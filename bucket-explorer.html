@@ -142,17 +142,17 @@
 
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-500/40">
           <span class="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400" aria-hidden="true"></span>
-          <span><strong>Hit:</strong> QB 20+ · RB 15+ · WR 14+ · TE 14+ PPG</span>
+          <span><strong>Hit:</strong> QB 20+ · RB 15+ · WR 14+ · TE 12+ PPG</span>
         </span>
 
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-amber-100 dark:bg-amber-500/20 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-500/40">
           <span class="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400" aria-hidden="true"></span>
-          <span><strong>Near Hit:</strong> QB 16+ · RB/WR/TE 12+ PPG</span>
+          <span><strong>Near Hit:</strong> QB 16+ · RB/WR 12+ PPG (TE: hit or bust only)</span>
         </span>
 
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-rose-100 dark:bg-rose-500/20 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-500/40">
           <span class="w-2 h-2 rounded-full bg-rose-600 dark:bg-rose-400" aria-hidden="true"></span>
-          <span><strong>Bust:</strong> 0 Near-Hit seasons (2006–2025)</span>
+          <span><strong>Bust:</strong> 0 Near-Hit seasons (TE: 0 seasons at 12+) (2006–2025)</span>
         </span>
 
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-sky-100 dark:bg-sky-500/20 text-sky-900 dark:text-sky-200 border border-sky-300 dark:border-sky-500/40">
@@ -162,7 +162,7 @@
 
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-indigo-100 dark:bg-indigo-500/20 text-indigo-950 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-500/40">
           <span class="text-indigo-600 dark:text-indigo-400 font-extrabold" aria-hidden="true">↻</span>
-          <span><strong>Repeater %:</strong> Of players who hit their PPG mark once (QB 20+, RB 15+, WR/TE 14+), % who hit it in 2+ seasons</span>
+          <span><strong>Repeater %:</strong> Of players who hit their PPG mark once (QB 20+, RB 15+, WR 14+, TE 12+), % who hit it in 2+ seasons</span>
         </span>
       </div>
     </div>
@@ -382,11 +382,12 @@
       TE: {
         label: 'TE (1.5 TEP)',
         short: 'TE',
-        nearLbl: '12+ PPG',
-        hitLbl: '14+ PPG',
+        nearLbl: null,       // TE: hit or bust only (no near-hit tier)
+        noNear: true,
+        hitLbl: '12+ PPG',
         eliteLbl: '17+ PPG',
         badgeCls: 'bg-amber-100 dark:bg-amber-500/20 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-500/35',
-        insight: 'While rare outliers exist in lower tiers (Kittle, Kelce), the odds of landing a 14+ PPG difference-maker drop sharply outside the Elite & Upside Freak/Gifted buckets.'
+        insight: 'TEs are hit-or-bust: any 12+ PPG season is a hit. Rare lower-tier outliers exist (Kittle, Kelce), but the odds of landing a 12+ PPG starter drop sharply outside the Elite & Upside Freak/Gifted buckets.'
       }
     };
 
@@ -1212,7 +1213,7 @@
         ]
       },
 
-      // ---------------- TE 1.5 TEP (near=12+, hit=14+, elite=17+) ----------------
+      // ---------------- TE 1.5 TEP (tuple: [name, year, 12+ seasons, 14+ seasons, 17+ seasons]; hit = 12+, no near tier) ----------------
       {
         pos: 'TE', name: 'Elite Freak', n: 1, hit: 100.0, nearTotal: 100.0, elite: 0.0, twoPlus: 0.0, rep: 0.0, extraHistoricalBusts: 0,
         players: [
@@ -1388,15 +1389,15 @@
     RAW_BUCKETS.forEach((raw, bIdx) => {
       const bucketId = `${raw.pos}_${bIdx}`;
       const isClogger = raw.name.toLowerCase().startsWith('clogger');
-      const nearOnlyPct = Math.max(0, Number((raw.nearTotal - raw.hit).toFixed(1)));
-      const bustPct = Math.max(0, Number((100 - raw.nearTotal).toFixed(1)));
+      const noNear = Boolean(POS_META[raw.pos].noNear);
 
       const parsedPlayers = raw.players.map(tuple => {
         const name = tuple[0];
         const year = tuple[1];
         const isRookie = tuple[2] === 'rookie';
-        const near = isRookie ? 0 : Number(tuple[2] || 0);
-        const hit = isRookie ? 0 : Number(tuple[3] || 0);
+        // TE: the 12+ PPG column IS the hit count; there is no near-hit tier
+        const near = (isRookie || noNear) ? 0 : Number(tuple[2] || 0);
+        const hit = isRookie ? 0 : Number(tuple[noNear ? 2 : 3] || 0);
         const elite = isRookie ? 0 : Number(tuple[4] || 0);
         const superElite = (!isRookie && raw.pos === 'WR') ? Number(tuple[5] || 0) : 0;
 
@@ -1425,19 +1426,33 @@
         return playerObj;
       });
 
+      // TE (hit = 12+): hit rate = 12+ rate; 2+ seasons & repeater recomputed at 12+ from the named players
+      let hitPct = raw.hit, twoPlusPct = raw.twoPlus, repPct = raw.rep;
+      if (noNear) {
+        const vets = parsedPlayers.filter(p => !p.isRookie);
+        const hitters = vets.filter(p => p.hit >= 1).length;
+        const twoPlus = vets.filter(p => p.hit >= 2).length;
+        hitPct = raw.nearTotal;
+        twoPlusPct = raw.n ? Number((twoPlus / raw.n * 100).toFixed(1)) : 0;
+        repPct = hitters ? Number((twoPlus / hitters * 100).toFixed(1)) : 0;
+      }
+      const nearOnlyPct = noNear ? 0 : Math.max(0, Number((raw.nearTotal - raw.hit).toFixed(1)));
+      const bustPct = Math.max(0, Number((100 - raw.nearTotal).toFixed(1)));
+
       const bucketObj = {
         id: bucketId,
         pos: raw.pos,
         name: raw.name,
         isClogger,
+        noNear,
         n: raw.n,
-        hitPct: raw.hit,
+        hitPct,
         nearTotalPct: raw.nearTotal,
         nearOnlyPct,
         bustPct,
         elitePct: raw.elite,
-        twoPlusPct: raw.twoPlus,
-        repPct: raw.rep,
+        twoPlusPct,
+        repPct,
         extraHistoricalBusts: raw.extraHistoricalBusts || 0,
         players: parsedPlayers
       };
@@ -1516,12 +1531,13 @@
     function formatSeasonLine(p) {
       const m = POS_META[p.pos];
       if (p.isRookie) return '2026 Rookie Class · Pending NFL sample';
-      if (p.status === 'bust') return `0 seasons at ${m.nearLbl}`;
+      if (p.status === 'bust') return `0 seasons at ${m.nearLbl || m.hitLbl}`;
       const parts = [];
       if (p.hit > 0) parts.push(`${p.hit}x ${m.hitLbl.replace(' PPG', '')}`);
       if (p.elite > 0) parts.push(`${p.elite}x ${m.eliteLbl.replace(' PPG', '')}`);
       if (p.pos === 'WR' && p.superElite > 0) parts.push(`${p.superElite}x 18+`);
-      if (p.hit === 0 && p.near > 0) parts.push(`${p.near}x ${m.nearLbl.replace(' PPG', '')}`);
+      if (!m.nearLbl) { /* TE: no near tier */ }
+      else if (p.hit === 0 && p.near > 0) parts.push(`${p.near}x ${m.nearLbl.replace(' PPG', '')}`);
       else if (p.near > p.hit) parts.push(`${p.near}x ${m.nearLbl.replace(' PPG', '')}`);
       return parts.join(' · ');
     }
@@ -1564,13 +1580,15 @@
         rookie: { on: 'bg-sky-600 text-white shadow-sm', off: 'bg-sky-50 dark:bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30 hover:bg-sky-100 dark:hover:bg-sky-500/20' }
       };
 
+      const noNearPos = Boolean(POS_META[state.pos].noNear);
+      if (noNearPos && state.outcome === 'near') state.outcome = 'all';
       document.querySelectorAll('.outcome-pill').forEach(btn => {
         const key = btn.dataset.outcome;
         const active = key === state.outcome;
         btn.setAttribute('aria-pressed', active ? 'true' : 'false');
         btn.className = `outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer ${
           active ? outcomeStyles[key].on : outcomeStyles[key].off
-        }`;
+        }${key === 'near' && noNearPos ? ' hidden' : ''}`;
       });
     }
 
@@ -1617,7 +1635,7 @@
         </div>
         <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
           Hit: <span class="text-emerald-600 dark:text-emerald-400">${esc(pm.hitLbl)}</span> ·
-          Near: <span class="text-amber-600 dark:text-amber-400">${esc(pm.nearLbl)}</span> ·
+          ${pm.nearLbl ? `Near: <span class="text-amber-600 dark:text-amber-400">${esc(pm.nearLbl)}</span> ·` : 'No near tier ·'}
           Elite: <span class="text-sky-600 dark:text-sky-400">${esc(pm.eliteLbl)}</span>
         </div>`;
 
@@ -1750,14 +1768,14 @@
             <!-- Horizontal Stacked Color-Coded Outcome Bar -->
             <div class="space-y-1.5">
               <div class="w-full h-3.5 rounded-full overflow-hidden flex bg-slate-200 dark:bg-slate-800"
-                role="img" aria-label="Outcome breakdown: ${hitW.toFixed(1)}% Hits, ${nearW.toFixed(1)}% Near Hits Only, ${bustW.toFixed(1)}% Busts">
+                role="img" aria-label="Outcome breakdown: ${hitW.toFixed(1)}% Hits${b.noNear ? '' : `, ${nearW.toFixed(1)}% Near Hits Only`}, ${bustW.toFixed(1)}% Busts">
                 ${hitW > 0 ? `<div class="bg-emerald-500 dark:bg-emerald-500 h-full transition-all duration-300" style="width:${hitW}%"></div>` : ''}
                 ${nearW > 0 ? `<div class="bg-amber-400 dark:bg-amber-400 h-full transition-all duration-300" style="width:${nearW}%"></div>` : ''}
                 ${bustW > 0 ? `<div class="bg-rose-500 dark:bg-rose-500 h-full transition-all duration-300" style="width:${bustW}%"></div>` : ''}
               </div>
               <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold">
                 <span class="text-emerald-700 dark:text-emerald-400">Hit ${hitW.toFixed(1)}%</span>
-                <span class="text-amber-700 dark:text-amber-300">Near Hit Only ${nearW.toFixed(1)}%</span>
+                ${b.noNear ? '' : `<span class="text-amber-700 dark:text-amber-300">Near Hit Only ${nearW.toFixed(1)}%</span>`}
                 <span class="text-rose-700 dark:text-rose-400">Bust ${bustW.toFixed(1)}%</span>
               </div>
             </div>
@@ -1952,11 +1970,12 @@
             2026 Rookie Prospect — Historical Bucket Projection Shown Below
           </span>`;
       } else {
-        const tiers = [
+        let tiers = [
           { lbl: pm.nearLbl, val: p.near, cls: p.near > 0 ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-950 dark:text-amber-200 border-amber-300 dark:border-amber-500/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700' },
           { lbl: pm.hitLbl, val: p.hit, cls: p.hit > 0 ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-950 dark:text-emerald-200 border-emerald-300 dark:border-emerald-500/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700' },
           { lbl: pm.eliteLbl, val: p.elite, cls: p.elite > 0 ? 'bg-sky-100 dark:bg-sky-500/20 text-sky-950 dark:text-sky-200 border-sky-300 dark:border-sky-500/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700' }
         ];
+        if (!pm.nearLbl) tiers = tiers.filter(t => t.lbl);
         if (p.pos === 'WR') {
           tiers.push({
             lbl: '18+ PPG',
@@ -1982,21 +2001,24 @@
 
       document.getElementById('modalProbLegend').innerHTML = `
         <span class="text-emerald-700 dark:text-emerald-400">● Hit Odds: ${b.hitPct.toFixed(1)}%</span>
-        <span class="text-amber-700 dark:text-amber-300">● Near Hit Only: ${b.nearOnlyPct.toFixed(1)}%</span>
+        ${b.noNear ? '' : `<span class="text-amber-700 dark:text-amber-300">● Near Hit Only: ${b.nearOnlyPct.toFixed(1)}%</span>`}
         <span class="text-rose-700 dark:text-rose-400">● Bust Odds: ${b.bustPct.toFixed(1)}%</span>
       `;
 
       const modalRepDesc = `Of ${b.pos}s who hit ${pm.hitLbl} once, % who hit ${pm.hitLbl.replace(' PPG', '')} in 2+ seasons`;
 
+      document.getElementById('modalKpiGrid').className = `grid grid-cols-2 ${b.noNear ? 'sm:grid-cols-4' : 'sm:grid-cols-5'} gap-2.5 pt-1`;
+      const nearKpi = b.noNear ? '' : `
+        <div class="rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 p-2.5 text-center">
+          <div class="text-base sm:text-lg font-extrabold text-amber-600 dark:text-amber-400">${b.nearOnlyPct.toFixed(1)}%</div>
+          <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Near Hit Only</div>
+        </div>`;
       document.getElementById('modalKpiGrid').innerHTML = `
         <div class="rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-500/30 p-2.5 text-center">
           <div class="text-base sm:text-lg font-extrabold text-emerald-600 dark:text-emerald-400">${b.hitPct.toFixed(1)}%</div>
           <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Hit (${esc(pm.hitLbl.replace(' PPG', ''))})</div>
         </div>
-        <div class="rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 p-2.5 text-center">
-          <div class="text-base sm:text-lg font-extrabold text-amber-600 dark:text-amber-400">${b.nearOnlyPct.toFixed(1)}%</div>
-          <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Near Hit Only</div>
-        </div>
+        ${nearKpi}
         <div class="rounded-xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-500/30 p-2.5 text-center">
           <div class="text-base sm:text-lg font-extrabold text-rose-600 dark:text-rose-400">${b.bustPct.toFixed(1)}%</div>
           <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Bust Floor</div>
@@ -2005,7 +2027,7 @@
           <div class="text-base sm:text-lg font-extrabold text-sky-600 dark:text-sky-400">${b.elitePct.toFixed(1)}%</div>
           <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Elite (${esc(pm.eliteLbl.replace(' PPG', ''))})</div>
         </div>
-        <div class="col-span-2 sm:col-span-1 rounded-xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-500/30 p-2.5 text-center cursor-help"
+        <div class="${b.noNear ? '' : 'col-span-2 sm:col-span-1 '}rounded-xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-500/30 p-2.5 text-center cursor-help"
           title="${esc(modalRepDesc)}">
           <div class="text-base sm:text-lg font-extrabold text-indigo-600 dark:text-indigo-400">${b.repPct.toFixed(1)}%</div>
           <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Repeater Odds</div>
@@ -2017,14 +2039,16 @@
     }
 
     function renderModalOutcomeColumns(selectedPlayer, b) {
+      if (b.noNear && state.modalSubTab === 'near') state.modalSubTab = 'all';
       // Sync subtab styles
       document.querySelectorAll('.modal-subtab').forEach(btn => {
         const active = btn.dataset.mtab === state.modalSubTab;
+        const hideBtn = b.noNear && btn.dataset.mtab === 'near';
         btn.className = `modal-subtab px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
           active
             ? 'bg-sky-600 text-white shadow-sm'
             : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-        }`;
+        }${hideBtn ? ' hidden' : ''}`;
       });
 
       const hits = b.players.filter(x => x.status === 'hit').sort((a, c) => (c.hit - a.hit) || (c.elite - a.elite) || (c.superElite - a.superElite) || (c.near - a.near));
@@ -2044,7 +2068,7 @@
             ? `${cp.near}x ${pm.nearLbl.replace(' PPG', '')}`
             : cp.status === 'rookie'
               ? '2026 Rookie'
-              : `0x ${pm.nearLbl.replace(' PPG', '')}`;
+              : `0x ${(pm.nearLbl || pm.hitLbl).replace(' PPG', '')}`;
 
         return `
           <button type="button" data-modal-switch="${esc(cp.id)}"
@@ -2078,7 +2102,7 @@
       }
 
       // 2. Near Hits / Flex Starters
-      if (state.modalSubTab === 'all' || state.modalSubTab === 'near') {
+      if (!b.noNear && (state.modalSubTab === 'all' || state.modalSubTab === 'near')) {
         sections.push(`
           <div class="rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/30 p-3.5 space-y-2.5">
             <div class="flex items-center justify-between gap-2">
@@ -2106,7 +2130,7 @@
               <h4 class="text-xs font-extrabold uppercase tracking-wider text-rose-800 dark:text-rose-300">
                 Busts / Floor Outcomes (${totalBustCount})
               </h4>
-              <span class="text-[10px] font-bold text-rose-700 dark:text-rose-400">0x ${esc(pm.nearLbl)}</span>
+              <span class="text-[10px] font-bold text-rose-700 dark:text-rose-400">0x ${esc(pm.nearLbl || pm.hitLbl)}</span>
             </div>
             <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
               ${busts.length ? busts.map(x => compRow(x, 'text-rose-700 dark:text-rose-400')).join('') : (b.extraHistoricalBusts ? '' : '<p class="text-xs italic text-slate-500 dark:text-slate-400">Zero busts recorded in this bucket!</p>')}
