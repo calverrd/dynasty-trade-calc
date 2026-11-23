@@ -1,0 +1,66 @@
+name: Update KeepTradeCut Values Daily
+
+on:
+  schedule:
+    # Runs every day at 11:00 UTC (5:00 AM CST / 6:00 AM CDT)
+    - cron: '0 11 * * *'
+  # Allows you to click "Run workflow" manually anytime in the Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-ktc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch KeepTradeCut rankings and save ktc.json
+        run: |
+          node -e '
+            const fs = require("fs");
+            (async () => {
+              const res = await fetch("https://keeptradecut.com/dynasty-rankings", {
+                headers: {
+                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+                  "Accept": "text/html,application/xhtml+xml"
+                }
+              });
+              if (!res.ok) throw new Error("KTC HTTP " + res.status);
+              const html = await res.text();
+              const match = html.match(/var\s+playersArray\s*=\s*(\[\s*\{[\s\S]*?\}\s*\])\s*;/);
+              if (!match) throw new Error("Could not locate playersArray on KTC page");
+              const raw = JSON.parse(match[1]);
+              const compact = raw.map(p => ({
+                playerName: p.playerName,
+                position: p.position,
+                superflexValues: p.superflexValues ? {
+                  value: p.superflexValues.value,
+                  tep: p.superflexValues.tep ? { value: p.superflexValues.tep.value } : undefined
+                } : undefined,
+                oneQBValues: p.oneQBValues ? {
+                  value: p.oneQBValues.value,
+                  tep: p.oneQBValues.tep ? { value: p.oneQBValues.tep.value } : undefined
+                } : undefined
+              }));
+              const payload = {
+                updatedAt: new Date().toISOString(),
+                count: compact.length,
+                players: compact
+              };
+              fs.writeFileSync("ktc.json", JSON.stringify(payload));
+              console.log("Saved ktc.json with " + compact.length + " players.");
+            })().catch(err => {
+              console.error(err);
+              process.exit(1);
+            });
+          '
+
+      - name: Commit and push updated ktc.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ktc.json
+          git diff --staged --quiet || (git commit -m "chore: update daily KTC values" && git push)
