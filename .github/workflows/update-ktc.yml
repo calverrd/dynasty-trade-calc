@@ -1,63 +1,49 @@
 name: Update KeepTradeCut Values Daily
 on:
-schedule:
-- cron: '0 11 * * *'
-workflow_dispatch:
+  schedule:
+    # 11:17 UTC every day (about 5:17 AM Central)
+    - cron: "17 11 * * *"
+  workflow_dispatch:
 
 permissions:
-contents: write
+  contents: write
+
+concurrency:
+  group: update-ktc
+  cancel-in-progress: false
 
 jobs:
-fetch-ktc:
-runs-on: ubuntu-latest
-steps:
-- name: Checkout repository
-uses: actions/checkout@v4
+  update-ktc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
 
-  - name: Fetch KeepTradeCut rankings and save ktc.json
-    run: |
-      node << 'EOF'
-      const fs = require('fs');
-      (async () => {
-        const res = await fetch('https://keeptradecut.com/dynasty-rankings', {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml'
-          }
-        });
-        if (!res.ok) throw new Error('KTC HTTP ' + res.status);
-        const html = await res.text();
-        const match = html.match(/var\s+playersArray\s*=\s*(\[\s*\{[\s\S]*?\}\s*\])\s*;/);
-        if (!match) throw new Error('Could not locate playersArray on KTC page');
-        const raw = JSON.parse(match[1]);
-        const compact = raw.map(p => ({
-          playerName: p.playerName,
-          position: p.position,
-          superflexValues: p.superflexValues ? {
-            value: p.superflexValues.value,
-            tep: p.superflexValues.tep ? { value: p.superflexValues.tep.value } : undefined
-          } : undefined,
-          oneQBValues: p.oneQBValues ? {
-            value: p.oneQBValues.value,
-            tep: p.oneQBValues.tep ? { value: p.oneQBValues.tep.value } : undefined
-          } : undefined
-        }));
-        const payload = {
-          updatedAt: new Date().toISOString(),
-          count: compact.length,
-          players: compact
-        };
-        fs.writeFileSync('ktc.json', JSON.stringify(payload));
-        console.log('Saved ktc.json with ' + compact.length + ' players.');
-      })().catch(err => {
-        console.error(err);
-        process.exit(1);
-      });
-      EOF
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-  - name: Commit and push updated ktc.json
-    run: |
-      git config user.name "github-actions[bot]"
-      git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-      git add ktc.json
-      git diff --staged --quiet || (git commit -m "chore: update daily KTC values" && git push)
+      - name: Install Playwright (Chromium) for the browser fallback
+        run: |
+          npm install --no-save --no-package-lock playwright@1
+          npx playwright install --with-deps chromium
+
+      - name: Scrape KeepTradeCut into ktc.json
+        run: node scripts/update-ktc.mjs
+
+      - name: Commit and push ktc.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ktc.json
+          if git diff --cached --quiet; then
+            echo "ktc.json unchanged - nothing to commit."
+            exit 0
+          fi
+          git commit -m "Update KTC values $(date -u +%Y-%m-%d)"
+          git pull --rebase origin main
+          git push origin HEAD:main
