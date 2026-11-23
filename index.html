@@ -99,9 +99,13 @@
             <span>KTC <strong id="blendLbl" class="text-[#111827] dark:text-white">50%</strong></span>
             <input id="blendSlider" type="range" min="0" max="100" step="5" value="50" class="w-16 accent-blue-600 cursor-pointer" />
           </label>
-          <label class="flex items-center gap-1.5 text-[11px] font-medium text-[#5d6672] dark:text-[#98a2ae]">
-            <span>Stud <strong id="studLbl" class="text-[#111827] dark:text-white">1.35×</strong></span>
-            <input id="studSlider" type="range" min="1.00" max="1.60" step="0.05" value="1.35" class="w-16 accent-blue-600 cursor-pointer" />
+          <label class="flex items-center gap-1.5 text-[11px] font-medium text-[#5d6672] dark:text-[#98a2ae]" title="Value adjustment for the side giving up the better single asset, matched to KeepTradeCut's calculator. ×1.00 = KTC, 0 = off.">
+            <span>Value adj. <strong id="adjLbl" class="text-[#111827] dark:text-white">×1.00</strong></span>
+            <input id="adjSlider" type="range" min="0" max="1.5" step="0.05" value="1" class="w-16 accent-blue-600 cursor-pointer" />
+          </label>
+          <label class="flex items-center gap-1.5 text-[11px] font-medium text-[#5d6672] dark:text-[#98a2ae]" title="A trade within this % gap is graded Fair">
+            <span>Fair ±<strong id="fairLbl" class="text-[#111827] dark:text-white">5%</strong></span>
+            <input id="fairSlider" type="range" min="2" max="15" step="1" value="5" class="w-14 accent-blue-600 cursor-pointer" />
           </label>
         </div>
       </div>
@@ -264,6 +268,7 @@
           <div id="barA" class="bg-blue-600 transition-all duration-300" style="width:50%"></div>
           <div id="barB" class="bg-indigo-500 transition-all duration-300" style="width:50%"></div>
         </div>
+        <div id="consensusBox" class="hidden"></div>
         <div id="verdictDetails" class="text-xs text-[#5d6672] dark:text-[#98a2ae]"></div>
         <div id="balanceChips" class="flex flex-wrap items-center gap-1.5"></div>
         <div id="lineupImpactBox" class="hidden pt-2 border-t border-[#eef0f4] dark:border-[#232933] text-xs space-y-2"></div>
@@ -277,7 +282,7 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div>
             <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">💡 Player Trade Idea Finder</h2>
-            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Pick any player to generate fair 1-for-1, +pick, and tier-up offers using live league rosters.</p>
+            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Pick any player to generate fair 1-for-1, player + pick, and 2-for-1 upgrade offers using live league rosters.</p>
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
@@ -307,7 +312,7 @@
       <!-- 2027 Draft Order Strip -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5">
         <div>
-          <h2 class="text-sm font-bold">Projected 2027 Draft Order</h2>
+          <h2 class="text-sm font-bold">Projected <span class="draft-yr">2027</span> Draft Order</h2>
           <p id="draftOrderSub" class="text-xs text-[#5d6672] dark:text-[#98a2ae]"></p>
         </div>
         <div id="draftOrderStrip" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
@@ -318,14 +323,14 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div>
             <h2 class="text-sm font-bold">League Power Rankings &amp; Trade Partner Matcher</h2>
-            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Auto-tagged by Contender/Rebuild status, weakest starting position, and 2027 1st ownership. Click any row to expand.</p>
+            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Auto-tagged by Contender/Rebuild status, weakest starting position, and next-draft 1st ownership. Click any row to expand.</p>
           </div>
           <div id="leagueFilterBar" class="inline-flex flex-wrap rounded-lg border border-[#d6dbe3] dark:border-[#2e3540] overflow-hidden text-xs bg-[#f6f7f9] dark:bg-[#0f1216]">
             <button type="button" data-lfilter="ALL" class="lfilter-btn px-2.5 py-1.5 font-semibold cursor-pointer">All</button>
             <button type="button" data-lfilter="contender" class="lfilter-btn px-2.5 py-1.5 font-semibold cursor-pointer">Contenders</button>
             <button type="button" data-lfilter="retool" class="lfilter-btn px-2.5 py-1.5 font-semibold cursor-pointer">Retool</button>
             <button type="button" data-lfilter="rebuild" class="lfilter-btn px-2.5 py-1.5 font-semibold cursor-pointer">Rebuild</button>
-            <button type="button" data-lfilter="has27" class="lfilter-btn px-2.5 py-1.5 font-semibold cursor-pointer">Owns 2027 1st</button>
+            <button type="button" data-lfilter="has27" class="lfilter-btn px-2.5 py-1.5 font-semibold cursor-pointer">Owns <span class="draft-yr">2027</span> 1st</button>
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -345,6 +350,15 @@
             <tbody id="leagueBody" class="divide-y divide-[#eef0f4] dark:divide-[#232933]"></tbody>
           </table>
         </div>
+      </div>
+
+      <!-- League Trade History (graded at today's values) -->
+      <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
+        <div>
+          <h2 class="text-sm font-bold">League Trade History</h2>
+          <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Every completed trade this season and last, graded at today’s values. Click a manager to filter.</p>
+        </div>
+        <div id="tradeHistoryBox" class="space-y-3"></div>
       </div>
     </section>
 
@@ -373,6 +387,24 @@
         </div>
       </div>
 
+      <!-- Risers & Fallers -->
+      <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+          <div>
+            <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">📈 Risers &amp; Fallers (League Rosters)</h2>
+            <p id="moversSub" class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Biggest KTC value changes for rostered players. Click a player for his graphs.</p>
+          </div>
+          <div class="inline-flex rounded-lg border border-[#d6dbe3] dark:border-[#2e3540] overflow-hidden text-xs bg-[#f6f7f9] dark:bg-[#0f1216]">
+            <button type="button" data-movers="7" class="movers-btn px-2.5 py-1.5 font-semibold cursor-pointer">7 days</button>
+            <button type="button" data-movers="30" class="movers-btn px-2.5 py-1.5 font-semibold cursor-pointer">30 days</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div><div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1.5">Risers</div><div id="risersList" class="space-y-1.5"></div></div>
+          <div><div class="text-[11px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400 mb-1.5">Fallers</div><div id="fallersList" class="space-y-1.5"></div></div>
+        </div>
+      </div>
+
       <!-- Best Available Free Agents / Waiver Scanner -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
@@ -390,6 +422,7 @@
               <button type="button" data-wpos="WR" class="wpos-btn px-2.5 py-1.5 font-semibold cursor-pointer">WR</button>
               <button type="button" data-wpos="TE" class="wpos-btn px-2.5 py-1.5 font-semibold cursor-pointer">TE</button>
             </div>
+            <button type="button" id="btnWaiverTrend" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-[#d6dbe3] dark:border-[#2e3540] bg-[#f6f7f9] dark:bg-[#0f1216] cursor-pointer" title="Sort by Sleeper adds in the last 24 hours">🔥 Trending</button>
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -429,12 +462,24 @@
             <p class="text-[#5d6672] dark:text-[#98a2ae]">When a league starts <strong>20+ QBs weekly</strong> (such as a 24-team 1-QB league), QB scarcity matches a 12-team Superflex, so it automatically switches to Superflex QB values. Draft picks are also scaled to their true overall pick range (e.g., a 24-team Late 1st = picks #17–24).</p>
           </div>
           <div class="p-3.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] space-y-1.5">
-            <h3 class="font-bold">3. Stud Premium Curve</h3>
-            <p class="text-[#5d6672] dark:text-[#98a2ae]">To prevent "four quarters for a dollar" trades, each asset's trade score is raised to the Stud exponent (default <strong>1.35×</strong>): <code>10,000 × (val / 10,000)^stud</code>. Deals within <strong>±5%</strong> are graded Fair.</p>
+            <h3 class="font-bold">3. Value Adjustment (matched to KTC)</h3>
+            <p class="text-[#5d6672] dark:text-[#98a2ae]">Like KeepTradeCut, every asset gets a hidden "raw adjustment" that grows faster than its value (≈10% of value for depth pieces, up to ≈42% for the best player). The side with the bigger raw total is giving up the better piece, so it is credited a <strong>value adjustment</strong> equal to the extra value the other side would need to add. The formula uses KTC's own exponents with constants fitted to KTC's published numbers. <strong>Value adj. ×1.00</strong> = KTC; lower it to soften, 0 turns it off. The League tab shows which setting best fits your league's real trades. Deals inside the <strong>Fair ±</strong> range (default 5% of the larger side) are graded Fair. The <strong>Consensus check</strong> grades every trade under KTC, FantasyCalc and the blend at once and warns you if any of them says your side loses.</p>
           </div>
           <div class="p-3.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] space-y-1.5">
             <h3 class="font-bold">4. Hit Rate &amp; Repeater % Model</h3>
             <p class="text-[#5d6672] dark:text-[#98a2ae]">Players are grouped into historical dynasty buckets (e.g., <em>Upside Konami QB</em>, <em>Elite Alpha WR</em>, <em>Clogger Committee RB</em>) to flag sell-high arbitrage opportunities where market value is high but multi-season repeater probability is low.</p>
+          </div>
+          <div class="p-3.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] space-y-1.5">
+            <h3 class="font-bold">5. Values &amp; Blending</h3>
+            <p class="text-[#5d6672] dark:text-[#98a2ae]">KTC values come from <code>ktc.json</code> (updated daily by a GitHub Action). Players are matched to FantasyCalc by Sleeper ID, then name; KTC players FantasyCalc doesn't list are kept. Before blending, FantasyCalc values are rank-matched onto KTC's scale, and FC tight ends get the same TE-premium lift KTC gives that player. The Trade chart's KTC / FC column shows both as published. FantasyCalc supports at most 16 teams, so in bigger leagues FC values are 16-team values.</p>
+          </div>
+          <div class="p-3.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] space-y-1.5">
+            <h3 class="font-bold">6. Draft Picks</h3>
+            <p class="text-[#5d6672] dark:text-[#98a2ae]">Pick values come from KTC's and FantasyCalc's own pick values (Early / Mid / Late anchors), interpolated to each pick's projected slot for the next draft (e.g. 1.03) and to mid-round for later years. In leagues bigger than 12 teams a pick is priced by its overall pick number.</p>
+          </div>
+          <div class="p-3.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] space-y-1.5">
+            <h3 class="font-bold">7. Trends &amp; History</h3>
+            <p class="text-[#5d6672] dark:text-[#98a2ae]">Click any player for his KTC value and positional-rank graphs. The daily update saves a snapshot to <code>ktc-history.json</code>, so the graphs fill in over time; until a week of history exists, FantasyCalc's published 30-day change is shown. The League tab grades every Sleeper trade (this season and last) at today's values.</p>
           </div>
         </div>
       </div>
@@ -510,6 +555,29 @@
     </div>
   </div>
 
+  <!-- ==================== MODAL: PLAYER VALUE TRENDS ==================== -->
+  <div id="playerModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-3">
+    <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-2xl max-w-2xl w-full max-h-[92vh] overflow-y-auto p-5 space-y-4 shadow-2xl">
+      <div class="flex items-start justify-between gap-3">
+        <div id="pmHeader" class="min-w-0"></div>
+        <button id="btnClosePlayer" type="button" aria-label="Close" class="text-sm font-bold px-2 py-1 rounded-lg hover:bg-[#f6f7f9] dark:hover:bg-[#232933] cursor-pointer">✕</button>
+      </div>
+      <div id="pmStats" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+      <div class="flex items-center justify-between gap-2">
+        <h4 class="text-sm font-bold">KTC value</h4>
+        <div class="inline-flex rounded-lg border border-[#d6dbe3] dark:border-[#2e3540] overflow-hidden text-xs bg-[#f6f7f9] dark:bg-[#0f1216]">
+          <button type="button" data-pmrange="7" class="px-2.5 py-1 font-semibold cursor-pointer">7D</button>
+          <button type="button" data-pmrange="30" class="px-2.5 py-1 font-semibold cursor-pointer">30D</button>
+          <button type="button" data-pmrange="all" class="px-2.5 py-1 font-semibold cursor-pointer">All</button>
+        </div>
+      </div>
+      <div id="pmValueChart" class="text-[#5d6672] dark:text-[#98a2ae]"></div>
+      <h4 class="text-sm font-bold">Positional rank <span class="font-normal text-xs text-[#5d6672] dark:text-[#98a2ae]">(higher on the graph = better)</span></h4>
+      <div id="pmRankChart" class="text-[#5d6672] dark:text-[#98a2ae]"></div>
+      <p id="pmNote" class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]"></p>
+    </div>
+  </div>
+
   <!-- Toast Container -->
   <div id="toast" class="hidden fixed bottom-4 right-4 z-50 px-4 py-2.5 rounded-xl bg-[#111827] dark:bg-white text-white dark:text-[#111827] text-xs font-bold shadow-xl"></div>
 
@@ -569,7 +637,8 @@
     const st = {
       src: 'blend',
       w: 50,
-      stud: 1.35,
+      adj: 1.0,   // value-adjustment strength (replaces the old per-asset stud exponent)
+      fair: 5,    // % gap still graded Fair
       theme: 'system',
       tab: 'calc',
       q: '',
@@ -836,6 +905,7 @@
       const fr = document.getElementById('buckets-frame');
       if (!fr || fr.getAttribute('src')) return;
       fr.addEventListener('load', onBucketsFrameLoad);
+      fr.removeAttribute('loading'); // src is already deferred until the tab is opened; don't let native lazy-loading stall it
       fr.src = fr.dataset.src;
     }
 
@@ -890,7 +960,7 @@
     function save() {
       try {
         localStorage.setItem(STATE_KEY, JSON.stringify({
-          src: st.src, w: st.w, stud: st.stud, theme: st.theme
+          src: st.src, w: st.w, adj: st.adj, adjModel: 'ktc', fair: st.fair, theme: st.theme
         }));
       } catch (e) {}
     }
@@ -900,7 +970,8 @@
         const raw = JSON.parse(localStorage.getItem(STATE_KEY) || '{}');
         if (raw.src) st.src = raw.src;
         if (typeof raw.w === 'number') st.w = raw.w;
-        if (typeof raw.stud === 'number') st.stud = raw.stud;
+        if (typeof raw.adj === 'number' && raw.adjModel === 'ktc') st.adj = raw.adj;
+        if (typeof raw.fair === 'number') st.fair = raw.fair;
         if (raw.theme) st.theme = raw.theme;
       } catch (e) {}
     }
@@ -992,24 +1063,179 @@
     }
 
     // ============================================================================
-    // 6. VALUE COMPUTATION & STUD PREMIUM
+    // 6. VALUE COMPUTATION, SOURCE BLENDING & TRADE VALUE ADJUSTMENT
     // ============================================================================
-    function studVal(raw) {
-      const v = Math.max(0, Number(raw) || 0);
-      if (!v) return 0;
-      return Math.round(10000 * Math.pow(v / 10000, st.stud));
+    // p.k    = KTC value (league format, TE premium tier applied)
+    // p.fRaw = FantasyCalc value as published (TE premium applied via KTC's own TE ratio)
+    // p.f    = FantasyCalc value mapped onto KTC's scale (rank-matched) — used for blending
+    function valueFor(p, mode) {
+      const k = Number(p.k) || 0;
+      const fRaw = Number(p.fRaw != null ? p.fRaw : p.f) || 0;
+      const fK = Number(p.f) || 0;
+      if (mode === 'ktc') return k || fK;
+      if (mode === 'fc') return fRaw || (k ? Math.round(FC_SCALE.toFc(k)) : 0);
+      if (k && fK) return Math.round((k * (st.w / 100)) + (fK * (1 - st.w / 100)));
+      return fK || k;
+    }
+    // Values for every asset under a given source (used by the consensus check); cached per recompute
+    let MODE_CACHE = {};
+    function modeValues(mode) {
+      if (!MODE_CACHE[mode]) {
+        const vals = P.map(p => valueFor(p, mode));
+        let max = 0;
+        vals.forEach(v => { if (v > max) max = v; });
+        MODE_CACHE[mode] = { vals, max: max || 9999 };
+      }
+      return MODE_CACHE[mode];
     }
 
     function recompute() {
-      V = P.map(p => {
-        const k = Number(p.k) || 0;
-        const f = Number(p.f) || 0;
-        if (st.src === 'ktc') return k || f;
-        if (st.src === 'fc') return f || k;
-        if (k && f) return Math.round((k * (st.w / 100)) + (f * (1 - st.w / 100)));
-        return f || k;
-      });
+      V = P.map(p => valueFor(p, st.src));
+      V_MAX = 0;
+      MODE_CACHE = {};
       all();
+    }
+
+    // FC -> KTC scale mapping built from players both sources value (quantile matching).
+    let FC_SCALE = { toKtc: x => x, toFc: x => x, n: 0 };
+    function buildScaleMap(pairs) {
+      // pairs: [[fcValue, ktcValue], ...] for assets valued by both
+      const fc = pairs.map(x => x[0]).filter(x => x > 0).sort((a, b) => b - a);
+      const kt = pairs.map(x => x[1]).filter(x => x > 0).sort((a, b) => b - a);
+      const n = Math.min(fc.length, kt.length);
+      if (n < 25) return { toKtc: x => x, toFc: x => x, n: 0 };
+      const F = fc.slice(0, n), K = kt.slice(0, n);
+      const interp = (x, from, to) => {
+        if (x >= from[0]) return to[0] * (x / from[0]);
+        if (x <= from[n - 1]) return to[n - 1] * (x / from[n - 1]);
+        let lo = 0, hi = n - 1; // from is descending
+        while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (from[mid] >= x) lo = mid; else hi = mid; }
+        const t = (from[lo] - x) / ((from[lo] - from[hi]) || 1);
+        return to[lo] + (to[hi] - to[lo]) * t;
+      };
+      return { toKtc: x => interp(x, F, K), toFc: x => interp(x, K, F), n };
+    }
+
+    // KTC value adjustment (matched to KeepTradeCut's calculator).
+    // KTC gives every asset a hidden "raw adjustment":
+    //   raw(p) = p · (d + a·(p/t)^1.3 + b·(p/v)^8 + c·(p/(v+2000))^1.28)
+    // p = asset value, t = best asset in this trade, v = best asset overall.
+    // Structure/exponents: KTC's client-side code (documented by Javelin Fantasy Football, 2022).
+    // Constants: fitted to KTC's live calculator on Nov 23 2026 (reference trades below, all matched
+    // exactly), with KTC's 2022 published raw values as a soft constraint (still within ~2–6%).
+    // Reference trades (KTC, Nov 23 2026; Gibbs 9999 = top overall):
+    //   Gibbs 9999  vs  Bowers 8804                      -> "add a player worth 4501"  (ours 4501)
+    //   Gibbs 9999  vs  Carnell Tate 5624 + Coleman 5101 -> Value Adjustment +6863, add 6138 (ours 6863 / 6138)
+    //   Carnell Tate 5624  vs  Jonah Coleman 5101        -> "add a player worth 2159"  (ours 2159)
+    // The side with the larger raw total is giving up the better piece. The other side would need an extra
+    // asset X whose raw adjustment equals the difference; the value adjustment added to the first side is
+    // (other side + X) − (its own total). st.adj scales it (1.0 = KTC, 0 = off).
+    const KTC_ADJ = { d: 0.09356, a: 0.27519, b: 0, c: 0.07029 };
+    function ktcRaw(p, t, v) {
+      if (!(p > 0)) return 0;
+      return p * (KTC_ADJ.d + KTC_ADJ.a * Math.pow(p / t, 1.3) + KTC_ADJ.b * Math.pow(p / v, 8) + KTC_ADJ.c * Math.pow(p / (v + 2000), 1.28));
+    }
+    let V_MAX = 0; // best asset overall in the current value mode (set in recompute)
+    function topValueOverall() {
+      if (!V_MAX) for (let i = 0; i < V.length; i++) if (V[i] > V_MAX) V_MAX = V[i];
+      return V_MAX || 9999;
+    }
+    function evalValues(aVals, bVals, strength, vmax) {
+      const va = aVals.filter(v => v > 0), vb = bVals.filter(v => v > 0);
+      const rawA = va.reduce((s, v) => s + v, 0), rawB = vb.reduce((s, v) => s + v, 0);
+      const k = Math.max(0, strength != null ? strength : (Number(st.adj) || 0));
+      let vaA = 0, vaB = 0, needX = 0;
+      if (va.length && vb.length && k > 0) {
+        const t = Math.max(...va, ...vb);
+        const v = Math.max(vmax || topValueOverall(), t);
+        const rA = va.reduce((s, p) => s + ktcRaw(p, t, v), 0);
+        const rB = vb.reduce((s, p) => s + ktcRaw(p, t, v), 0);
+        const diff = Math.abs(rA - rB);
+        if (diff > 0.5) {
+          // value X whose raw adjustment equals the gap (bisection; X may exceed t)
+          let lo = 0, hi = 2 * v;
+          for (let i = 0; i < 50; i++) {
+            const m = (lo + hi) / 2;
+            if (ktcRaw(m, Math.max(t, m), Math.max(v, m)) < diff) lo = m; else hi = m;
+          }
+          needX = lo;
+          if (rA > rB) vaA = Math.max(0, rawB + needX - rawA) * k;
+          else vaB = Math.max(0, rawA + needX - rawB) * k;
+        }
+      }
+      const effA = rawA + vaA, effB = rawB + vaB;
+      const gapPct = Math.abs(effA - effB) / Math.max(effA, effB, 1) * 100;
+      return { rawA, rawB, vaA, vaB, effA, effB, gapPct };
+    }
+    function evalTrade(aItems, bItems) {
+      return evalValues(aItems.map(x => V[x.id] || 0), bItems.map(x => V[x.id] || 0));
+    }
+
+    // ---- Draft pick values from KTC / FantasyCalc (anchors per year+round, interpolated by slot) ----
+    const ORD = { '1st': 1, '2nd': 2, '3rd': 3, '4th': 4, '5th': 5 };
+    const TIER_FRAC = { Early: 1 / 6, Mid: 0.5, Late: 5 / 6 };
+    function parsePickName(name) {
+      const s = String(name || '').trim();
+      let m = s.match(/^(\d{4})\s+(Early|Mid|Late)\s+(1st|2nd|3rd|4th|5th)$/i);      // KTC: "2027 Early 1st"
+      if (m) return { year: +m[1], rd: ORD[m[3].toLowerCase()], frac: TIER_FRAC[cap(m[2])] };
+      m = s.match(/^(\d{4})\s+(1st|2nd|3rd|4th|5th)\s*\((Early|Mid|Late)\)$/i);    // FC: "2027 1st (Early)"
+      if (m) return { year: +m[1], rd: ORD[m[2].toLowerCase()], frac: TIER_FRAC[cap(m[3])] };
+      m = s.match(/^(\d{4})\s+(1st|2nd|3rd|4th|5th)$/i);                              // generic "2028 1st"
+      if (m) return { year: +m[1], rd: ORD[m[2].toLowerCase()], frac: 0.5, generic: true };
+      m = s.match(/^(\d{4})\s+(?:Pick\s+)?(\d)\.(\d{1,2})$/i);                        // "2027 Pick 1.03" / "2027 1.03"
+      if (m) return { year: +m[1], rd: +m[2], frac: (+m[3] - 0.5) / 12 };
+      return null;
+    }
+    function cap(x) { x = String(x).toLowerCase(); return x.charAt(0).toUpperCase() + x.slice(1); }
+
+    // table[year][rd] = [[frac, value], ...]
+    function buildPickTable(entries) {
+      const t = {};
+      entries.forEach(([name, val]) => {
+        const pp = parsePickName(name);
+        if (!pp || !(val > 0)) return;
+        t[pp.year] = t[pp.year] || {};
+        const arr = (t[pp.year][pp.rd] = t[pp.year][pp.rd] || []);
+        // a generic "2027 1st" is only used if there are no tiered anchors
+        if (pp.generic && arr.some(a => !a[2])) return;
+        if (!pp.generic) for (let i = arr.length - 1; i >= 0; i--) if (arr[i][2]) arr.splice(i, 1);
+        arr.push([pp.frac, val, !!pp.generic]);
+      });
+      Object.values(t).forEach(y => Object.values(y).forEach(a => a.sort((x, z) => x[0] - z[0])));
+      return t;
+    }
+    function anchorValue(anchors, frac) {
+      if (!anchors || !anchors.length) return 0;
+      if (anchors.length === 1) return anchors[0][1];
+      const a = anchors;
+      let i = a.findIndex(x => x[0] >= frac);
+      if (i === -1) i = a.length - 1;
+      if (i === 0) i = 1;
+      const [x0, y0] = a[i - 1], [x1, y1] = a[i];
+      let v = y0 + (y1 - y0) * (frac - x0) / ((x1 - x0) || 1);
+      // keep extrapolation sane (first/last slots)
+      v = Math.min(v, a[0][1] * 1.15);
+      v = Math.max(v, a[a.length - 1][1] * 0.85);
+      return Math.round(v);
+    }
+    // Value of a pick in an N-team league. Overall pick number is mapped onto the 12-team curve
+    // (a 24-team 1.24 is overall #24 = 12-team 2.12), which KTC/FC values are built for.
+    function pickValueFrom(table, year, rd, slot, nTeams) {
+      const yt = table && table[year];
+      if (!yt) return 0;
+      const n = nTeams || 12;
+      const s = slot || (n + 1) / 2;
+      const overall = (rd - 1) * n + s;
+      let rd12 = Math.ceil(overall / 12);
+      let frac = (overall - (rd12 - 1) * 12 - 0.5) / 12;
+      const rounds = Object.keys(yt).map(Number).sort((a, b) => a - b);
+      const last = rounds[rounds.length - 1];
+      if (rd12 > last) {
+        const base = anchorValue(yt[last], 5 / 6) || 0;
+        return Math.round(base * Math.pow(0.6, rd12 - last) * (1 - 0.15 * frac));
+      }
+      if (!yt[rd12]) return 0;
+      return anchorValue(yt[rd12], Math.max(0, Math.min(1, frac)));
     }
 
     // ============================================================================
@@ -1084,7 +1310,7 @@
         let count27First = 0;
         (t.pk || []).forEach(([id]) => {
           posTotals.PICK += V[id] || 0;
-          if (P[id] && /^2027\s+1st/i.test(P[id].name)) count27First++;
+          if (P[id] && P[id].pick && P[id].rd === 1 && (P[id].year || 2027) === DRAFT_YEARS[0]) count27First++;
         });
         const totalVal = posTotals.QB + posTotals.RB + posTotals.WR + posTotals.TE + posTotals.PICK;
         const arch = teamArchetype(o);
@@ -1143,30 +1369,75 @@
       return false;
     }
 
-    function applyKtcArrayToP(arr) {
-      if (!Array.isArray(arr) || !arr.length) return 0;
+    // ---- KTC index: league-format value per KTC entry (TE premium tier applied) ----
+    const NAME_ALIASES = {
+      // FantasyCalc / Sleeper spelling -> KTC spelling (both sides normalised with normName)
+      'hollywood brown': 'marquise brown', 'chig okonkwo': 'chigoziem okonkwo', 'cameron ward': 'cam ward',
+      'joshua palmer': 'josh palmer', 'gabe davis': 'gabriel davis', 'mitchell trubisky': 'mitch trubisky',
+      'nathaniel dell': 'tank dell', 'ken walker': 'kenneth walker', 'kenneth walker': 'kenneth walker',
+      'joshua dobbs': 'josh dobbs', 'dj chark': 'dj chark', 'tutu atwell': 'tutu atwell', 'jeffery wilson': 'jeff wilson',
+      'cedrick wilson': 'cedrick wilson', 'scotty miller': 'scott miller', 'olabisi johnson': 'bisi johnson'
+    };
+    function aliasKey(n) { const k = normName(n); return NAME_ALIASES[k] || k; }
+    function ktcFormatValue(item) {
       const sf = useSfValues(activeLeague);
       const tep = Number(activeLeague.tep) || 0;
-      const map = new Map();
-      arr.forEach(item => {
-        const key = normName(item.playerName || item.name);
-        if (!key) return;
-        const vObj = sf ? (item.superflexValues || item.oneQBValues) : (item.oneQBValues || item.superflexValues);
-        let val = vObj?.value || 0;
-        if (tep >= 0.5 && String(item.position).toUpperCase() === 'TE') {
-          const tier = tep >= 1.5 ? vObj?.teppp : tep >= 1 ? vObj?.tepp : vObj?.tep;
-          val = tier?.value || vObj?.tep?.value || Math.round(val * (1 + tep * 0.16));
-        }
-        if (val > 0) map.set(key, val);
+      const vObj = sf ? (item.superflexValues || item.oneQBValues) : (item.oneQBValues || item.superflexValues);
+      const base = Number(vObj?.value) || 0;
+      let val = base;
+      if (tep >= 0.5 && String(item.position).toUpperCase() === 'TE') {
+        const tier = tep >= 1.5 ? vObj?.teppp : tep >= 1 ? vObj?.tepp : vObj?.tep;
+        val = Number(tier?.value) || Number(vObj?.tep?.value) || Math.round(base * (1 + tep * 0.16));
+      }
+      return { val, base };
+    }
+    function buildKtcIndex(arr) {
+      const list = [], byKey = new Map(), byName = new Map(), bySid = new Map(), picks = [];
+      (arr || []).forEach(item => {
+        const name = item.playerName || item.name;
+        const pos = String(item.position || '').toUpperCase();
+        if (!name) return;
+        const { val, base } = ktcFormatValue(item);
+        if (!(val > 0)) return;
+        if (pos === 'RDP' || pos === 'PICK') { picks.push([name, val]); return; }
+        const it = {
+          name, pos, val, key: `${name}|${pos}`, team: item.team || '', age: Number(item.age) || null,
+          sid: item.sleeperId ? String(item.sleeperId) : '', teRatio: (pos === 'TE' && base > 0) ? val / base : null
+        };
+        list.push(it);
+        byKey.set(`${aliasKey(name)}|${pos}`, it);
+        const nk = aliasKey(name);
+        byName.set(nk, byName.has(nk) ? null : it); // null = ambiguous name
+        if (it.sid) bySid.set(it.sid, it);
       });
+      return { list, byKey, byName, bySid, picks };
+    }
+    function matchKtc(idx, p) {
+      if (!idx) return null;
+      if (p.sleeperId && idx.bySid.has(String(p.sleeperId))) return idx.bySid.get(String(p.sleeperId));
+      const nk = aliasKey(p.name);
+      return idx.byKey.get(`${nk}|${p.pos}`) || idx.byName.get(nk) || null;
+    }
+    // Used by the offline/fallback dataset and the manual paste
+    function applyKtcArrayToP(arr) {
+      const idx = buildKtcIndex(arr);
       let matched = 0;
       P.forEach(p => {
         if (p.pick) return;
-        const val = map.get(normName(p.name));
-        if (val) { p.k = val; matched++; }
+        const it = matchKtc(idx, p);
+        if (it) { p.k = it.val; p.ktcKey = it.key; matched++; }
       });
       return matched;
     }
+
+    let SLEEPER_TO_PID = new Map();
+    let PICK_LOOKUP = {};
+    let DRAFT_YEARS = [2027, 2028, 2029];
+    let SLOT_BY_RID = {};
+    let RID_TO_KEY = {};
+    let TRENDING = new Map();   // sleeperId -> adds in last 24h
+    let FC_CAPPED = false;
+    const ORD_NAME = ['', '1st', '2nd', '3rd', '4th', '5th'];
 
     async function fetchSleeperLeagueMeta(leagueId) {
       const res = await fetch(`https://api.sleeper.app/v1/league/${leagueId}`);
@@ -1184,6 +1455,8 @@
         ppr: typeof sc.rec === 'number' ? sc.rec : 1,
         tep: typeof sc.bonus_rec_te === 'number' ? sc.bonus_rec_te : 0,
         rounds: Number(d.settings?.draft_rounds) || 4,
+        season: Number(d.season) || null,
+        prevId: d.previous_league_id ? String(d.previous_league_id) : '',
         slots: slots.length ? slots : ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX']
       };
     }
@@ -1193,11 +1466,12 @@
       OWN = {};
       T = {};
       FALLBACK_PLAYERS.forEach((fp, idx) => {
-        P.push({ id: idx, ...fp, pick: false });
+        P.push({ id: idx, ...fp, fRaw: fp.f, pick: false });
       });
       BASE_PICKS_12T.forEach(pk => {
         const copy = { id: P.length, ...pk };
         applyLeaguePickScaling(copy);
+        copy.fRaw = copy.f;
         P.push(copy);
       });
       if (LIVE_KTC_ARRAY) applyKtcArrayToP(LIVE_KTC_ARRAY);
@@ -1227,12 +1501,14 @@
         const fcPpr = activeLeague.ppr >= 0.75 ? 1 : activeLeague.ppr >= 0.25 ? 0.5 : 0;
         const fcUrl = `https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=${numQbs}&numTeams=${fcTeams}&ppr=${fcPpr}`;
 
+        FC_CAPPED = (activeLeague.numTeams || 12) > 16;
         const [fcRes, uRes, rRes, tpRes] = await Promise.all([
           fetch(fcUrl),
           fetch(`https://api.sleeper.app/v1/league/${activeLeague.id}/users`),
           fetch(`https://api.sleeper.app/v1/league/${activeLeague.id}/rosters`),
           fetch(`https://api.sleeper.app/v1/league/${activeLeague.id}/traded_picks`),
-          fetchHostedKtc()
+          fetchHostedKtc(),
+          fetchTrending()
         ]);
 
         if (!fcRes.ok) throw new Error('FantasyCalc API unavailable');
@@ -1243,17 +1519,18 @@
           tpRes.ok ? tpRes.json() : []
         ]);
 
-        // 3. Build P[] from FantasyCalc players + League-scaled picks
+        // 3. Build P[]: FantasyCalc players, matched to KTC (by Sleeper ID, then name), plus KTC-only players
         const newP = [];
         const sleeperIdToPid = new Map();
         const tep = Number(activeLeague.tep) || 0;
+        const ktcIdx = LIVE_KTC_ARRAY ? buildKtcIndex(LIVE_KTC_ARRAY) : null;
+        const fcPickEntries = [];
 
         (fcData || []).forEach(row => {
           const pl = row.player || {};
           const pos = String(pl.position || '').toUpperCase();
+          if (pos === 'PICK') { fcPickEntries.push([pl.name, Number(row.value) || 0]); return; }
           if (!['QB', 'RB', 'WR', 'TE'].includes(pos)) return;
-          let val = Number(row.value) || 0;
-          if (tep >= 0.5 && pos === 'TE') val = Math.round(val * (1 + tep * 0.14));
           const pid = newP.length;
           newP.push({
             id: pid,
@@ -1262,23 +1539,77 @@
             team: pl.maybeTeam || 'FA',
             age: pl.maybeAge ? Number(pl.maybeAge) : null,
             sleeperId: pl.sleeperId ? String(pl.sleeperId) : '',
-            f: val,
-            k: val, // Default KTC to FC until KTC paste is applied
+            fRaw: Number(row.value) || 0,
+            fcTrend30: Number(row.trend30Day) || 0,
+            k: 0,
             pick: false
           });
           if (pl.sleeperId) sleeperIdToPid.set(String(pl.sleeperId), pid);
         });
 
-        // Add Draft Picks (scaled to league size!)
+        let ktcCount = 0;
+        if (ktcIdx) {
+          const used = new Set();
+          newP.forEach(p => {
+            const it = matchKtc(ktcIdx, p);
+            if (it && !used.has(it.key)) {
+              used.add(it.key);
+              p.k = it.val; p.ktcKey = it.key; p.teRatio = it.teRatio;
+              if (!p.age && it.age) p.age = it.age;
+              ktcCount++;
+            }
+          });
+          // KTC players FantasyCalc doesn't list (deep stashes, some rookies) — keep them instead of dropping
+          ktcIdx.list.forEach(it => {
+            if (used.has(it.key)) return;
+            const pid = newP.length;
+            newP.push({ id: pid, name: it.name, pos: it.pos, team: it.team || 'FA', age: it.age, sleeperId: it.sid,
+              k: it.val, fRaw: 0, fcTrend30: 0, ktcKey: it.key, ktcOnly: true, pick: false });
+            if (it.sid && !sleeperIdToPid.has(it.sid)) sleeperIdToPid.set(it.sid, pid);
+            ktcCount++;
+          });
+        }
+
+        // TE premium for FantasyCalc values: use KTC's own TE-premium lift for that player (median for others)
+        if (tep >= 0.5) {
+          const ratios = newP.filter(p => p.pos === 'TE' && p.teRatio).map(p => p.teRatio).sort((a, b) => a - b);
+          const med = ratios.length ? ratios[ratios.length >> 1] : (1 + tep * 0.14);
+          newP.forEach(p => { if (p.pos === 'TE' && p.fRaw) p.fRaw = Math.round(p.fRaw * (p.teRatio || med)); });
+        }
+
+        // Put FantasyCalc on KTC's scale before blending (rank-matched on players both sources value)
+        FC_SCALE = buildScaleMap(newP.filter(p => p.k > 0 && p.fRaw > 0).map(p => [p.fRaw, p.k]));
+        newP.forEach(p => { p.f = p.fRaw ? Math.round(FC_SCALE.toKtc(p.fRaw)) : 0; });
+
+        // Draft picks: real KTC + FantasyCalc pick values, priced by projected slot for the next draft
         const pickLookup = {};
-        const maxRd = Math.min(4, Math.max(3, activeLeague.rounds || 4));
-        BASE_PICKS_12T.filter(pk => pk.rd <= maxRd).forEach(pk => {
+        const maxRd = Math.min(5, Math.max(3, activeLeague.rounds || 4));
+        const nTeams = Math.max(4, (rosters || []).length || activeLeague.numTeams || 12);
+        const y0 = (activeLeague.season || 2026) + 1;
+        DRAFT_YEARS = [y0, y0 + 1, y0 + 2];
+        const ktcPickTable = buildPickTable(ktcIdx ? ktcIdx.picks : []);
+        const fcPickTable = buildPickTable(fcPickEntries);
+        const tierOf = slot => slot <= Math.ceil(nTeams / 3) ? 'Early' : slot <= Math.ceil(2 * nTeams / 3) ? 'Mid' : 'Late';
+        const addPick = (year, rd, slot) => {
           const pid = newP.length;
-          const obj = { id: pid, ...pk };
-          applyLeaguePickScaling(obj);
-          newP.push(obj);
-          pickLookup[`${pk.year}_${pk.rd}_${pk.tier}`] = pid;
-        });
+          const kv = pickValueFrom(ktcPickTable, year, rd, slot || null, nTeams);
+          const fv = pickValueFrom(fcPickTable, year, rd, slot || null, nTeams);
+          let fallback = 0;
+          if (!kv && !fv) fallback = overallPickValue12T((rd - 1) * nTeams + (slot || (nTeams + 1) / 2), year === y0 ? 2027 : year === y0 + 1 ? 2028 : 2029);
+          const tier = slot ? tierOf(slot) : 'Mid';
+          newP.push({
+            id: pid, pick: true, pos: 'PICK', team: '', age: null, year, rd, slot: slot || 0,
+            tier: slot ? tier : '',
+            name: slot ? `${year} ${rd}.${String(slot).padStart(2, '0')}` : `${year} ${ORD_NAME[rd] || rd + 'th'}`,
+            k: kv || (fv ? 0 : fallback),
+            fRaw: fv || (kv ? 0 : fallback),
+            f: fv ? Math.round(FC_SCALE.toKtc(fv)) : (kv ? 0 : fallback),
+            ktcKey: `${year} ${tier} ${ORD_NAME[rd] || ''}|RDP`
+          });
+          pickLookup[`${year}_${rd}_${slot || 0}`] = pid;
+        };
+        for (let rd = 1; rd <= maxRd; rd++) for (let sl = 1; sl <= nTeams; sl++) addPick(y0, rd, sl);
+        [y0 + 1, y0 + 2].forEach(yr => { for (let rd = 1; rd <= maxRd; rd++) addPick(yr, rd, 0); });
 
         // 4. Map Sleeper Rosters, Standings & Traded Picks
         const userMap = new Map();
@@ -1332,16 +1663,13 @@
           };
         });
 
-        // Build pick ownership for 2027, 2028, 2029
-        const nTeams = Math.max(4, (rosters || []).length || activeLeague.numTeams || 12);
-        const earlyCut = Math.ceil(nTeams / 3);
-        const midCut = Math.ceil((2 * nTeams) / 3);
+        // Build pick ownership for the next three drafts
         const tradedMap = new Map();
         (tradedPicks || []).forEach(tp => {
           tradedMap.set(`${tp.season}_${tp.round}_${tp.roster_id}`, tp.owner_id);
         });
 
-        [2027, 2028, 2029].forEach(yr => {
+        DRAFT_YEARS.forEach(yr => {
           for (let rd = 1; rd <= maxRd; rd++) {
             (rosters || []).forEach(origR => {
               const currOwnerRid = tradedMap.has(`${yr}_${rd}_${origR.roster_id}`)
@@ -1351,12 +1679,8 @@
               const origKey = rosterIdToKey[origR.roster_id];
               if (!ownerKey || !newT[ownerKey]) return;
 
-              let tier = '';
-              if (yr === 2027) {
-                const sl = slotByRosterId[origR.roster_id] || 6;
-                tier = sl <= earlyCut ? 'Early' : sl <= midCut ? 'Mid' : 'Late';
-              }
-              const pkId = pickLookup[`${yr}_${rd}_${tier}`];
+              const slot = yr === DRAFT_YEARS[0] ? (slotByRosterId[origR.roster_id] || Math.ceil(nTeams / 2)) : 0;
+              const pkId = pickLookup[`${yr}_${rd}_${slot}`];
               if (pkId !== undefined) {
                 const via = currOwnerRid === origR.roster_id ? 'own' : (newT[origKey]?.n || 'traded');
                 newT[ownerKey].pk.push([pkId, via]);
@@ -1368,6 +1692,11 @@
         P = newP;
         T = newT;
         OWN = newOWN;
+        SLEEPER_TO_PID = sleeperIdToPid;
+        PICK_LOOKUP = pickLookup;
+        SLOT_BY_RID = slotByRosterId;
+        RID_TO_KEY = rosterIdToKey;
+        TRADE_HISTORY = null; // re-load for the newly synced league when the League tab is opened
         owners = Object.keys(T).sort((a, b) => T[a].n.localeCompare(T[b].n));
 
         // Match ME to actual key
@@ -1378,9 +1707,6 @@
           ME = foundMe || owners[0] || '';
         }
 
-        // Apply saved KTC if present
-        let ktcCount = 0;
-        if (LIVE_KTC_ARRAY) ktcCount = applyKtcArrayToP(LIVE_KTC_ARRAY);
 
         // Set default calc teams if unset
         if (!st.tA || !T[st.tA]) st.tA = T[ME] ? ME : (owners[0] || '');
@@ -1393,19 +1719,26 @@
 
         const timeStr = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         const ktcDateStr = KTC_UPDATED_AT ? new Date(KTC_UPDATED_AT).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
+        const ktcAgeH = KTC_UPDATED_AT ? (Date.now() - new Date(KTC_UPDATED_AT).getTime()) / 36e5 : 0;
+        const ktcStale = KTC_SOURCE === 'hosted' && ktcAgeH > 48;
         if (pill) {
           pill.textContent = ktcCount
-            ? (KTC_SOURCE === 'hosted' ? `Live + Auto KTC${ktcDateStr ? ` (${ktcDateStr})` : ''}` : `Live + KTC (${timeStr})`)
+            ? (ktcStale ? `KTC stale (${ktcDateStr})` : KTC_SOURCE === 'hosted' ? `Live + Auto KTC${ktcDateStr ? ` (${ktcDateStr})` : ''}` : `Live + KTC (${timeStr})`)
             : `Live FC + Sleeper (${timeStr})`;
-          pill.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25';
+          pill.title = (ktcStale ? `ktc.json was last updated ${Math.round(ktcAgeH / 24)} days ago — check the GitHub Action. ` : '')
+            + (FC_CAPPED ? `FantasyCalc only supports up to 16 teams, so FC values here are 16-team values (KTC is unaffected).` : '');
+          pill.className = ktcStale
+            ? 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25'
+            : 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25';
         }
         if (status) {
           const ktcNote = ktcCount
             ? (KTC_SOURCE === 'hosted' ? ` · Auto-loaded ktc.json (${ktcCount} players${ktcDateStr ? `, updated ${ktcDateStr}` : ''})` : ` · Saved KTC (${ktcCount} players)`)
             : ' · Using FC values (no ktc.json found)';
-          status.textContent = `Synced ${P.length} assets across ${owners.length} teams at ${timeStr}${ktcNote}.`;
+          status.textContent = `Synced ${P.length} assets across ${owners.length} teams at ${timeStr}${ktcNote}.${FC_CAPPED ? ' FantasyCalc values are 16-team (its maximum).' : ''}`;
         }
         if (!isAuto) toast(`Synced ${activeLeague.name}!`);
+        loadHistory().then(() => { if (HISTORY) all(); });
       } catch (err) {
         console.error('Sync error:', err);
         if (pill) {
@@ -1415,6 +1748,353 @@
         if (status) status.textContent = `Sync failed: ${err.message}`;
         if (!isAuto) toast(`Sync error: ${err.message}`);
       }
+    }
+
+    // ============================================================================
+    // 8B. VALUE HISTORY (ktc-history.json), TRENDS, TRENDING ADDS, TRADE HISTORY, QUICK FACTS
+    // ============================================================================
+    let HISTORY = null;          // { dates: [...], days: { 'YYYY-MM-DD': { 'Name|POS': [values...] } }, rankCache }
+    let HISTORY_TRIED = false;
+    async function loadHistory() {
+      if (HISTORY || HISTORY_TRIED) return;
+      HISTORY_TRIED = true;
+      try {
+        const res = await fetch(`./ktc-history.json?t=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const d = await res.json();
+        const dates = Object.keys(d.days || {}).sort();
+        if (dates.length) HISTORY = { dates, days: d.days, rankCache: {} };
+      } catch (e) { /* no history file yet */ }
+    }
+    // Column in a history row for this league's format (TE rows carry the TE-premium tiers)
+    function histCol(pos) {
+      const sf = useSfValues(activeLeague);
+      const tep = Number(activeLeague.tep) || 0;
+      if (pos !== 'TE' || tep < 0.5) return sf ? 0 : 1;
+      const tier = tep >= 1.5 ? 3 : tep >= 1 ? 2 : 1;
+      return sf ? 1 + tier : 4 + tier;
+    }
+    function histVal(key, pos, date) {
+      const row = HISTORY && HISTORY.days[date] && HISTORY.days[date][key];
+      if (!row) return null;
+      const v = row[histCol(pos)];
+      return v != null ? v : row[useSfValues(activeLeague) ? 0 : 1];
+    }
+    function histPos(key) { return String(key).split('|')[1] || ''; }
+    function posRankOn(date, pos, key) {
+      const ck = `${date}|${pos}|${histCol(pos)}`;
+      let m = HISTORY.rankCache[ck];
+      if (!m) {
+        m = new Map();
+        const posKey = pos === 'PICK' ? 'RDP' : pos;
+        Object.keys(HISTORY.days[date] || {})
+          .filter(k => histPos(k) === posKey)
+          .map(k => [k, histVal(k, pos, date) || 0])
+          .sort((a, b) => b[1] - a[1])
+          .forEach(([k], i) => m.set(k, i + 1));
+        HISTORY.rankCache[ck] = m;
+      }
+      return m.get(key) || null;
+    }
+    function histSeries(p, days) {
+      if (!HISTORY || !p || !p.ktcKey) return [];
+      const last = HISTORY.dates[HISTORY.dates.length - 1];
+      const cutoff = days ? new Date(new Date(last + 'T00:00:00Z').getTime() - days * 864e5).toISOString().slice(0, 10) : '';
+      return HISTORY.dates
+        .filter(d => !cutoff || d >= cutoff)
+        .map(d => ({ d, v: histVal(p.ktcKey, p.pos, d), r: posRankOn(d, p.pos, p.ktcKey) }))
+        .filter(x => x.v != null);
+    }
+    // Change over the last `days` (or since the first snapshot if history is shorter)
+    function trendWindow(p, days) {
+      const ser = histSeries(p, days);
+      if (ser.length < 2) return null;
+      const a = ser[0], b = ser[ser.length - 1];
+      return { delta: b.v - a.v, rankDelta: (a.r && b.r) ? a.r - b.r : null, from: a.d, to: b.d, full: (new Date(b.d) - new Date(a.d)) / 864e5 >= days - 0.5 };
+    }
+    function shortDate(d) {
+      try { return new Date(d + 'T12:00:00Z').toLocaleDateString([], { month: 'short', day: 'numeric' }); } catch (e) { return d; }
+    }
+    function trendBadge(p) {
+      if (!p || p.pick) return '';
+      const t = trendWindow(p, 7);
+      let d = null, lbl = '';
+      if (t && t.delta) { d = t.delta; lbl = t.full ? '7d' : `since ${shortDate(t.from)}`; }
+      else if (p.fcTrend30) { d = Math.round(p.fcTrend30); lbl = 'FC 30d'; }
+      if (!d) return '';
+      const up = d > 0;
+      return `<span class="ml-1 text-[10px] font-bold ${up ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}" title="${esc(lbl)} change">${up ? '▲' : '▼'}${fmt(Math.abs(d))}<span class="font-semibold opacity-70"> ${esc(lbl)}</span></span>`;
+    }
+
+    // Small dependency-free SVG line chart
+    function lineChartSvg(pts, opts = {}) {
+      const { invert = false, color = '#2563eb', label = 'value', fmtY = fmt } = opts;
+      if (pts.length < 2) {
+        return `<div class="h-24 flex items-center justify-center text-xs text-center px-3 text-[#5d6672] dark:text-[#98a2ae] border border-dashed border-[#d6dbe3] dark:border-[#2e3540] rounded-xl">${
+          pts.length ? `Only one day of history so far (${esc(shortDate(pts[0].d))}: ${fmtY(pts[0].y)}). The graph fills in as daily snapshots build up.` : 'No history for this asset yet.'}</div>`;
+      }
+      const W = 600, H = 170, pl = 46, pr = 14, pt = 12, pb = 24;
+      const ys = pts.map(p => p.y);
+      let lo = Math.min(...ys), hi = Math.max(...ys);
+      if (hi === lo) { hi += invert ? 1 : Math.max(1, hi * 0.02); lo -= invert ? 1 : Math.max(1, lo * 0.02); }
+      const pad = (hi - lo) * 0.12; lo -= pad; hi += pad;
+      if (invert) lo = Math.max(0.5, lo);
+      const X = i => pl + i * (W - pl - pr) / (pts.length - 1);
+      const Y = v => invert ? pt + (v - lo) / (hi - lo) * (H - pt - pb) : pt + (hi - v) / (hi - lo) * (H - pt - pb);
+      const line = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(p.y).toFixed(1)}`).join(' ');
+      const area = `${line} L${X(pts.length - 1).toFixed(1)},${H - pb} L${X(0).toFixed(1)},${H - pb} Z`;
+      const last = pts[pts.length - 1];
+      const top = invert ? Math.max(1, Math.ceil(lo)) : Math.round(hi), bot = invert ? Math.floor(hi) : Math.round(lo);
+      return `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" role="img" aria-label="${esc(label)} over time">
+        <line x1="${pl}" y1="${pt}" x2="${pl}" y2="${H - pb}" stroke="currentColor" stroke-opacity=".15"/>
+        <line x1="${pl}" y1="${H - pb}" x2="${W - pr}" y2="${H - pb}" stroke="currentColor" stroke-opacity=".15"/>
+        <text x="${pl - 6}" y="${pt + 8}" text-anchor="end" font-size="11" fill="currentColor" fill-opacity=".6">${invert ? '#' + top : fmtY(top)}</text>
+        <text x="${pl - 6}" y="${H - pb}" text-anchor="end" font-size="11" fill="currentColor" fill-opacity=".6">${invert ? '#' + bot : fmtY(bot)}</text>
+        <text x="${pl}" y="${H - 6}" font-size="11" fill="currentColor" fill-opacity=".6">${esc(shortDate(pts[0].d))}</text>
+        <text x="${W - pr}" y="${H - 6}" text-anchor="end" font-size="11" fill="currentColor" fill-opacity=".6">${esc(shortDate(last.d))}</text>
+        <path d="${area}" fill="${color}" fill-opacity=".10"/>
+        <path d="${line}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        ${pts.map((p, i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="${i === pts.length - 1 ? 4 : 2.2}" fill="${color}"><title>${esc(shortDate(p.d))}: ${invert ? '#' + p.y : fmtY(p.y)}</title></circle>`).join('')}
+      </svg>`;
+    }
+
+    // ---- Player value modal ----
+    function openPlayerModal(id) {
+      const p = P[id];
+      if (!p) return;
+      st.pm = { id, range: st.pm?.range || 30 };
+      renderPlayerModal();
+      document.getElementById('playerModal')?.classList.remove('hidden');
+      if (!HISTORY && !HISTORY_TRIED) loadHistory().then(renderPlayerModal);
+    }
+    function renderPlayerModal() {
+      if (!st.pm) return;
+      const p = P[st.pm.id];
+      if (!p) return;
+      const range = st.pm.range;
+      const days = range === 'all' ? 0 : Number(range);
+      const ser = histSeries(p, days);
+      const posLbl = p.pick ? 'Pick' : p.pos;
+      document.getElementById('pmHeader').innerHTML = `
+        <div class="flex items-center gap-2 flex-wrap">${posTag(p.pos)}<h3 class="text-base sm:text-lg font-extrabold">${esc(p.name)}</h3>${p.pick ? '' : bucketBadge(p)}</div>
+        <div class="text-xs text-[#5d6672] dark:text-[#98a2ae] mt-0.5">${p.pick ? `Projected ${esc(p.tier || 'mid')} pick · KTC history uses its “${esc((p.ktcKey || '').split('|')[0])}” value` : `${esc(p.team || 'FA')}${p.age ? ` · Age ${Number(p.age).toFixed(1)}` : ''}`} · ${esc(ownTxt(p.id))}</div>`;
+      const t7 = trendWindow(p, 7), t30 = trendWindow(p, 30);
+      const chg = (t, lbl) => {
+        if (!t) return `<div class="text-sm font-extrabold text-[#5d6672] dark:text-[#98a2ae]">—</div><div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">${lbl}: not enough history yet</div>`;
+        const up = t.delta >= 0;
+        return `<div class="text-sm font-extrabold ${up ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${up ? '+' : '−'}${fmt(Math.abs(t.delta))}${t.rankDelta ? ` <span class="text-[11px]">(${t.rankDelta > 0 ? '▲' : '▼'}${Math.abs(t.rankDelta)} ${esc(posLbl)} rank)</span>` : ''}</div>
+          <div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">KTC ${t.full ? lbl : `since ${esc(shortDate(t.from))}`}</div>`;
+      };
+      const card = inner => `<div class="p-2.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039]">${inner}</div>`;
+      document.getElementById('pmStats').innerHTML = [
+        card(`<div class="text-sm font-extrabold">${fmt(V[p.id])}</div><div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">Calculator value (${st.src === 'blend' ? `blend ${st.w}% KTC` : st.src.toUpperCase()})</div>`),
+        card(`<div class="text-sm font-extrabold">${p.k ? fmt(p.k) : '—'} / ${p.fRaw ? fmt(p.fRaw) : '—'}</div><div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">KTC / FantasyCalc (as published)</div>`),
+        card(chg(t7, '7 days')),
+        card(chg(t30, '30 days') + (p.fcTrend30 ? `<div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">FC 30d: ${p.fcTrend30 > 0 ? '+' : '−'}${fmt(Math.abs(p.fcTrend30))}</div>` : ''))
+      ].join('');
+      document.querySelectorAll('[data-pmrange]').forEach(b => {
+        const act = String(b.dataset.pmrange) === String(range);
+        b.classList.toggle('bg-blue-600', act);
+        b.classList.toggle('text-white', act);
+      });
+      document.getElementById('pmValueChart').innerHTML = lineChartSvg(ser.map(x => ({ d: x.d, y: x.v })), { color: '#2563eb', label: 'KTC value' });
+      document.getElementById('pmRankChart').innerHTML = lineChartSvg(ser.filter(x => x.r).map(x => ({ d: x.d, y: x.r })), { invert: true, color: '#7c3aed', label: `${posLbl} rank`, fmtY: v => '#' + v });
+      const nDays = HISTORY ? HISTORY.dates.length : 0;
+      document.getElementById('pmNote').textContent = !p.ktcKey
+        ? 'This asset is not on KeepTradeCut, so there is no KTC value history for it.'
+        : nDays < 30
+          ? `Graphs use KeepTradeCut values saved by the daily update (${nDays} day${nDays === 1 ? '' : 's'} saved so far${HISTORY ? `, since ${shortDate(HISTORY.dates[0])}` : ''}). 7-day graphs fill in after a week and 30-day graphs after a month.${p.fcTrend30 ? ' FantasyCalc’s published 30-day change is shown above in the meantime.' : ''}`
+          : 'Positional rank is the player’s rank among KTC players at his position in your league’s format (lower is better).';
+    }
+
+    // ---- Sleeper trending adds (waiver scanner) ----
+    async function fetchTrending() {
+      try {
+        const res = await fetch('https://api.sleeper.app/v1/players/nfl/trending/add?lookback_hours=24&limit=100');
+        if (!res.ok) return false;
+        const arr = await res.json();
+        TRENDING = new Map((arr || []).map(x => [String(x.player_id), Number(x.count) || 0]));
+        return true;
+      } catch (e) { return false; }
+    }
+
+    // ---- Quick facts: average age and a rough 2-year value estimate per side ----
+    function ageMult(pos, age) {
+      if (!age) return 1;
+      const a = Number(age);
+      if (pos === 'QB') return a <= 26 ? 1.05 : a <= 31 ? 1.0 : a <= 33 ? 0.93 : a <= 35 ? 0.85 : 0.75;
+      if (pos === 'RB') return a <= 22.5 ? 1.08 : a <= 24.5 ? 1.0 : a <= 25.5 ? 0.92 : a <= 26.5 ? 0.84 : a <= 27.5 ? 0.74 : 0.64;
+      if (pos === 'WR') return a <= 23 ? 1.08 : a <= 25 ? 1.03 : a <= 27.5 ? 1.0 : a <= 28.5 ? 0.93 : a <= 29.5 ? 0.86 : a <= 30.5 ? 0.79 : 0.7;
+      if (pos === 'TE') return a <= 24 ? 1.08 : a <= 27 ? 1.03 : a <= 29.5 ? 1.0 : a <= 30.5 ? 0.92 : a <= 31.5 ? 0.84 : 0.74;
+      return 1;
+    }
+    function sideFacts(arr) {
+      const pl = arr.map(x => P[x.id]).filter(p => p && !p.pick);
+      const ages = pl.map(p => Number(p.age)).filter(a => a > 0);
+      const now = arr.reduce((s, x) => s + (V[x.id] || 0), 0);
+      const in2 = arr.reduce((s, x) => {
+        const p = P[x.id];
+        if (!p) return s;
+        const v = V[x.id] || 0;
+        if (p.pick) {
+          // Later-year picks gain value as their draft approaches: in 2 years they are worth about
+          // what a mid-round pick in the next draft is worth today. Next-draft picks are held flat.
+          if (p.year && p.year > DRAFT_YEARS[0]) {
+            const mid = PICK_LOOKUP[`${DRAFT_YEARS[0]}_${p.rd}_${Math.ceil((owners.length || 12) / 2)}`];
+            return s + Math.max(v, (mid !== undefined ? V[mid] : 0) || 0);
+          }
+          return s + v;
+        }
+        if (!p.age) return s + v;
+        return s + v * ageMult(p.pos, p.age) * ageMult(p.pos, Number(p.age) + 1);
+      }, 0);
+      return { avgAge: ages.length ? ages.reduce((s, a) => s + a, 0) / ages.length : null, picks: arr.length - pl.length, now, in2 };
+    }
+
+    // ---- League trade history from Sleeper, graded at today's values ----
+    let TRADE_HISTORY = null;
+    let TRADE_HISTORY_LOADING = false;
+    async function loadTradeHistory() {
+      if (TRADE_HISTORY || TRADE_HISTORY_LOADING || !owners.length) return;
+      TRADE_HISTORY_LOADING = true;
+      renderTradeHistory();
+      const leagueId = activeLeague.id;
+      try {
+        const leagues = [{ id: activeLeague.id, season: activeLeague.season }];
+        if (activeLeague.prevId) leagues.push({ id: activeLeague.prevId, season: activeLeague.season ? activeLeague.season - 1 : null });
+        const reqs = [];
+        leagues.forEach(lg => { for (let wk = 0; wk <= 18; wk++) reqs.push(fetch(`https://api.sleeper.app/v1/league/${lg.id}/transactions/${wk}`).then(r => r.ok ? r.json() : []).catch(() => []).then(a => (a || []).map(t => ({ ...t, _season: lg.season })))); });
+        const all = (await Promise.all(reqs)).flat();
+        if (leagueId !== activeLeague.id) return; // league switched while loading
+        const seen = new Set();
+        TRADE_HISTORY = all
+          .filter(t => t && t.type === 'trade' && t.status === 'complete' && !seen.has(t.transaction_id) && seen.add(t.transaction_id))
+          .sort((a, b) => (b.status_updated || b.created || 0) - (a.status_updated || a.created || 0));
+      } catch (e) {
+        TRADE_HISTORY = [];
+      } finally {
+        TRADE_HISTORY_LOADING = false;
+      }
+      renderTradeHistory();
+    }
+    function tradeAssetValue(kind, a) {
+      if (kind === 'player') {
+        const pid = SLEEPER_TO_PID.get(String(a));
+        if (pid === undefined) return { name: 'Player no longer valued (retired/unlisted)', v: 0, id: null };
+        return { name: P[pid].name, v: V[pid] || 0, id: pid, pos: P[pid].pos };
+      }
+      const yr = Number(a.season), rd = Number(a.round);
+      const via = RID_TO_KEY[a.roster_id] && T[RID_TO_KEY[a.roster_id]] ? T[RID_TO_KEY[a.roster_id]].n : '';
+      if (!DRAFT_YEARS.includes(yr)) return { name: `${yr} ${ORD_NAME[rd] || rd} (already drafted)`, v: 0, id: null, pos: 'PICK' };
+      const slot = yr === DRAFT_YEARS[0] ? (SLOT_BY_RID[a.roster_id] || 0) : 0;
+      const pid = PICK_LOOKUP[`${yr}_${rd}_${slot}`] ?? PICK_LOOKUP[`${yr}_${rd}_0`];
+      if (pid === undefined) return { name: `${yr} ${ORD_NAME[rd] || rd}`, v: 0, id: null, pos: 'PICK' };
+      return { name: `${P[pid].name}${via ? ` (${via})` : ''}`, v: V[pid] || 0, id: pid, pos: 'PICK' };
+    }
+    function gradeTrade(t) {
+      const rids = (t.roster_ids || []).slice();
+      const sides = rids.map(rid => {
+        const got = [];
+        Object.entries(t.adds || {}).forEach(([sid, to]) => { if (to === rid) got.push(tradeAssetValue('player', sid)); });
+        (t.draft_picks || []).forEach(pk => { if (pk.owner_id === rid) got.push(tradeAssetValue('pick', pk)); });
+        (t.waiver_budget || []).forEach(w => { if (w.receiver === rid) got.push({ name: `$${w.amount} FAAB`, v: 0, id: null, pos: 'FAAB' }); });
+        const key = RID_TO_KEY[rid];
+        return { rid, name: key && T[key] ? T[key].n : `Roster ${rid}`, key, got, raw: got.reduce((s, x) => s + x.v, 0) };
+      });
+      let verdict = null;
+      if (sides.length === 2) {
+        const ev = evalValues(sides[0].got.map(x => x.v), sides[1].got.map(x => x.v));
+        sides[0].eff = ev.effA; sides[1].eff = ev.effB;
+        verdict = ev.gapPct <= st.fair ? { fair: true, gap: ev.gapPct } : { fair: false, winner: ev.effA > ev.effB ? 0 : 1, gap: ev.gapPct };
+      } else {
+        sides.forEach(sd => { sd.eff = sd.raw; });
+      }
+      return { t, sides, verdict, when: new Date(t.status_updated || t.created || 0) };
+    }
+    // Which value-adjustment strength makes this league's recent real trades look fairest?
+    // Only 2-team trades from the last 120 days where every asset still has a value are used
+    // (values are today's, so older trades say more about value changes than about the formula).
+    function calibrateAdj(graded) {
+      const cutoff = Date.now() - 120 * 864e5;
+      const usable = graded.filter(g => g.sides.length === 2 && g.when.getTime() >= cutoff
+        && g.sides.every(sd => sd.got.length && sd.got.every(a => a.v > 0 || a.pos === 'FAAB')));
+      if (usable.length < 4) return { n: usable.length };
+      const median = arr => { const a = arr.slice().sort((x, y) => x - y); const m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+      let best = null;
+      const curve = [];
+      for (let k = 0; k <= 1.5001; k += 0.05) {
+        const gaps = usable.map(g => evalValues(g.sides[0].got.map(x => x.v), g.sides[1].got.map(x => x.v), k).gapPct);
+        const med = median(gaps);
+        curve.push([Math.round(k * 100) / 100, med]);
+        if (!best || med < best.med - 1e-9) best = { k: Math.round(k * 100) / 100, med };
+      }
+      const at = kk => curve.find(c => Math.abs(c[0] - kk) < 1e-6)?.[1];
+      return { n: usable.length, best: best.k, bestMed: best.med, ktcMed: at(1), offMed: at(0), curMed: at(Math.round(st.adj * 20) / 20) };
+    }
+
+    function renderTradeHistory() {
+      const box = document.getElementById('tradeHistoryBox');
+      if (!box) return;
+      if (TRADE_HISTORY_LOADING) { box.innerHTML = '<div class="text-xs text-[#5d6672] dark:text-[#98a2ae] py-3">Loading trades from Sleeper…</div>'; return; }
+      if (!TRADE_HISTORY) { box.innerHTML = '<div class="text-xs text-[#5d6672] dark:text-[#98a2ae] py-3">Sync a league to load its trade history.</div>'; return; }
+      if (!TRADE_HISTORY.length) { box.innerHTML = '<div class="text-xs text-[#5d6672] dark:text-[#98a2ae] py-3">No completed trades found this season or last.</div>'; return; }
+      const graded = TRADE_HISTORY.map(gradeTrade);
+      // Per-manager summary: value received minus value sent, at today's values
+      const sum = {};
+      graded.forEach(g => {
+        const totalAll = g.sides.reduce((s, x) => s + x.eff, 0);
+        g.sides.forEach(sd => {
+          const k = sd.key || `rid${sd.rid}`;
+          sum[k] = sum[k] || { name: sd.name, n: 0, net: 0, won: 0, lost: 0 };
+          sum[k].n++;
+          const others = g.sides.length > 1 ? (totalAll - sd.eff) / (g.sides.length - 1) : 0;
+          sum[k].net += sd.eff - others;
+          if (g.verdict && !g.verdict.fair) { if (g.sides[g.verdict.winner] === sd) sum[k].won++; else sum[k].lost++; }
+        });
+      });
+      const rows = Object.entries(sum).sort((a, b) => b[1].net - a[1].net);
+      const cal = calibrateAdj(graded);
+      const calHtml = cal.best == null
+        ? `<div class="p-2.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] text-[11px] text-[#5d6672] dark:text-[#98a2ae]"><strong>Value adjustment check:</strong> needs at least 4 recent (last 120 days) two-team trades with every asset still valued — found ${cal.n}. Using KTC's setting (×1.00).</div>`
+        : `<div class="p-2.5 rounded-xl bg-blue-500/5 border border-blue-500/25 text-xs space-y-1">
+            <div><strong>Value adjustment vs. your league’s real trades</strong> <span class="text-[#5d6672] dark:text-[#98a2ae]">(${cal.n} recent two-team trades)</span></div>
+            <div>Median gap between sides: <strong>${cal.ktcMed.toFixed(1)}%</strong> at KTC’s setting (×1.00) · <strong>${cal.offMed.toFixed(1)}%</strong> with no adjustment · best fit <strong>×${cal.best.toFixed(2)}</strong> (${cal.bestMed.toFixed(1)}%).</div>
+            <div class="text-[#5d6672] dark:text-[#98a2ae]">${Math.abs(cal.best - 1) <= 0.15 ? 'Your league trades about the way KTC’s adjustment expects.' : cal.best < 1 ? 'Your league pays less of a premium for studs than KTC assumes.' : 'Your league pays more of a premium for studs than KTC assumes.'} Accepted trades aren’t all fair, so treat this as a sanity check — a small sample can swing it.
+              ${Math.abs(cal.best - st.adj) > 0.001 ? `<button type="button" data-useadj="${cal.best}" class="ml-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Use ×${cal.best.toFixed(2)}</button>` : ''}
+              ${Math.abs(st.adj - 1) > 0.001 ? `<button type="button" data-useadj="1" class="ml-1 px-2 py-0.5 rounded-md text-[11px] font-bold border border-blue-500/40 text-blue-700 dark:text-blue-300 cursor-pointer">Back to KTC ×1.00</button>` : ''}</div>
+          </div>`;
+      const filt = st.thFilter || 'ALL';
+      const list = graded.filter(g => filt === 'ALL' || g.sides.some(sd => sd.key === filt));
+      box.innerHTML = `${calHtml}
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs sm:text-sm">
+            <thead><tr class="border-b border-[#e3e6eb] dark:border-[#2a3039] text-[11px] uppercase tracking-wider text-[#5d6672] dark:text-[#98a2ae]">
+              <th class="py-2 pr-2">Manager</th><th class="py-2 pr-2 text-right">Trades</th><th class="py-2 pr-2 text-right">Won / Lost</th><th class="py-2 pl-2 text-right">Net value (today)</th></tr></thead>
+            <tbody class="divide-y divide-[#eef0f4] dark:divide-[#232933]">
+              ${rows.map(([k, r]) => `<tr data-thfilter="${esc(k)}" class="hover:bg-[#f6f7f9] dark:hover:bg-[#1e242d] cursor-pointer ${filt === k ? 'bg-blue-500/10' : ''}">
+                <td class="py-2 pr-2 font-semibold">${esc(r.name)}${k === ME ? ' <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td>
+                <td class="py-2 pr-2 text-right">${r.n}</td>
+                <td class="py-2 pr-2 text-right text-[#5d6672] dark:text-[#98a2ae]">${r.won} / ${r.lost}</td>
+                <td class="py-2 pl-2 text-right font-extrabold ${r.net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${r.net >= 0 ? '+' : '−'}${fmt(Math.abs(r.net))}</td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="flex items-center justify-between gap-2 pt-1">
+          <div class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]">${filt === 'ALL' ? `${graded.length} trades` : `${list.length} trades involving ${esc(sum[filt]?.name || '')} · <button type="button" data-thfilter="ALL" class="font-bold text-blue-600 dark:text-blue-400 cursor-pointer">show all</button>`}</div>
+        </div>
+        <div class="space-y-2 max-h-[32rem] overflow-y-auto pr-1">
+          ${list.slice(0, 60).map(g => `<div class="p-2.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] text-xs space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-semibold text-[#5d6672] dark:text-[#98a2ae]">${g.when.getTime() ? esc(g.when.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })) : ''}</span>
+              ${g.verdict ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${g.verdict.fair ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-amber-500/15 text-amber-800 dark:text-amber-300'}">${g.verdict.fair ? `Fair (${g.verdict.gap.toFixed(1)}%)` : `${esc(g.sides[g.verdict.winner].name)} won by ${g.verdict.gap.toFixed(1)}%`}</span>` : '<span class="text-[10px] font-bold text-[#5d6672]">Multi-team</span>'}
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-${Math.min(3, g.sides.length)} gap-2">
+              ${g.sides.map(sd => `<div><div class="font-bold">${esc(sd.name)} got <span class="font-extrabold">${fmt(sd.eff)}</span>${Math.round(sd.raw) !== Math.round(sd.eff) ? ` <span class="font-normal text-[#5d6672] dark:text-[#98a2ae]">(raw ${fmt(sd.raw)})</span>` : ''}</div>
+                <div class="text-[#374151] dark:text-[#cbd5e1]">${sd.got.length ? sd.got.map(a => `${a.id != null ? `<button type="button" data-player="${a.id}" class="hover:underline cursor-pointer">${esc(a.name)}</button>` : esc(a.name)} <span class="text-[#5d6672] dark:text-[#98a2ae]">${a.v ? fmt(a.v) : ''}</span>`).join(' · ') : 'Nothing'}</div></div>`).join('')}
+            </div>
+          </div>`).join('')}
+        </div>
+        <p class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]">Graded with today’s values and your current Value adj. / Fair settings — it shows who came out ahead <em>now</em>, not who won at the time. Picks already used in a past draft show as 0.</p>`;
     }
 
     // ============================================================================
@@ -1476,14 +2156,14 @@
             <div class="flex items-center gap-2">
               ${posTag(p.pos)}
               <div>
-                <div class="font-semibold">${esc(p.name)}</div>
-                <div class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]">${p.pick ? 'Draft Pick' : `${esc(p.team || 'FA')}${p.age ? ` · Age ${p.age.toFixed(1)}` : ''}`}</div>
+                <button type="button" data-player="${p.id}" class="font-semibold hover:underline cursor-pointer text-left">${esc(p.name)}</button>${trendBadge(p)}
+                <div class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]">${p.pick ? 'Draft Pick' : `${esc(p.team || 'FA')}${p.age ? ` · Age ${Number(p.age).toFixed(1)}` : ''}${p.ktcOnly ? ' · KTC only' : ''}`}</div>
               </div>
             </div>
           </td>
           <td class="py-2 pr-2 hidden sm:table-cell text-xs text-[#5d6672] dark:text-[#98a2ae] truncate max-w-[140px]">${esc(ownTxt(p.id))}</td>
           <td class="py-2 pr-2 hidden md:table-cell">${bucketBadge(p)}</td>
-          <td class="py-2 pr-2 text-right hidden lg:table-cell text-[11px] text-[#5d6672] dark:text-[#98a2ae]">${fmt(p.k)} / ${fmt(p.f)}</td>
+          <td class="py-2 pr-2 text-right hidden lg:table-cell text-[11px] text-[#5d6672] dark:text-[#98a2ae]">${p.k ? fmt(p.k) : '—'} / ${p.fRaw ? fmt(p.fRaw) : '—'}</td>
           <td class="py-2 pr-2 text-right font-extrabold">${fmt(V[p.id])}</td>
           <td class="py-2 pl-2 text-right whitespace-nowrap">
             <button type="button" data-addside="A" data-id="${p.id}" class="px-2 py-1 rounded-md text-[11px] font-bold bg-blue-600/12 hover:bg-blue-600 text-blue-700 dark:text-blue-300 hover:text-white cursor-pointer">+A</button>
@@ -1507,14 +2187,14 @@
           <div class="flex items-center gap-2 min-w-0">
             ${posTag(p.pos)}
             <div class="min-w-0">
-              <div class="text-xs font-bold truncate">${esc(p.name)}${item.via && item.via !== 'own' ? ` <span class="font-normal text-[#5d6672]">(${esc(item.via)})</span>` : ''}</div>
+              <div class="text-xs font-bold truncate"><button type="button" data-player="${p.id}" class="hover:underline cursor-pointer">${esc(p.name)}</button>${item.via && item.via !== 'own' ? ` <span class="font-normal text-[#5d6672]">(${esc(item.via)})</span>` : ''}${trendBadge(p)}</div>
               <div class="mt-0.5">${bucketBadge(p)}</div>
             </div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
             <div class="text-right">
-              <div class="text-xs font-extrabold">${fmt(studVal(V[p.id]))}</div>
-              <div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">Raw ${fmt(V[p.id])}</div>
+              <div class="text-xs font-extrabold">${fmt(V[p.id])}</div>
+              <div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">${p.pick ? 'pick' : esc(p.pos)}${p.age ? ` · ${Number(p.age).toFixed(1)}y` : ''}</div>
             </div>
             <button type="button" data-rmside="${side}" data-idx="${idx}" class="w-6 h-6 rounded-md bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold cursor-pointer">✕</button>
           </div>
@@ -1556,15 +2236,13 @@
       renderRosterQuickAdd('A');
       renderRosterQuickAdd('B');
 
-      const rawA = st.A.reduce((s, x) => s + (V[x.id] || 0), 0);
-      const rawB = st.B.reduce((s, x) => s + (V[x.id] || 0), 0);
-      const totA = st.A.reduce((s, x) => s + studVal(V[x.id] || 0), 0);
-      const totB = st.B.reduce((s, x) => s + studVal(V[x.id] || 0), 0);
+      const ev = evalTrade(st.A, st.B);
+      const rawA = ev.rawA, rawB = ev.rawB, totA = ev.effA, totB = ev.effB;
 
       document.getElementById('totA').textContent = fmt(totA);
-      document.getElementById('rawA').textContent = `Raw: ${fmt(rawA)}`;
+      document.getElementById('rawA').textContent = ev.vaA >= 1 ? `Raw ${fmt(rawA)} · +${fmt(ev.vaA)} value adj.` : `Raw: ${fmt(rawA)}`;
       document.getElementById('totB').textContent = fmt(totB);
-      document.getElementById('rawB').textContent = `Raw: ${fmt(rawB)}`;
+      document.getElementById('rawB').textContent = ev.vaB >= 1 ? `Raw ${fmt(rawB)} · +${fmt(ev.vaB)} value adj.` : `Raw: ${fmt(rawB)}`;
 
       const hl = document.getElementById('verdictHeadline');
       const badge = document.getElementById('verdictBadge');
@@ -1585,11 +2263,13 @@
         barB.style.width = '50%';
         lineupBox.classList.add('hidden');
         analysisEl.classList.add('hidden');
+        renderConsensus('', '');
         return;
       }
 
       const nA = st.tA && T[st.tA] ? T[st.tA].n : 'Side A';
       const nB = st.tB && T[st.tB] ? T[st.tB].n : 'Side B';
+      renderConsensus(nA, nB);
       const diff = totB - totA; // positive means Side A receives more value (wins)
       const maxTot = Math.max(totA, totB, 1);
       const pct = Math.abs(diff) / maxTot * 100;
@@ -1598,38 +2278,54 @@
       barA.style.width = `${Math.max(8, Math.min(92, (totA / sumTot) * 100))}%`;
       barB.style.width = `${Math.max(8, Math.min(92, (totB / sumTot) * 100))}%`;
 
-      if (pct <= 5) {
+      if (pct <= st.fair) {
         hl.textContent = `Fair Trade (${pct.toFixed(1)}% gap)`;
         badge.textContent = 'FAIR';
         badge.className = 'px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300';
       } else {
         const winner = diff > 0 ? nA : nB;
         hl.textContent = `${winner} wins by ${fmt(Math.abs(diff))} (${pct.toFixed(1)}%)`;
-        badge.textContent = pct <= 12 ? 'SLIGHT EDGE' : 'LOPSIDED';
-        badge.className = pct <= 12
+        badge.textContent = pct <= st.fair * 2.4 ? 'SLIGHT EDGE' : 'LOPSIDED';
+        badge.className = pct <= st.fair * 2.4
           ? 'px-3 py-1 rounded-full text-xs font-extrabold bg-amber-500/15 text-amber-800 dark:text-amber-300'
           : 'px-3 py-1 rounded-full text-xs font-extrabold bg-rose-500/15 text-rose-700 dark:text-rose-300';
       }
 
-      det.innerHTML = `${esc(nA)} sends <strong>${fmt(totA)}</strong> (Raw ${fmt(rawA)}) · ${esc(nB)} sends <strong>${fmt(totB)}</strong> (Raw ${fmt(rawB)}) · Stud Exponent <strong>${st.stud.toFixed(2)}×</strong>`;
+      const fA = sideFacts(st.A), fB = sideFacts(st.B);
+      const factTxt = (f) => `${f.avgAge ? `avg age ${f.avgAge.toFixed(1)}` : 'no players'}${f.picks ? ` · ${f.picks} pick${f.picks > 1 ? 's' : ''}` : ''} · est. in 2 yrs <strong>${fmt(f.in2)}</strong> (${f.now ? `${f.in2 >= f.now ? '+' : '−'}${Math.abs((f.in2 / f.now - 1) * 100).toFixed(0)}%` : '—'})`;
+      det.innerHTML = `${esc(nA)} sends <strong>${fmt(totA)}</strong>${ev.vaA >= 1 ? ` (raw ${fmt(rawA)} + ${fmt(ev.vaA)} value adjustment for the stronger single piece)` : ''} · ${esc(nB)} sends <strong>${fmt(totB)}</strong>${ev.vaB >= 1 ? ` (raw ${fmt(rawB)} + ${fmt(ev.vaB)} value adjustment for the stronger single piece)` : ''} · Fair within ±${st.fair}%
+        <div class="mt-1.5 grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px]">
+          <div><strong>Quick facts — ${esc(nA)} sends:</strong> ${factTxt(fA)}</div>
+          <div><strong>${esc(nB)} sends:</strong> ${factTxt(fB)}</div>
+        </div>
+        <div class="text-[10px] mt-0.5 opacity-80">“Est. in 2 yrs” is a rough age-curve estimate (RBs fade from ~25, WRs ~28, TEs ~30, QBs ~32); later-year picks rise to today’s value of a mid-round pick in the next draft, next-draft picks are held flat.</div>`;
 
       // Balancing suggestion chips if gap > 5%
-      if (pct > 5) {
+      if (pct > st.fair) {
         const shortSide = diff > 0 ? 'A' : 'B';
-        const need = Math.abs(diff);
-        const pickCands = P.filter(p => p.pick && Math.abs(studVal(V[p.id]) - need) <= need * 0.45)
-          .sort((a, b) => Math.abs(studVal(V[a.id]) - need) - Math.abs(studVal(V[b.id]) - need))
+        // Picks that would bring the deal inside the Fair range once the value adjustment is applied
+        const seenNames = new Set();
+        const pickCands = P.filter(p => p.pick && V[p.id] > 0)
+          .map(p => {
+            const A2 = shortSide === 'A' ? [...st.A, { id: p.id }] : st.A;
+            const B2 = shortSide === 'B' ? [...st.B, { id: p.id }] : st.B;
+            return { p, gap: evalTrade(A2, B2).gapPct };
+          })
+          .filter(x => x.gap <= st.fair * 1.5)
+          .sort((a, b) => a.gap - b.gap)
+          .map(x => x.p)
+          .filter(p => { const k = `${p.year}_${p.rd}_${p.tier}`; if (seenNames.has(k)) return false; seenNames.add(k); return true; })
           .slice(0, 4);
         chips.innerHTML = pickCands.length
           ? `<span class="text-[11px] font-semibold text-[#5d6672] dark:text-[#98a2ae]">Balance by adding to Side ${shortSide}:</span> ` +
             pickCands.map(pk => `<button type="button" data-fix="${shortSide}" data-id="${pk.id}"
-              class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-purple-500/12 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 cursor-pointer">+ ${esc(pk.name)} (${fmt(studVal(V[pk.id]))})</button>`).join('')
+              class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-purple-500/12 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 cursor-pointer">+ ${esc(pk.name)} (${fmt(V[pk.id])})</button>`).join('')
           : '';
       } else {
         chips.innerHTML = '';
       }
 
-      // Starting Lineup Impact (if both teams selected)
+      // Starting Lineup Impact + league positional ranks before/after (if both teams selected)
       if (st.tA && st.tB && T[st.tA] && T[st.tB] && st.tA !== st.tB) {
         const sendAIds = new Set(st.A.filter(x => !P[x.id]?.pick).map(x => x.id));
         const sendBIds = new Set(st.B.filter(x => !P[x.id]?.pick).map(x => x.id));
@@ -1639,18 +2335,136 @@
         const postB = solveLineup([...T[st.tB].ids.filter(id => !sendBIds.has(id)), ...sendAIds]).total;
         const dA = postA - preA, dB = postB - preB;
         const startN = (activeLeague.slots || []).length || 10;
+        const impact = tradeRankImpact();
         lineupBox.classList.remove('hidden');
         lineupBox.innerHTML = `<div class="flex flex-wrap items-center gap-4">
           <span><strong>Start-${startN} Impact:</strong></span>
           <span>${esc(nA)}: <strong class="${dA >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${dA >= 0 ? '+' : ''}${fmt(dA)}</strong></span>
           <span>${esc(nB)}: <strong class="${dB >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${dB >= 0 ? '+' : ''}${fmt(dB)}</strong></span>
-        </div>`;
+        </div>${impact}`;
       } else {
         lineupBox.classList.add('hidden');
       }
 
       // Real-Time Trade Analysis Card (Value + Repeater %)
       renderTradeAnalysis(nA, nB, totA, totB, rawA, rawB, pct, diff);
+    }
+
+    // ---- Consensus check: grade the trade under KTC, FantasyCalc and the blend at once ----
+    function renderConsensus(nA, nB) {
+      const box = document.getElementById('consensusBox');
+      if (!box) return;
+      if (!st.A.length || !st.B.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+      const mySide = st.tA && st.tA === ME ? 'A' : st.tB && st.tB === ME ? 'B' : null;
+      const name = side => side === 'A' ? nA : nB;
+      const modes = [['ktc', 'KTC'], ['fc', 'FantasyCalc'], ['blend', `Blend (${st.w}% KTC)`]];
+      const results = modes.map(([m, label]) => {
+        const mv = modeValues(m);
+        const a = st.A.map(x => mv.vals[x.id] || 0), b = st.B.map(x => mv.vals[x.id] || 0);
+        if (!a.some(v => v > 0) || !b.some(v => v > 0)) return { m, label, nodata: true };
+        const ev = evalValues(a, b, null, mv.max);
+        const fair = ev.gapPct <= st.fair;
+        // "winner" = the side that comes out ahead = the side RECEIVING more (the other side sends more)
+        const winner = fair ? null : (ev.effB > ev.effA ? 'A' : 'B');
+        return { m, label, gap: ev.gapPct, fair, winner };
+      });
+      const valid = results.filter(r => !r.nodata);
+      const chip = r => {
+        if (r.nodata) return `<span class="px-2 py-1 rounded-lg text-[11px] font-semibold bg-[#f6f7f9] dark:bg-[#0f1216] text-[#5d6672] dark:text-[#98a2ae] border border-[#e3e6eb] dark:border-[#2a3039]">${esc(r.label)}: no data</span>`;
+        const lose = mySide && r.winner && r.winner !== mySide;
+        const win = mySide && r.winner === mySide;
+        const cls = r.fair ? 'bg-emerald-500/12 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
+          : lose ? 'bg-rose-500/12 text-rose-700 dark:text-rose-300 border-rose-500/35'
+          : win ? 'bg-blue-500/12 text-blue-700 dark:text-blue-300 border-blue-500/30'
+          : 'bg-amber-500/12 text-amber-800 dark:text-amber-300 border-amber-500/30';
+        const txt = r.fair ? `Fair (${r.gap.toFixed(1)}%)` : `${esc(name(r.winner))} wins by ${r.gap.toFixed(1)}%`;
+        return `<span class="px-2 py-1 rounded-lg text-[11px] font-semibold border ${cls}">${esc(r.label)}: ${txt}</span>`;
+      };
+      let banner;
+      if (mySide) {
+        const losses = valid.filter(r => r.winner && r.winner !== mySide);
+        if (losses.length) {
+          banner = `<div class="px-3 py-2 rounded-lg bg-rose-500/12 border border-rose-500/35 text-rose-800 dark:text-rose-200 text-xs font-bold">⚠ ${losses.length} of ${valid.length} value source${valid.length > 1 ? 's' : ''} say you lose this trade (${esc(losses.map(r => r.label.split(' (')[0]).join(', '))}). Ask for more or pass.</div>`;
+        } else if (valid.length) {
+          const wins = valid.filter(r => r.winner === mySide).length;
+          banner = `<div class="px-3 py-2 rounded-lg bg-emerald-500/12 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-bold">✓ No value source says you lose this trade${wins ? ` — ${wins} of ${valid.length} say you win it` : ''}.</div>`;
+        }
+      } else {
+        const winners = new Set(valid.map(r => r.winner || 'fair'));
+        banner = winners.size > 1
+          ? `<div class="px-3 py-2 rounded-lg bg-amber-500/12 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs font-bold">Sources disagree on this trade — check each before deciding.</div>`
+          : `<div class="px-3 py-2 rounded-lg bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] text-xs font-bold">All value sources agree. (Pick your team on Side A or B to get a “you lose” warning.)</div>`;
+      }
+      box.classList.remove('hidden');
+      box.innerHTML = `<div class="space-y-1.5">
+          ${banner || ''}
+          <div class="flex flex-wrap items-center gap-1.5"><span class="text-[11px] font-bold uppercase tracking-wider text-[#5d6672] dark:text-[#98a2ae]">Consensus check</span>${results.map(chip).join('')}</div>
+        </div>`;
+    }
+
+    // ---- How a trade moves each team's league rank at every position ----
+    // Position strength = value of the players who would start there (dedicated slots plus a
+    // share of flex spots), so a QB upgrade only counts if he would actually start.
+    function posStarterCounts() {
+      const slots = (activeLeague.slots && activeLeague.slots.length) ? activeLeague.slots : ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX'];
+      const c = x => slots.filter(s => s === x).length;
+      const flex = c('FLEX'), wrrb = c('WRRB_FLEX'), rec = c('REC_FLEX'), sf = c('SUPER_FLEX');
+      return {
+        QB: c('QB') + sf,
+        RB: c('RB') + Math.ceil((flex + wrrb) / 2),
+        WR: c('WR') + Math.ceil((flex + wrrb) / 2) + rec,
+        TE: Math.max(1, c('TE'))
+      };
+    }
+    function teamStrength(ids, pickIds) {
+      // Position strength = value of the players who actually start at that position in the
+      // optimal lineup (so a TE or QB filling a FLEX / SUPER_FLEX spot counts for his position).
+      const lu = solveLineup(ids);
+      const out = { QB: 0, RB: 0, WR: 0, TE: 0 };
+      lu.filled.forEach(f => { if (f.id != null && P[f.id] && out[P[f.id].pos] !== undefined) out[P[f.id].pos] += f.val; });
+      out.PICK = pickIds.reduce((s, id) => s + (V[id] || 0), 0);
+      out.START = lu.total;
+      out.TOTAL = ids.reduce((s, id) => s + (V[id] || 0), 0) + out.PICK;
+      return out;
+    }
+    function tradeRankImpact() {
+      if (!owners.length) return '';
+      const giveA = new Set(st.A.map(x => x.id)), giveB = new Set(st.B.map(x => x.id));
+      const rosterAfter = key => {
+        const t = T[key];
+        let ids = (t.ids || []).slice(), pks = (t.pk || []).map(([id]) => id);
+        if (key === st.tA) {
+          ids = ids.filter(id => !giveA.has(id)).concat(st.B.filter(x => !P[x.id]?.pick).map(x => x.id));
+          pks = pks.filter(id => !giveA.has(id)).concat(st.B.filter(x => P[x.id]?.pick).map(x => x.id));
+        } else if (key === st.tB) {
+          ids = ids.filter(id => !giveB.has(id)).concat(st.A.filter(x => !P[x.id]?.pick).map(x => x.id));
+          pks = pks.filter(id => !giveB.has(id)).concat(st.A.filter(x => P[x.id]?.pick).map(x => x.id));
+        }
+        return { ids, pks };
+      };
+      const before = {}, after = {};
+      owners.forEach(o => {
+        before[o] = teamStrength(T[o].ids || [], (T[o].pk || []).map(([id]) => id));
+        const ra = rosterAfter(o);
+        after[o] = teamStrength(ra.ids, ra.pks);
+      });
+      const cats = [['QB', 'QB'], ['RB', 'RB'], ['WR', 'WR'], ['TE', 'TE'], ['START', 'Starting lineup'], ['PICK', 'Draft capital'], ['TOTAL', 'Total value']];
+      const rankOf = (map, key, cat) => 1 + owners.filter(o => (map[o][cat] || 0) > (map[key][cat] || 0)).length;
+      const n = owners.length;
+      const cell = (key, cat) => {
+        const r0 = rankOf(before, key, cat), r1 = rankOf(after, key, cat);
+        const cls = r1 < r0 ? 'text-emerald-600 dark:text-emerald-400' : r1 > r0 ? 'text-rose-600 dark:text-rose-400' : 'text-[#5d6672] dark:text-[#98a2ae]';
+        return `<td class="py-1 px-1.5 text-center whitespace-nowrap ${cls}">${r0 === r1 ? `#${r0}` : `#${r0} → <strong>#${r1}</strong>`}</td>`;
+      };
+      const row = key => `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1 pr-2 font-semibold whitespace-nowrap">${esc(T[key].n)}${key === ME ? ' <span class="text-[10px] px-1 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td>${cats.map(([c]) => cell(key, c)).join('')}</tr>`;
+      return `<div class="pt-1">
+        <div class="font-bold mb-1">League rank before → after (of ${n})</div>
+        <div class="overflow-x-auto"><table class="w-full text-[11px] sm:text-xs border-collapse">
+          <thead><tr class="text-[10px] uppercase tracking-wider text-[#5d6672] dark:text-[#98a2ae]"><th class="text-left py-1 pr-2">Team</th>${cats.map(([, l]) => `<th class="py-1 px-1.5 text-center font-semibold">${l}</th>`).join('')}</tr></thead>
+          <tbody>${row(st.tA)}${row(st.tB)}</tbody>
+        </table></div>
+        <div class="text-[10px] mt-1 text-[#5d6672] dark:text-[#98a2ae]">Position ranks use the value of the players who would start at that position in each team’s best lineup (a TE or QB starting at FLEX / SUPER_FLEX counts for his position), so bench depth doesn’t inflate a position.</div>
+      </div>`;
     }
 
     function sideRepeaterStats(arr) {
@@ -1712,7 +2526,9 @@
       if (sA.highRep.length) bullets.push(`<strong>${esc(nB)} gains High-Confidence Repeaters:</strong> ${esc(sA.highRep.join(', '))}.`);
       if (st.A.length !== st.B.length) {
         const consolidator = st.A.length > st.B.length ? nA : nB;
-        bullets.push(`<strong>Consolidation:</strong> ${esc(consolidator)} consolidates ${Math.max(st.A.length, st.B.length)} assets into ${Math.min(st.A.length, st.B.length)}, capturing the ${st.stud.toFixed(2)}× stud premium.`);
+        const evC = evalTrade(st.A, st.B);
+        const adjAmt = Math.max(evC.vaA, evC.vaB);
+        bullets.push(`<strong>Consolidation:</strong> ${esc(consolidator)} consolidates ${Math.max(st.A.length, st.B.length)} assets into ${Math.min(st.A.length, st.B.length)}${adjAmt >= 1 ? ` — KTC-style value adjustment of ${fmt(adjAmt)} credited to the side with the better single asset (×${Number(st.adj).toFixed(2)})` : ''}.`);
       }
       if (!bullets.length) bullets.push('Both sides exchange similar repeater stability and market value—decision comes down to roster need and contender/rebuild timeline.');
 
@@ -1727,13 +2543,13 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div class="p-3 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] space-y-1">
             <div class="font-bold text-blue-600 dark:text-blue-400">${esc(nA)} Receives</div>
-            <div>Stud Value: <strong>${fmt(totB)}</strong> (Raw ${fmt(rawB)})</div>
+            <div>Adjusted Value: <strong>${fmt(totB)}</strong> (Raw ${fmt(rawB)})</div>
             <div>Avg Player Repeater: <strong>${sB.avgCond !== null ? sB.avgCond.toFixed(0) + '%' : 'Picks Only'}</strong>${sB.avgHit !== null ? ` · Hit ${sB.avgHit.toFixed(0)}%` : ''}</div>
             <div>Insulated Pick Capital: <strong>${fmt(sB.pickVal)}</strong></div>
           </div>
           <div class="p-3 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] space-y-1">
             <div class="font-bold text-indigo-600 dark:text-indigo-400">${esc(nB)} Receives</div>
-            <div>Stud Value: <strong>${fmt(totA)}</strong> (Raw ${fmt(rawA)})</div>
+            <div>Adjusted Value: <strong>${fmt(totA)}</strong> (Raw ${fmt(rawA)})</div>
             <div>Avg Player Repeater: <strong>${sA.avgCond !== null ? sA.avgCond.toFixed(0) + '%' : 'Picks Only'}</strong>${sA.avgHit !== null ? ` · Hit ${sA.avgHit.toFixed(0)}%` : ''}</div>
             <div>Insulated Pick Capital: <strong>${fmt(sA.pickVal)}</strong></div>
           </div>
@@ -1759,8 +2575,12 @@
       }
 
       const baseP = P[pId];
-      const baseStud = studVal(V[pId]);
+      const baseV = V[pId] || 0;
       const baseB = getBucket(baseP);
+      const myAssets = [
+        ...(T[tKey].ids || []).filter(id => P[id] && id !== pId).map(id => ({ id, via: '' })),
+        ...(T[tKey].pk || []).filter(([id]) => P[id]).map(([id, via]) => ({ id, via }))
+      ];
       const ideas = [];
 
       owners.forEach(partner => {
@@ -1779,12 +2599,12 @@
           if (!cp) return;
           if (posF !== 'ALL' && cp.pos !== posF) return;
 
-          const cStud = studVal(V[cand.id]);
+          const cV = V[cand.id] || 0;
           const cb = getBucket(cp);
 
-          // 1-for-1 match (within 11%)
-          const gap1 = Math.abs(cStud - baseStud) / Math.max(baseStud, cStud, 1);
-          if (gap1 <= 0.11) {
+          // 1-for-1 match (within ~2× the Fair range)
+          const gap1 = Math.abs(cV - baseV) / Math.max(baseV, cV, 1);
+          if (gap1 <= Math.max(0.08, st.fair * 2.2 / 100)) {
             let score = 50 - gap1 * 200;
             if (goal === 'repeater') {
               if (cp.pick && cp.rd <= 2) score += 28;
@@ -1800,18 +2620,22 @@
               type: '1-for-1 Swap',
               send: [{ id: pId }],
               recv: [cand],
-              gapPct: ((cStud - baseStud) / Math.max(baseStud, cStud, 1)) * 100,
+              gapPct: ((cV - baseV) / Math.max(baseV, cV, 1)) * 100,
               score
             });
           }
 
-          // Get Player + Pick (when partner's asset is cheaper by 15%–55%)
-          if (cStud < baseStud * 0.88 && cStud > baseStud * 0.35 && !cp.pick) {
-            const need = baseStud - cStud;
-            const kicker = (pt.pk || []).find(([pkId]) => P[pkId] && Math.abs(studVal(V[pkId]) - need) <= baseStud * 0.12);
-            if (kicker) {
-              const totRecv = cStud + studVal(V[kicker[0]]);
-              const gap2 = Math.abs(totRecv - baseStud) / Math.max(baseStud, totRecv, 1);
+          // Get Player + Pick (when partner's asset is cheaper by 12%–65%) — graded with the value adjustment
+          if (cV < baseV * 0.88 && cV > baseV * 0.35 && !cp.pick) {
+            let kicker = null, kEv = null;
+            (pt.pk || []).forEach(([pkId, via]) => {
+              if (!P[pkId]) return;
+              const e2 = evalTrade([{ id: pId }], [cand, { id: pkId }]);
+              if (!kEv || e2.gapPct < kEv.gapPct) { kEv = e2; kicker = [pkId, via]; }
+            });
+            if (kicker && kEv.gapPct <= st.fair * 2.4) {
+              const gap2 = kEv.gapPct / 100;
+              const totRecv = kEv.effB;
               let score = 48 - gap2 * 180;
               if (goal === 'rebuild') score += 25;
               if (goal === 'repeater' && cb.cond >= 65) score += 20;
@@ -1820,7 +2644,31 @@
                 type: 'Pivot + Pick',
                 send: [{ id: pId }],
                 recv: [cand, { id: kicker[0], via: kicker[1] }],
-                gapPct: ((totRecv - baseStud) / Math.max(baseStud, totRecv, 1)) * 100,
+                gapPct: ((totRecv - kEv.effA) / Math.max(kEv.effA, totRecv, 1)) * 100,
+                score
+              });
+            }
+          }
+
+          // 2-for-1 consolidation: add one of my other assets to move up to a better player
+          if (!cp.pick && cV > baseV * 1.08 && cV < baseV * 2.2) {
+            let best = null;
+            myAssets.forEach(a => {
+              const e3 = evalTrade([{ id: pId }, a], [cand]);
+              if (!best || e3.gapPct < best.ev.gapPct) best = { a, ev: e3 };
+            });
+            if (best && best.ev.gapPct <= st.fair * 2) {
+              let score = 46 - best.ev.gapPct * 1.8;
+              if (goal === 'winnow') score += 22;
+              if (goal === 'repeater' && cb.cond !== null && baseB.cond !== null) score += (cb.cond - baseB.cond) * 0.6;
+              if (goal === 'rebuild' && cp.age && cp.age <= 24.5) score += 12;
+              if (goal === 'rebuild' && P[best.a.id]?.pick) score -= 15;
+              ideas.push({
+                partner,
+                type: '2-for-1 Upgrade',
+                send: [{ id: pId }, { ...best.a }],
+                recv: [cand],
+                gapPct: ((best.ev.effB - best.ev.effA) / Math.max(best.ev.effA, best.ev.effB, 1)) * 100,
                 score
               });
             }
@@ -1847,14 +2695,14 @@
       listEl.innerHTML = top.map((idea, idx) => {
         const recvTxt = idea.recv.map(x => `${P[x.id].name}${x.via && x.via !== 'own' ? ` (${x.via})` : ''}`).join(' + ');
         const g = idea.gapPct;
-        const gCls = Math.abs(g) <= 5 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400';
+        const gCls = Math.abs(g) <= st.fair ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400';
         return `<div class="p-3 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] flex flex-col justify-between gap-2">
           <div class="space-y-1">
             <div class="flex items-center justify-between gap-2">
               <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">${esc(idea.type)} · ${esc(T[idea.partner].n)}</span>
               <span class="text-[11px] font-bold ${gCls}">${g >= 0 ? '+' : ''}${g.toFixed(1)}%</span>
             </div>
-            <div class="text-xs"><strong>Send:</strong> ${esc(baseP.name)}</div>
+            <div class="text-xs"><strong>Send:</strong> ${esc(idea.send.map(x => `${P[x.id].name}${x.via && x.via !== 'own' ? ` (${x.via})` : ''}`).join(' + '))}</div>
             <div class="text-xs"><strong>Get:</strong> ${esc(recvTxt)}</div>
             <div class="pt-0.5">${bucketBadge(P[idea.recv[0].id])}</div>
           </div>
@@ -1878,11 +2726,12 @@
       const draftSub = document.getElementById('draftOrderSub');
       if (draftSub) {
         const scaleNote = nTeams !== 12
-          ? ` Pick values are automatically scaled to ${nTeams}-team overall draft slots (e.g., Late 1st = #${midCut + 1}–${nTeams}).`
+          ? ` In a ${nTeams}-team league each pick is valued by its overall pick number (e.g. 1.${nTeams} = overall #${nTeams}, priced like a 12-team ${Math.ceil(nTeams / 12)}.${String(nTeams - (Math.ceil(nTeams / 12) - 1) * 12).padStart(2, '0')}).`
           : '';
-        draftSub.textContent = `Worst record picks first (lower PF breaks ties). Sets Early (1–${earlyCut}), Mid (${earlyCut + 1}–${midCut}), and Late (${midCut + 1}–${nTeams}) 2027 pick tiers.${scaleNote}`;
+        draftSub.textContent = `Worst record picks first (lower PF breaks ties). Sets Early (1–${earlyCut}), Mid (${earlyCut + 1}–${midCut}), and Late (${midCut + 1}–${nTeams}) ${DRAFT_YEARS[0]} pick tiers. ${DRAFT_YEARS[0]} picks are valued at their projected slot (e.g. 1.03).${scaleNote}`;
       }
 
+      document.querySelectorAll('.draft-yr').forEach(el => { el.textContent = DRAFT_YEARS[0]; });
       document.getElementById('draftOrderStrip').innerHTML = bySlot.map((o, idx) => {
         const slot = T[o].slot || (idx + 1);
         const tier = slot <= earlyCut ? 'Early' : slot <= midCut ? 'Mid' : 'Late';
@@ -1925,7 +2774,7 @@
         const isOpen = st.open === r.o;
         const aCls = archStyles[r.arch.archetype] || archStyles.neutral;
         const pickPill = r.count27First > 0
-          ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/25">2027 1st${r.count27First > 1 ? ` ×${r.count27First}` : ''}</span>`
+          ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/25">${DRAFT_YEARS[0]} 1st${r.count27First > 1 ? ` ×${r.count27First}` : ''}</span>`
           : '';
         const needPill = `<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20">Needs ${r.weakPos} (#${r.weakRk})</span>`;
 
@@ -2113,7 +2962,9 @@
           if (st.waiverPos !== 'ALL' && p.pos !== st.waiverPos) return false;
           if (wq && !normName(`${p.name} ${p.team} ${p.pos}`).includes(wq)) return false;
           return true;
-        }).sort((a, b) => V[b.id] - V[a.id]);
+        }).sort((a, b) => st.waiverSort === 'trend'
+          ? ((TRENDING.get(String(b.sleeperId)) || 0) - (TRENDING.get(String(a.sleeperId)) || 0)) || (V[b.id] - V[a.id])
+          : V[b.id] - V[a.id]);
 
         if (!fas.length) {
           wBody.innerHTML = `<tr><td colspan="5" class="py-5 text-center text-xs text-[#5d6672] dark:text-[#98a2ae]">No unrostered players match this filter.</td></tr>`;
@@ -2123,13 +2974,15 @@
             if (p.pos === 'QB' && useSfValues(activeLeague)) note = 'High-scarcity QB stash';
             else if (p.age && p.age <= 24.5) note = `Young upside (Age ${Number(p.age).toFixed(1)})`;
             else if (V[p.id] >= 1200) note = 'Immediate flex / spot start';
+            const tr = TRENDING.get(String(p.sleeperId));
+            if (tr) note = `🔥 ${fmt(tr)} Sleeper adds (24h) · ${note}`;
             return `<tr class="hover:bg-[#f6f7f9] dark:hover:bg-[#1e242d]">
               <td class="py-2 pr-2 font-semibold text-[#5d6672] dark:text-[#98a2ae]">${idx + 1}</td>
               <td class="py-2 pr-2">
                 <div class="flex items-center gap-2">
                   ${posTag(p.pos)}
                   <div>
-                    <div class="font-semibold">${esc(p.name)}</div>
+                    <button type="button" data-player="${p.id}" class="font-semibold hover:underline cursor-pointer text-left">${esc(p.name)}</button>${trendBadge(p)}
                     <div class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]">${esc(p.team || 'FA')}${p.age ? ` · Age ${Number(p.age).toFixed(1)}` : ''}</div>
                   </div>
                 </div>
@@ -2141,6 +2994,40 @@
           }).join('');
         }
       }
+    }
+
+    function renderMovers() {
+      const rEl = document.getElementById('risersList'), fEl = document.getElementById('fallersList');
+      if (!rEl || !fEl) return;
+      const days = Number(st.moversDays || 7);
+      const rostered = P.filter(p => !p.pick && OWN[p.id]);
+      let rows = rostered.map(p => ({ p, t: trendWindow(p, days) })).filter(x => x.t && x.t.delta);
+      let src = 'ktc';
+      if (!rows.length) {
+        rows = rostered.filter(p => p.fcTrend30).map(p => ({ p, t: { delta: Math.round(p.fcTrend30), full: true } }));
+        src = 'fc';
+      }
+      const sub = document.getElementById('moversSub');
+      if (sub) {
+        const span = rows.find(r => r.t.from);
+        sub.textContent = src === 'fc'
+          ? 'Not enough saved KTC history yet, so this shows FantasyCalc’s 30-day change. KTC 7-day and 30-day movers appear as daily snapshots build up.'
+          : `KTC value change over ${span && !span.t.full ? `the ${HISTORY.dates.length} days saved so far (since ${shortDate(span.t.from)})` : `the last ${days} days`}. Click a player for his graphs.`;
+      }
+      const row = x => `<button type="button" data-player="${x.p.id}" class="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] text-xs text-left cursor-pointer hover:border-blue-500/50">
+          <span class="flex items-center gap-1.5 min-w-0">${posTag(x.p.pos)} <span class="font-semibold truncate">${esc(x.p.name)}</span> <span class="text-[10px] text-[#5d6672] dark:text-[#98a2ae] truncate">${esc(ownTxt(x.p.id))}</span></span>
+          <span class="font-extrabold shrink-0 ${x.t.delta > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${x.t.delta > 0 ? '+' : '−'}${fmt(Math.abs(x.t.delta))}${src === 'fc' ? ' <span class="font-semibold opacity-70">FC</span>' : ''}</span>
+        </button>`;
+      const ups = rows.filter(x => x.t.delta > 0).sort((a, b) => b.t.delta - a.t.delta).slice(0, 8);
+      const downs = rows.filter(x => x.t.delta < 0).sort((a, b) => a.t.delta - b.t.delta).slice(0, 8);
+      const empty = '<div class="text-xs text-[#5d6672] dark:text-[#98a2ae] py-2">None yet.</div>';
+      rEl.innerHTML = ups.length ? ups.map(row).join('') : empty;
+      fEl.innerHTML = downs.length ? downs.map(row).join('') : empty;
+      document.querySelectorAll('.movers-btn').forEach(b => {
+        const act = Number(b.dataset.movers) === days;
+        b.classList.toggle('bg-blue-600', act);
+        b.classList.toggle('text-white', act);
+      });
     }
 
     function renderSavedLeaguesModal() {
@@ -2176,10 +3063,16 @@
       if (bl) bl.textContent = `${st.w}%`;
       const bs = document.getElementById('blendSlider');
       if (bs) bs.value = st.w;
-      const sl = document.getElementById('studLbl');
-      if (sl) sl.textContent = `${st.stud.toFixed(2)}×`;
-      const ss = document.getElementById('studSlider');
-      if (ss) ss.value = st.stud;
+      const al = document.getElementById('adjLbl');
+      if (al) al.textContent = `×${Number(st.adj).toFixed(2)}${Math.abs(st.adj - 1) < 0.001 ? ' (KTC)' : ''}`;
+      const as = document.getElementById('adjSlider');
+      if (as) as.value = st.adj;
+      const fl = document.getElementById('fairLbl');
+      if (fl) fl.textContent = `${st.fair}%`;
+      const fs = document.getElementById('fairSlider');
+      if (fs) fs.value = st.fair;
+      const wt = document.getElementById('btnWaiverTrend');
+      if (wt) { wt.classList.toggle('bg-blue-600', st.waiverSort === 'trend'); wt.classList.toggle('text-white', st.waiverSort === 'trend'); }
 
       document.querySelectorAll('.pos-filter').forEach(btn => {
         const act = btn.dataset.pos === st.pos;
@@ -2205,6 +3098,9 @@
       renderTradeIdeas();
       renderLeague();
       renderScout();
+      renderMovers();
+      renderTradeHistory();
+      if (st.pm && !document.getElementById('playerModal')?.classList.contains('hidden')) renderPlayerModal();
       save();
     }
 
@@ -2219,6 +3115,7 @@
         a.classList.toggle('active', a.dataset.tab === tab);
       });
       if (tab === 'buckets') loadBucketsFrame();
+      if (tab === 'league') loadTradeHistory();
       try { history.replaceState(null, '', `#${tab}`); } catch (e) {}
     }
 
@@ -2291,8 +3188,16 @@
       document.querySelectorAll('.src-btn').forEach(btn => {
         btn.addEventListener('click', () => { st.src = btn.dataset.src; recompute(); });
       });
-      document.getElementById('blendSlider')?.addEventListener('input', e => { st.w = Number(e.target.value); recompute(); });
-      document.getElementById('studSlider')?.addEventListener('input', e => { st.stud = Number(e.target.value); all(); });
+      document.getElementById('blendSlider')?.addEventListener('input', e => { st.w = Number(e.target.value); MODE_CACHE = {}; recompute(); });
+      document.getElementById('adjSlider')?.addEventListener('input', e => { st.adj = Number(e.target.value); all(); });
+      document.getElementById('fairSlider')?.addEventListener('input', e => { st.fair = Number(e.target.value); all(); });
+      document.getElementById('btnWaiverTrend')?.addEventListener('click', () => { st.waiverSort = st.waiverSort === 'trend' ? 'value' : 'trend'; syncControls(); renderScout(); });
+      document.querySelectorAll('.movers-btn').forEach(b => b.addEventListener('click', () => { st.moversDays = Number(b.dataset.movers); renderMovers(); }));
+      const playerModal = document.getElementById('playerModal');
+      document.getElementById('btnClosePlayer')?.addEventListener('click', () => playerModal.classList.add('hidden'));
+      playerModal?.addEventListener('click', e => { if (e.target === playerModal) playerModal.classList.add('hidden'); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') playerModal?.classList.add('hidden'); });
+      document.querySelectorAll('[data-pmrange]').forEach(b => b.addEventListener('click', () => { if (st.pm) { st.pm.range = b.dataset.pmrange === 'all' ? 'all' : Number(b.dataset.pmrange); renderPlayerModal(); } }));
 
       document.getElementById('chartSearch')?.addEventListener('input', e => { st.q = e.target.value; renderChart(); });
       document.querySelectorAll('.pos-filter').forEach(btn => {
@@ -2326,7 +3231,8 @@
         const nB = st.tB && T[st.tB] ? T[st.tB].n : 'Side B';
         const fmtSide = arr => arr.map(x => `${P[x.id]?.name || '?'}${x.via && x.via !== 'own' ? ` (${x.via})` : ''}`).join(' + ') || 'Nothing';
         const headline = document.getElementById('verdictHeadline')?.textContent || '';
-        copyText(`${activeLeague.name} Trade Summary\n${nA} sends: ${fmtSide(st.A)}\n${nB} sends: ${fmtSide(st.B)}\nVerdict: ${headline}`);
+        const cons = [...document.querySelectorAll('#consensusBox span.border')].map(el => el.textContent.trim()).join(' · ');
+        copyText(`${activeLeague.name} Trade Summary\n${nA} sends: ${fmtSide(st.A)}\n${nB} sends: ${fmtSide(st.B)}\nVerdict: ${headline}${cons ? `\nConsensus: ${cons}` : ''}`);
       });
 
       document.getElementById('ideaTeamSel')?.addEventListener('change', () => { populateIdeaSelectors(); renderTradeIdeas(); });
@@ -2382,7 +3288,7 @@
       document.getElementById('btnCloseSync')?.addEventListener('click', () => syncModal.classList.add('hidden'));
       document.getElementById('btnSyncLive')?.addEventListener('click', () => syncLiveSleeperAndFC(false));
       document.getElementById('btnCopyKtcCmd')?.addEventListener('click', () => {
-        copyText('copy(JSON.stringify(window.playersArray.map(p=>({playerName:p.playerName,position:p.position,superflexValues:p.superflexValues,oneQBValues:p.oneQBValues}))))');
+        copyText('copy(JSON.stringify(window.playersArray.map(p=>({playerName:p.playerName,position:p.position,team:p.team,age:p.age,superflexValues:p.superflexValues,oneQBValues:p.oneQBValues}))))');
       });
       document.getElementById('btnApplyKtc')?.addEventListener('click', () => {
         const txt = (document.getElementById('ktcPasteBox')?.value || '').trim();
@@ -2393,10 +3299,9 @@
           LIVE_KTC_ARRAY = arr;
           KTC_SOURCE = 'manual';
           localStorage.setItem(KTC_STORAGE_KEY, JSON.stringify(arr));
-          const matched = applyKtcArrayToP(arr);
-          recompute();
-          status.textContent = `Applied & saved KTC values for ${matched} assets!`;
-          toast(`Saved KTC (${matched} matched)`);
+          status.textContent = 'Saved pasted KTC values — re-syncing…';
+          toast('Saved KTC — re-syncing');
+          syncLiveSleeperAndFC(false);
         } catch (err) {
           status.textContent = `Invalid KTC JSON: ${err.message}`;
         }
@@ -2411,6 +3316,25 @@
       });
 
       document.addEventListener('click', e => {
+        const playerBtn = e.target.closest('[data-player]');
+        if (playerBtn) {
+          e.stopPropagation();
+          openPlayerModal(Number(playerBtn.dataset.player));
+          return;
+        }
+        const useAdj = e.target.closest('[data-useadj]');
+        if (useAdj) {
+          st.adj = Number(useAdj.dataset.useadj);
+          all();
+          toast(`Value adjustment set to ×${st.adj.toFixed(2)}`);
+          return;
+        }
+        const thBtn = e.target.closest('[data-thfilter]');
+        if (thBtn) {
+          st.thFilter = thBtn.dataset.thfilter === st.thFilter ? 'ALL' : thBtn.dataset.thfilter;
+          renderTradeHistory();
+          return;
+        }
         const addBtn = e.target.closest('[data-addside]');
         if (addBtn) {
           addAssetToSide(addBtn.dataset.addside, Number(addBtn.dataset.id));
