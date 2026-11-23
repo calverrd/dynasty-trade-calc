@@ -196,14 +196,27 @@
           </button>
         </div>
 
+        <div class="flex flex-wrap items-center gap-2 self-start md:self-auto">
+        <!-- Draft Class (Rookie Year) Range Filter -->
+        <div class="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3 py-1.5">
+          <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">Draft class</span>
+          <label for="yearMin" class="sr-only">Earliest draft class</label>
+          <select id="yearMin" class="year-sel bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-1.5 py-1 text-xs font-bold text-slate-900 dark:text-slate-100 cursor-pointer"></select>
+          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">to</span>
+          <label for="yearMax" class="sr-only">Latest draft class</label>
+          <select id="yearMax" class="year-sel bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-1.5 py-1 text-xs font-bold text-slate-900 dark:text-slate-100 cursor-pointer"></select>
+          <button id="yearReset" type="button" class="hidden text-[11px] font-bold text-sky-700 dark:text-sky-400 hover:underline cursor-pointer">All years</button>
+        </div>
+
         <!-- Historical Pre-2019 Clogger Busts Toggle -->
-        <label class="inline-flex items-center gap-2.5 cursor-pointer select-none bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3.5 py-2 self-start md:self-auto">
+        <label class="inline-flex items-center gap-2.5 cursor-pointer select-none bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3.5 py-2">
           <input id="hideOldCloggerBusts" type="checkbox" checked
             class="w-4 h-4 rounded border-slate-400 text-sky-600 focus:ring-sky-500 accent-sky-500 cursor-pointer" />
           <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">
             Hide pre-2019 busts in Clogger tiers
           </span>
         </label>
+        </div>
       </div>
 
       <!-- Row 2: Outcome Filter Pills + Positional Threshold Info -->
@@ -1467,6 +1480,8 @@
       pos: 'QB',
       outcome: 'all', // 'all' | 'hit' | 'near' | 'bust' | 'rookie'
       hideOldCloggerBusts: true,
+      yearMin: 0,   // set from data in init (draft-class range filter)
+      yearMax: 9999,
       expandedBustBuckets: new Set(),
       modalPlayerId: null,
       modalSubTab: 'all',
@@ -1627,6 +1642,7 @@
       const totalSample = posBuckets.reduce((sum, b) => sum + b.n, 0);
       const totalRookies = posBuckets.reduce((sum, b) => sum + b.players.filter(p => p.isRookie).length, 0);
       metaEl.textContent = `${posBuckets.length} Buckets · ${totalSample.toLocaleString()} Historical Samples · ${totalRookies} 2026 Rookies`;
+      const yReset = document.getElementById('yearReset');
 
       bannerEl.innerHTML = `
         <div class="flex items-start sm:items-center gap-2.5">
@@ -1639,7 +1655,22 @@
           Elite: <span class="text-sky-600 dark:text-sky-400">${esc(pm.eliteLbl)}</span>
         </div>`;
 
-      grid.innerHTML = posBuckets.map(b => {
+      const YEAR_LO = Math.min(...ALL_PLAYERS.map(p => p.year));
+      // (computed below; reset button visibility set after)
+      const YEAR_HI = Math.max(...ALL_PLAYERS.map(p => p.year));
+      const yearFiltered = state.yearMin > YEAR_LO || state.yearMax < YEAR_HI;
+      const inYears = p => p.year >= state.yearMin && p.year <= state.yearMax;
+      if (yReset) yReset.classList.toggle('hidden', !yearFiltered);
+      if (yearFiltered) {
+        const shownN = posBuckets.reduce((sum, bb) => sum + bb.players.filter(inYears).length, 0);
+        metaEl.textContent += ` · Showing ${shownN} players drafted ${state.yearMin}–${state.yearMax} (stats = full sample)`;
+      }
+
+      grid.innerHTML = posBuckets.map(bFull => {
+        // Draft-class filter narrows which players are shown; bucket stats stay the full historical sample
+        const b = yearFiltered
+          ? { ...bFull, players: bFull.players.filter(inYears), extraHistoricalBusts: 0 }
+          : bFull;
         // Order players: Hits (desc by hit, elite, near) -> Near Hits (desc by near) -> 2026 Rookies -> Busts (desc by year)
         const hits = b.players.filter(p => p.status === 'hit').sort((a, c) => (c.hit - a.hit) || (c.elite - a.elite) || (c.near - a.near));
         const nears = b.players.filter(p => p.status === 'near').sort((a, c) => (c.near - a.near) || (c.year - a.year));
@@ -1710,7 +1741,7 @@
         }
 
         const chipsContent = (shownPlayers.length === 0 && !collapsedPillHtml)
-          ? `<span class="text-xs italic text-slate-500 dark:text-slate-400 py-1">No players in this bucket match the "${esc(state.outcome)}" filter.</span>`
+          ? `<span class="text-xs italic text-slate-500 dark:text-slate-400 py-1">No players in this bucket match the "${esc(state.outcome)}" filter${yearFiltered ? ` for ${state.yearMin}–${state.yearMax} draft classes` : ''}.</span>`
           : shownPlayers.map(renderPlayerChip).join('') + collapsedPillHtml;
 
         const repDesc = `Of ${b.pos}s who hit ${pm.hitLbl} once, % who hit ${pm.hitLbl.replace(' PPG', '')} in 2+ seasons`;
@@ -1726,6 +1757,7 @@
                 </div>
                 <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                   Sample Size: <strong class="text-slate-800 dark:text-slate-200">n = ${b.n}</strong>
+                  ${yearFiltered ? ` · <span class="text-indigo-600 dark:text-indigo-400 font-bold">${b.players.length} shown from ${state.yearMin}–${state.yearMax}</span>` : ''}
                   ${rookies.length ? ` · <span class="text-sky-600 dark:text-sky-400 font-bold">${rookies.length} in 2026 Class</span>` : ''}
                 </p>
               </div>
@@ -2188,6 +2220,24 @@
         });
       });
 
+      // Draft-class range filter
+      const yMinSel = document.getElementById('yearMin');
+      const yMaxSel = document.getElementById('yearMax');
+      const onYearChange = changed => {
+        let lo = Number(yMinSel.value), hi = Number(yMaxSel.value);
+        if (lo > hi) { if (changed === 'min') hi = lo; else lo = hi; }
+        state.yearMin = lo; state.yearMax = hi;
+        yMinSel.value = lo; yMaxSel.value = hi;
+        renderBucketsGrid();
+      };
+      yMinSel?.addEventListener('change', () => onYearChange('min'));
+      yMaxSel?.addEventListener('change', () => onYearChange('max'));
+      document.getElementById('yearReset')?.addEventListener('click', () => {
+        yMinSel.value = yMinSel.options[0].value;
+        yMaxSel.value = yMaxSel.options[yMaxSel.options.length - 1].value;
+        onYearChange('max');
+      });
+
       // Hide Pre-2019 Busts in Clogger Tiers Toggle
       document.getElementById('hideOldCloggerBusts')?.addEventListener('change', e => {
         state.hideOldCloggerBusts = Boolean(e.target.checked);
@@ -2316,6 +2366,16 @@
       } catch (e) {}
 
       applyTheme();
+      // Draft-class options from the data (e.g. 2006–2026)
+      const years = [...new Set(ALL_PLAYERS.map(p => p.year))].sort((a, b) => a - b);
+      const lo = years[0], hi = years[years.length - 1];
+      const opts = [];
+      for (let y = lo; y <= hi; y++) opts.push(`<option value="${y}">${y}</option>`);
+      document.getElementById('yearMin').innerHTML = opts.join('');
+      document.getElementById('yearMax').innerHTML = opts.join('');
+      document.getElementById('yearMin').value = lo;
+      document.getElementById('yearMax').value = hi;
+      state.yearMin = lo; state.yearMax = hi;
       syncControlStyles();
       renderBucketsGrid();
       wireEvents();
