@@ -85,6 +85,7 @@
           <a href="#calc" data-tab="calc" class="tab-btn active px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Trade calculator</a>
           <a href="#league" data-tab="league" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">League</a>
           <a href="#scout" data-tab="scout" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Scout &amp; Waivers</a>
+          <a href="#buckets" data-tab="buckets" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Profile Buckets</a>
           <a href="#about" data-tab="about" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">How it works</a>
         </nav>
 
@@ -408,7 +409,13 @@
       </div>
     </section>
 
-    <!-- ==================== TAB 5: HOW IT WORKS ==================== -->
+    <!-- ==================== TAB 5: PROFILE BUCKETS (bucket-explorer.html, lazy iframe) ==================== -->
+    <section id="view-buckets" class="hidden">
+      <iframe id="buckets-frame" data-src="./bucket-explorer.html" title="Dynasty Profile Bucket Explorer"
+        class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1400px;" loading="lazy"></iframe>
+    </section>
+
+    <!-- ==================== TAB 6: HOW IT WORKS ==================== -->
     <section id="view-about" class="hidden space-y-4">
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-5 space-y-4 text-xs sm:text-sm leading-relaxed">
         <h2 class="text-base sm:text-lg font-extrabold">How This Calculator Works</h2>
@@ -824,6 +831,52 @@
       }
     }
 
+    // ---- Profile Buckets iframe: lazy load, theme sync, auto-height ----
+    function loadBucketsFrame() {
+      const fr = document.getElementById('buckets-frame');
+      if (!fr || fr.getAttribute('src')) return;
+      fr.addEventListener('load', onBucketsFrameLoad);
+      fr.src = fr.dataset.src;
+    }
+
+    function syncBucketsFrameTheme() {
+      const fr = document.getElementById('buckets-frame');
+      if (!fr || !fr.getAttribute('src')) return;
+      const dark = document.documentElement.classList.contains('dark');
+      try { fr.contentWindow.postMessage({ type: 'dtc-theme', theme: dark ? 'dark' : 'light' }, '*'); } catch (e) {}
+      try { // same-origin on GitHub Pages: mirror the Tailwind 'dark' class directly
+        const d = fr.contentDocument;
+        if (d && d.documentElement) {
+          d.documentElement.classList.toggle('dark', dark);
+          d.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+        }
+      } catch (e) {}
+    }
+
+    function resizeBucketsFrame(h) {
+      const fr = document.getElementById('buckets-frame');
+      const n = Math.ceil(Number(h) || 0);
+      if (fr && n > 200 && Math.abs(parseFloat(fr.style.height) - n) > 1) fr.style.height = `${n}px`;
+    }
+
+    function onBucketsFrameLoad() {
+      syncBucketsFrameTheme();
+      const fr = document.getElementById('buckets-frame');
+      try {
+        const d = fr.contentDocument;
+        if (!d || !d.body) return;
+        const measure = () => resizeBucketsFrame(d.body.offsetHeight);
+        measure();
+        if ('ResizeObserver' in window) new ResizeObserver(measure).observe(d.body);
+        fr.contentWindow.addEventListener('load', measure);
+      } catch (e) { /* cross-origin: rely on postMessage height below */ }
+    }
+
+    // Optional: bucket-explorer.html may post { type: 'dtc-height', height } itself
+    window.addEventListener('message', e => {
+      if (e.origin === location.origin && e.data && e.data.type === 'dtc-height') resizeBucketsFrame(e.data.height);
+    });
+
     function applyTheme() {
       const root = document.documentElement;
       let dark = false;
@@ -831,6 +884,7 @@
         dark = st.theme === 'dark' || (st.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
       } catch (e) {}
       root.classList.toggle('dark', dark);
+      syncBucketsFrameTheme();
     }
 
     function save() {
@@ -2155,15 +2209,16 @@
     }
 
     function switchTab(tab) {
-      if (!['chart', 'calc', 'league', 'scout', 'about'].includes(tab)) tab = 'calc';
+      if (!['chart', 'calc', 'league', 'scout', 'buckets', 'about'].includes(tab)) tab = 'calc';
       st.tab = tab;
-      ['chart', 'calc', 'league', 'scout', 'about'].forEach(t => {
+      ['chart', 'calc', 'league', 'scout', 'buckets', 'about'].forEach(t => {
         const sec = document.getElementById(`view-${t}`);
         if (sec) sec.classList.toggle('hidden', t !== tab);
       });
       document.querySelectorAll('[data-tab]').forEach(a => {
         a.classList.toggle('active', a.dataset.tab === tab);
       });
+      if (tab === 'buckets') loadBucketsFrame();
       try { history.replaceState(null, '', `#${tab}`); } catch (e) {}
     }
 
@@ -2493,7 +2548,7 @@
       wireEvents();
       loadFallbackDataset();
       const initialHash = (location.hash || '').replace('#', '');
-      switchTab(['chart', 'calc', 'league', 'scout', 'about'].includes(initialHash) ? initialHash : 'calc');
+      switchTab(['chart', 'calc', 'league', 'scout', 'buckets', 'about'].includes(initialHash) ? initialHash : 'calc');
       syncLiveSleeperAndFC(true);
     });
   })();

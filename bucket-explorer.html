@@ -1,0 +1,2305 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dynasty Profile Bucket Explorer &amp; Range of Outcomes</title>
+
+  <!-- Montserrat Font (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Montserrat', 'system-ui', '-apple-system', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Smooth custom scrollbars for modal & autocomplete */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.35); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.55); }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Modal enter/exit transitions */
+    #outcomeModal {
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+    #outcomeModal.modal-closed {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #outcomeModal.modal-open {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    #outcomeModalPanel {
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    }
+    #outcomeModal.modal-closed #outcomeModalPanel {
+      transform: translateY(14px) scale(0.97);
+      opacity: 0;
+    }
+    #outcomeModal.modal-open #outcomeModalPanel {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
+    /* Focus rings for WCAG keyboard accessibility */
+    button:focus-visible,
+    input:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid #38bdf8;
+      outline-offset: 2px;
+    }
+
+    /* Embedded inside index.html (Profile Buckets tab): let the parent size the frame & own the theme toggle */
+    html.embedded body { min-height: 0 !important; }
+    html.embedded #themeToggleMobile,
+    html.embedded #themeToggleDesktop { display: none !important; }
+  </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen antialiased selection:bg-sky-500/30">
+
+  <!-- ==================== STICKY HEADER ==================== -->
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800/90">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 space-y-3">
+      <!-- Top Row: Brand Title + Global Search + Theme Toggle -->
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div class="flex items-start sm:items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 via-sky-500 to-indigo-600 text-white font-extrabold text-sm flex items-center justify-center shadow-lg shadow-sky-500/20 shrink-0" aria-hidden="true">
+              RO
+            </div>
+            <div class="min-w-0">
+              <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
+                Dynasty Profile Bucket Explorer <span class="text-sky-600 dark:text-sky-400">&amp; Range of Outcomes</span>
+              </h1>
+              <p class="text-[11px] sm:text-xs font-medium text-slate-600 dark:text-slate-400 mt-0.5">
+                Historical 2006–2026 Dynasty Hit Rates, Repeaters &amp; Comps — click any player to inspect their range of outcomes
+              </p>
+            </div>
+          </div>
+
+          <!-- Mobile Theme Toggle -->
+          <button id="themeToggleMobile" type="button" aria-label="Toggle dark or light theme"
+            class="lg:hidden shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer">
+            <span class="theme-icon text-base" aria-hidden="true">☀️</span>
+          </button>
+        </div>
+
+        <!-- Global Autocomplete Search + Desktop Theme Toggle -->
+        <div class="flex items-center gap-2.5 w-full lg:w-auto">
+          <div class="relative flex-1 lg:w-80 xl:w-96">
+            <label for="globalSearch" class="sr-only">Search any player across all positions</label>
+            <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-sm" aria-hidden="true">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7"></circle>
+                <path stroke-linecap="round" d="M20 20l-3.5-3.5"></path>
+              </svg>
+            </span>
+            <input id="globalSearch" type="search" autocomplete="off"
+              placeholder="Search any player (e.g. Tetairoa, Jonah Coleman, Jayden)…"
+              aria-autocomplete="list" aria-controls="searchDropdown" aria-expanded="false"
+              class="w-full pl-10 pr-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:bg-white dark:focus:bg-slate-900 focus:border-sky-500 transition" />
+            <!-- Instant Autocomplete Dropdown -->
+            <div id="searchDropdown" role="listbox"
+              class="hidden absolute left-0 right-0 mt-1.5 max-h-80 overflow-y-auto rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl z-40 divide-y divide-slate-100 dark:divide-slate-800">
+            </div>
+          </div>
+
+          <button id="themeToggleDesktop" type="button" aria-label="Toggle dark or light theme"
+            class="hidden lg:inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition cursor-pointer shrink-0">
+            <span class="theme-icon" aria-hidden="true">☀️</span>
+            <span class="theme-label">Light</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Color Coding Legend Strip -->
+      <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800/80 text-[11px]">
+        <span class="font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mr-1">Color Key:</span>
+
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-500/40">
+          <span class="w-2 h-2 rounded-full bg-emerald-600 dark:bg-emerald-400" aria-hidden="true"></span>
+          <span><strong>Hit:</strong> QB 20+ · RB 15+ · WR 14+ · TE 14+ PPG</span>
+        </span>
+
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-amber-100 dark:bg-amber-500/20 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-500/40">
+          <span class="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400" aria-hidden="true"></span>
+          <span><strong>Near Hit:</strong> QB 16+ · RB/WR/TE 12+ PPG</span>
+        </span>
+
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-rose-100 dark:bg-rose-500/20 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-500/40">
+          <span class="w-2 h-2 rounded-full bg-rose-600 dark:bg-rose-400" aria-hidden="true"></span>
+          <span><strong>Bust:</strong> 0 Near-Hit seasons (2006–2025)</span>
+        </span>
+
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-sky-100 dark:bg-sky-500/20 text-sky-900 dark:text-sky-200 border border-sky-300 dark:border-sky-500/40">
+          <span class="w-2 h-2 rounded-full bg-sky-600 dark:bg-sky-400" aria-hidden="true"></span>
+          <span><strong>2026 Rookie:</strong> Pending NFL sample</span>
+        </span>
+
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-indigo-100 dark:bg-indigo-500/20 text-indigo-950 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-500/40">
+          <span class="text-indigo-600 dark:text-indigo-400 font-extrabold" aria-hidden="true">↻</span>
+          <span><strong>Repeater %:</strong> Of players who hit their PPG mark once (QB 20+, RB 15+, WR/TE 14+), % who hit it in 2+ seasons</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-5">
+
+    <!-- Filter Controls Bar -->
+    <section aria-label="Position and Outcome Filters"
+      class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3.5">
+
+      <!-- Row 1: Position Tabs -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div role="tablist" aria-label="Position Filter" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+          <button type="button" role="tab" data-pos="QB" aria-selected="true"
+            class="pos-tab px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition cursor-pointer">
+            QB <span class="opacity-75 font-semibold">(6 PT/TD)</span>
+          </button>
+          <button type="button" role="tab" data-pos="RB" aria-selected="false"
+            class="pos-tab px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition cursor-pointer">
+            RB
+          </button>
+          <button type="button" role="tab" data-pos="WR" aria-selected="false"
+            class="pos-tab px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition cursor-pointer">
+            WR <span class="opacity-75 font-semibold">(Size-Adjusted)</span>
+          </button>
+          <button type="button" role="tab" data-pos="TE" aria-selected="false"
+            class="pos-tab px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition cursor-pointer">
+            TE <span class="opacity-75 font-semibold">(1.5 TEP)</span>
+          </button>
+        </div>
+
+        <!-- Historical Pre-2019 Clogger Busts Toggle -->
+        <label class="inline-flex items-center gap-2.5 cursor-pointer select-none bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3.5 py-2 self-start md:self-auto">
+          <input id="hideOldCloggerBusts" type="checkbox" checked
+            class="w-4 h-4 rounded border-slate-400 text-sky-600 focus:ring-sky-500 accent-sky-500 cursor-pointer" />
+          <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">
+            Hide pre-2019 busts in Clogger tiers
+          </span>
+        </label>
+      </div>
+
+      <!-- Row 2: Outcome Filter Pills + Positional Threshold Info -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-3 border-t border-slate-200/80 dark:border-slate-800">
+        <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter players by outcome">
+          <button type="button" data-outcome="all"
+            class="outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer">
+            All Outcomes
+          </button>
+          <button type="button" data-outcome="hit"
+            class="outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer">
+            Hits Only
+          </button>
+          <button type="button" data-outcome="near"
+            class="outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer">
+            Near Hits Only
+          </button>
+          <button type="button" data-outcome="bust"
+            class="outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer">
+            Busts Only
+          </button>
+          <button type="button" data-outcome="rookie"
+            class="outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer">
+            2026 Rookies Only
+          </button>
+        </div>
+
+        <div id="posSummaryMeta" class="text-xs font-semibold text-slate-600 dark:text-slate-400"></div>
+      </div>
+    </section>
+
+    <!-- Positional Quick Insights Banner -->
+    <div id="posInsightBanner" class="rounded-2xl bg-gradient-to-r from-slate-100 via-sky-50/70 to-indigo-50/60 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/40 border border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+    </div>
+
+    <!-- Bucket Cards Grid -->
+    <section aria-label="Profile Buckets Grid">
+      <div id="bucketsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5"></div>
+    </section>
+
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="max-w-7xl mx-auto px-4 sm:px-6 py-8 text-center text-xs text-slate-500 dark:text-slate-400">
+    Dynasty Profile Bucket Explorer · Historical 2006–2025 Samples + 2026 Rookie Class · ★ indicates 1+ Elite Spike season
+  </footer>
+
+  <!-- ==================== RANGE OF OUTCOMES MODAL ==================== -->
+  <div id="outcomeModal" role="dialog" aria-modal="true" aria-labelledby="modalPlayerName"
+    class="modal-closed fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-5 bg-slate-950/75 backdrop-blur-sm">
+    <div id="outcomeModalPanel"
+      class="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/90 shadow-2xl overflow-hidden">
+
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3 bg-slate-50/90 dark:bg-slate-950/60">
+        <div class="min-w-0 space-y-1.5">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="modalPosBadge" class="px-2 py-0.5 rounded-md text-[11px] font-extrabold tracking-wide"></span>
+            <span id="modalBucketBadge" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200"></span>
+            <span id="modalStatusBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold"></span>
+          </div>
+          <div class="flex flex-wrap items-baseline gap-2.5">
+            <h2 id="modalPlayerName" class="text-lg sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white"></h2>
+            <span id="modalDraftYear" class="text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400"></span>
+          </div>
+          <div id="modalPlayerSeasons" class="flex flex-wrap items-center gap-1.5 pt-0.5"></div>
+        </div>
+
+        <button id="modalCloseBtn" type="button" aria-label="Close Range of Outcomes modal"
+          class="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-200/80 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm transition cursor-pointer">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Scrollable Body -->
+      <div id="modalBodyScroll" class="overflow-y-auto p-5 space-y-5">
+
+        <!-- Historical Odds & Probability Gauge -->
+        <div class="rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 p-4 space-y-3.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200">
+              Historical Bucket Probability Gauge
+            </h3>
+            <span id="modalSampleSize" class="text-xs font-bold text-slate-600 dark:text-slate-400"></span>
+          </div>
+
+          <!-- Stacked Bar -->
+          <div class="space-y-1.5">
+            <div id="modalProbBar" class="w-full h-5 rounded-full overflow-hidden flex bg-slate-200 dark:bg-slate-800 shadow-inner"></div>
+            <div id="modalProbLegend" class="flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold"></div>
+          </div>
+
+          <!-- 5 Key Probability KPI Cards -->
+          <div id="modalKpiGrid" class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1"></div>
+        </div>
+
+        <!-- Range of Outcomes Comps -->
+        <div class="space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
+                Range of Outcomes from This Bucket
+              </h3>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                Click any comparable player below to immediately inspect their profile.
+              </p>
+            </div>
+            <!-- Modal View Sub-Tabs -->
+            <div id="modalOutcomeTabs" class="inline-flex flex-wrap gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700/80">
+              <button type="button" data-mtab="all" class="modal-subtab px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">All</button>
+              <button type="button" data-mtab="hit" class="modal-subtab px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">Hits</button>
+              <button type="button" data-mtab="near" class="modal-subtab px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">Near Hits</button>
+              <button type="button" data-mtab="bust" class="modal-subtab px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">Busts</button>
+              <button type="button" data-mtab="rookie" class="modal-subtab px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">2026 Comps</button>
+            </div>
+          </div>
+
+          <!-- Outcomes Columns Container -->
+          <div id="modalOutcomesContent" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/60 flex items-center justify-between gap-3">
+        <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+          Tip: Press <kbd class="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[10px]">ESC</kbd> to return to the bucket grid
+        </span>
+        <button id="modalFooterCloseBtn" type="button"
+          class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-90 transition cursor-pointer">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== APPLICATION SCRIPT ==================== -->
+  <script>
+  (function () {
+    'use strict';
+
+    // Running inside index.html's "Profile Buckets" iframe?
+    const EMBEDDED = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+
+    // =========================================================================
+    // 1. POSITION METADATA & THRESHOLD DEFINITIONS
+    // =========================================================================
+    const POS_META = {
+      QB: {
+        label: 'QB (6 PT/TD)',
+        short: 'QB',
+        nearLbl: '16+ PPG',
+        hitLbl: '20+ PPG',
+        eliteLbl: '24+ PPG',
+        badgeCls: 'bg-rose-100 dark:bg-rose-500/20 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-500/35',
+        insight: 'Scramble & Konami QBs show dramatically higher 20+ PPG hit and ceiling rates than non-Elite Pocket QBs. Outside of Elite Pocket profiles, target rushing upside.'
+      },
+      RB: {
+        label: 'RB',
+        short: 'RB',
+        nearLbl: '12+ PPG',
+        hitLbl: '15+ PPG',
+        eliteLbl: '18+ PPG',
+        badgeCls: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-500/35',
+        insight: 'Bellcow and Workhorse draft profiles drive elite 15+ PPG repeatability (57–78%), while Clogger Committee backs hit just 4.6% of the time with only a 33.3% repeater rate.'
+      },
+      WR: {
+        label: 'WR (Size-Adjusted)',
+        short: 'WR',
+        nearLbl: '12+ PPG',
+        hitLbl: '14+ PPG',
+        eliteLbl: '16+ PPG',
+        superEliteLbl: '18+ PPG',
+        badgeCls: 'bg-sky-100 dark:bg-sky-500/20 text-sky-800 dark:text-sky-200 border border-sky-300 dark:border-sky-500/35',
+        insight: 'Elite Alpha Hog WRs hit 14+ PPG at an 84.6% clip with an 81.8% repeater rate. Size-adjusted Alpha Hogs consistently outperform Runts across Elite, Upside, and Depth tiers.'
+      },
+      TE: {
+        label: 'TE (1.5 TEP)',
+        short: 'TE',
+        nearLbl: '12+ PPG',
+        hitLbl: '14+ PPG',
+        eliteLbl: '17+ PPG',
+        badgeCls: 'bg-amber-100 dark:bg-amber-500/20 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-500/35',
+        insight: 'While rare outliers exist in lower tiers (Kittle, Kelce), the odds of landing a 14+ PPG difference-maker drop sharply outside the Elite & Upside Freak/Gifted buckets.'
+      }
+    };
+
+    // =========================================================================
+    // 2. COMPLETE EMBEDDED SPREADSHEET DATASET (48 BUCKETS, ALL PLAYERS)
+    //    Player tuple format:
+    //      QB/RB/TE: [name, year, nearCount, hitCount, eliteCount]  OR [name, 2026, 'rookie']
+    //      WR:       [name, year, nearCount, hitCount, elite16Count, superElite18Count] OR [name, 2026, 'rookie']
+    // =========================================================================
+    const RAW_BUCKETS = [
+      // ---------------- QB (near=16+, hit=20+, elite=24+) ----------------
+      {
+        pos: 'QB', name: 'Cornerstone Konami', n: 1, hit: 100.0, nearTotal: 100.0, elite: 100.0, twoPlus: 100.0, rep: 100.0, extraHistoricalBusts: 0,
+        players: [
+          ['Cam Newton', 2011, 9, 7, 2]
+        ]
+      },
+      {
+        pos: 'QB', name: 'Elite Konami', n: 4, hit: 75.0, nearTotal: 75.0, elite: 50.0, twoPlus: 50.0, rep: 66.7, extraHistoricalBusts: 0,
+        players: [
+          ['Deshaun Watson', 2017, 5, 4, 2],
+          ['Kyler Murray', 2019, 7, 3, 1],
+          ['Jayden Daniels', 2024, 2, 1, 0],
+          ['Vince Young', 2006, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'QB', name: 'Elite Pocket', n: 7, hit: 85.7, nearTotal: 100.0, elite: 14.3, twoPlus: 42.9, rep: 50.0, extraHistoricalBusts: 0,
+        players: [
+          ['Jared Goff', 2016, 9, 5, 0],
+          ['Jameis Winston', 2015, 6, 3, 0],
+          ['Baker Mayfield', 2018, 6, 2, 1],
+          ['Sam Bradford', 2010, 4, 1, 0],
+          ['Tua Tagovailoa', 2020, 3, 1, 0],
+          ['CJ Stroud', 2023, 2, 1, 0],
+          ['Bryce Young', 2023, 2, 0, 0],
+          ['Fernando Mendoza', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'QB', name: 'Elite Scramble', n: 8, hit: 100.0, nearTotal: 100.0, elite: 50.0, twoPlus: 62.5, rep: 62.5, extraHistoricalBusts: 0,
+        players: [
+          ['Patrick Mahomes', 2017, 8, 8, 5],
+          ['Andrew Luck', 2012, 6, 6, 3],
+          ['Joe Burrow', 2020, 6, 4, 3],
+          ['Trevor Lawrence', 2021, 4, 2, 0],
+          ['Justin Fields', 2021, 3, 2, 0],
+          ['Marcus Mariota', 2015, 3, 1, 0],
+          ['Drake Maye', 2024, 2, 1, 1],
+          ['Caleb Williams', 2024, 2, 1, 0]
+        ]
+      },
+      {
+        pos: 'QB', name: 'Upside Konami', n: 5, hit: 20.0, nearTotal: 20.0, elite: 20.0, twoPlus: 20.0, rep: 100.0, extraHistoricalBusts: 0,
+        players: [
+          ['Lamar Jackson', 2018, 7, 6, 3],
+          ['Tim Tebow', 2010, 0, 0, 0],
+          ['Johnny Manziel', 2014, 0, 0, 0],
+          ['Trey Lance', 2021, 0, 0, 0],
+          ['Anthony Richardson', 2023, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'QB', name: 'Upside Pocket', n: 11, hit: 27.3, nearTotal: 36.4, elite: 18.2, twoPlus: 18.2, rep: 66.7, extraHistoricalBusts: 0,
+        players: [
+          ['Matthew Stafford', 2009, 12, 7, 2],
+          ['Justin Herbert', 2020, 6, 4, 2],
+          ['Sam Darnold', 2018, 4, 1, 0],
+          ['Mark Sanchez', 2009, 2, 0, 0],
+          ['Matt Leinart', 2006, 0, 0, 0],
+          ['JaMarcus Russell', 2007, 0, 0, 0],
+          ['Josh Rosen', 2018, 0, 0, 0],
+          ['Dwayne Haskins', 2019, 0, 0, 0],
+          ['Mac Jones', 2021, 0, 0, 0],
+          ['Michael Penix Jr', 2024, 0, 0, 0],
+          ['Cam Ward', 2025, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'QB', name: 'Upside Scramble', n: 13, hit: 53.9, nearTotal: 76.9, elite: 15.4, twoPlus: 23.1, rep: 42.9, extraHistoricalBusts: 0,
+        players: [
+          ['Josh Allen', 2018, 8, 6, 6],
+          ['Carson Wentz', 2016, 5, 3, 1],
+          ['Bo Nix', 2024, 2, 2, 0],
+          ['Daniel Jones', 2019, 4, 1, 0],
+          ['Blake Bortles', 2014, 3, 1, 0],
+          ['Robert Griffin III', 2012, 2, 1, 0],
+          ['Mitch Trubisky', 2017, 2, 1, 0],
+          ['Blaine Gabbert', 2011, 1, 0, 0],
+          ['Jake Locker', 2011, 1, 0, 0],
+          ['Christian Ponder', 2011, 1, 0, 0],
+          ['Jaxson Dart', 2025, 1, 0, 0],
+          ['Zach Wilson', 2021, 0, 0, 0],
+          ['JJ McCarthy', 2024, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'QB', name: 'Depth Konami', n: 4, hit: 25.0, nearTotal: 50.0, elite: 25.0, twoPlus: 25.0, rep: 100.0, extraHistoricalBusts: 0,
+        players: [
+          ['Jalen Hurts', 2020, 5, 5, 1],
+          ['Colin Kaepernick', 2011, 3, 0, 0],
+          ['Pat White', 2009, 0, 0, 0],
+          ['Malik Willis', 2022, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'QB', name: 'Depth Pocket', n: 35, hit: 20.0, nearTotal: 40.0, elite: 8.6, twoPlus: 8.6, rep: 42.9, extraHistoricalBusts: 16,
+        players: [
+          ['Matt Ryan', 2008, 12, 7, 2],
+          ['Derek Carr', 2014, 9, 3, 0],
+          ['Ryan Tannehill', 2012, 7, 3, 1],
+          ['Joe Flacco', 2008, 7, 1, 1],
+          ['Nick Foles', 2012, 3, 1, 0],
+          ['Geno Smith', 2013, 3, 1, 0],
+          ['Jordan Love', 2020, 3, 1, 0],
+          ['Jimmy Garoppolo', 2014, 4, 0, 0],
+          ['Teddy Bridgewater', 2014, 2, 0, 0],
+          ['Kevin Kolb', 2007, 1, 0, 0],
+          ['Chad Henne', 2008, 1, 0, 0],
+          ['Brock Osweiler', 2012, 1, 0, 0],
+          ['Mike Glennon', 2013, 1, 0, 0],
+          ['Drew Lock', 2019, 1, 0, 0],
+          ['Will Grier', 2019, 0, 0, 0],
+          ['Davis Mills', 2021, 0, 0, 0],
+          ['Kyle Trask', 2021, 0, 0, 0],
+          ['Kenny Pickett', 2022, 0, 0, 0],
+          ['Dillon Gabriel', 2025, 0, 0, 0],
+          ['Ty Simpson', 2026, 'rookie'],
+          ['Carson Beck', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'QB', name: 'Depth Scramble', n: 17, hit: 23.5, nearTotal: 29.4, elite: 5.9, twoPlus: 11.8, rep: 50.0, extraHistoricalBusts: 0,
+        players: [
+          ['Russell Wilson', 2012, 13, 10, 4],
+          ['Andy Dalton', 2011, 7, 2, 0],
+          ['Jay Cutler', 2006, 7, 1, 0],
+          ['Jacoby Brissett', 2016, 2, 1, 0],
+          ['Josh Freeman', 2009, 2, 0, 0],
+          ['Kellen Clemens', 2006, 0, 0, 0],
+          ['Drew Stanton', 2007, 0, 0, 0],
+          ["Kevin O'Connell", 2008, 0, 0, 0],
+          ['Colt McCoy', 2010, 0, 0, 0],
+          ['Paxton Lynch', 2016, 0, 0, 0],
+          ['DeShone Kizer', 2017, 0, 0, 0],
+          ['Kellen Mond', 2021, 0, 0, 0],
+          ['Desmond Ridder', 2022, 0, 0, 0],
+          ['Matt Corral', 2022, 0, 0, 0],
+          ['Will Levis', 2023, 0, 0, 0],
+          ['Hendon Hooker', 2023, 0, 0, 0],
+          ['Jalen Milroe', 2025, 0, 0, 0],
+          ['Drew Allar', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'QB', name: 'Clogger Konami', n: 5, hit: 0.0, nearTotal: 0.0, elite: 0.0, twoPlus: 0.0, rep: 0.0, extraHistoricalBusts: 0,
+        players: [
+          ['Reggie McNeal', 2006, 0, 0, 0],
+          ['Josh Johnson', 2008, 0, 0, 0],
+          ['Stephen McGee', 2009, 0, 0, 0],
+          ['Chandler Harnish', 2012, 0, 0, 0],
+          ['Riley Leonard', 2025, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'QB', name: 'Clogger Pocket', n: 75, hit: 2.7, nearTotal: 4.0, elite: 0.0, twoPlus: 1.3, rep: 50.0, extraHistoricalBusts: 61,
+        players: [
+          ['Kirk Cousins', 2012, 10, 8, 0],
+          ['Gardner Minshew II', 2019, 2, 1, 0],
+          ['Trevor Siemian', 2015, 2, 0, 0],
+          ['Bailey Zappe', 2022, 0, 0, 0],
+          ['Skylar Thompson', 2022, 0, 0, 0],
+          ['Tanner McKee', 2023, 0, 0, 0],
+          ["Aidan O'Connell", 2023, 0, 0, 0],
+          ['Jake Haener', 2023, 0, 0, 0],
+          ['Stetson Bennett', 2023, 0, 0, 0],
+          ['Spencer Rattler', 2024, 0, 0, 0],
+          ['Shedeur Sanders', 2025, 0, 0, 0],
+          ['Quinn Ewers', 2025, 0, 0, 0],
+          ['Kyle McCord', 2025, 0, 0, 0],
+          ['Kurtis Rourke', 2025, 0, 0, 0],
+          ['Garrett Nussmeier', 2026, 'rookie'],
+          ['Athan Kaliakmanis', 2026, 'rookie'],
+          ['Behren Morton', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'QB', name: 'Clogger Scramble', n: 38, hit: 10.5, nearTotal: 21.1, elite: 5.3, twoPlus: 7.9, rep: 75.0, extraHistoricalBusts: 20,
+        players: [
+          ['Dak Prescott', 2016, 10, 8, 4],
+          ['Brock Purdy', 2022, 3, 3, 1],
+          ['Tyrod Taylor', 2011, 3, 2, 0],
+          ['Jeff Driskel', 2016, 1, 1, 0],
+          ['Tyler Thigpen', 2007, 1, 0, 0],
+          ['Joshua Dobbs', 2017, 1, 0, 0],
+          ['Easton Stick', 2019, 1, 0, 0],
+          ['Sam Howell', 2022, 1, 0, 0],
+          ['Ian Book', 2021, 0, 0, 0],
+          ['Sam Ehlinger', 2021, 0, 0, 0],
+          ['Clayton Tune', 2023, 0, 0, 0],
+          ['Dorian Thompson-Robinson', 2023, 0, 0, 0],
+          ['Joe Milton', 2024, 0, 0, 0],
+          ['Jordan Travis', 2024, 0, 0, 0],
+          ['Michael Pratt', 2024, 0, 0, 0],
+          ['Will Howard', 2025, 0, 0, 0],
+          ['Cam Miller', 2025, 0, 0, 0],
+          ['Tommy Mellott', 2025, 0, 0, 0],
+          ['Cole Payton', 2026, 'rookie'],
+          ['Taylen Green', 2026, 'rookie'],
+          ['Cade Klubnik', 2026, 'rookie']
+        ]
+      },
+
+      // ---------------- RB (near=12+, hit=15+, elite=18+) ----------------
+      {
+        pos: 'RB', name: 'Cornerstone Bellcow', n: 1, hit: 100.0, nearTotal: 100.0, elite: 100.0, twoPlus: 100.0, rep: 100.0, extraHistoricalBusts: 0,
+        players: [
+          ['Saquon Barkley', 2018, 6, 5, 3]
+        ]
+      },
+      {
+        pos: 'RB', name: 'Elite Bellcow', n: 13, hit: 69.2, nearTotal: 100.0, elite: 46.2, twoPlus: 53.9, rep: 77.8, extraHistoricalBusts: 0,
+        players: [
+          ['Christian McCaffrey', 2017, 6, 5, 5],
+          ['Reggie Bush', 2006, 6, 4, 0],
+          ['Leonard Fournette', 2017, 5, 4, 1],
+          ['Todd Gurley', 2015, 5, 3, 2],
+          ['Dalvin Cook', 2017, 5, 3, 2],
+          ['Mark Ingram', 2011, 5, 3, 0],
+          ['Bijan Robinson', 2023, 3, 2, 2],
+          ['Knowshon Moreno', 2009, 3, 1, 1],
+          ['Trent Richardson', 2012, 1, 1, 0],
+          ['Giovani Bernard', 2013, 3, 0, 0],
+          ['Jahvid Best', 2010, 1, 0, 0],
+          ['Ashton Jeanty', 2025, 1, 0, 0],
+          ['Omarion Hampton', 2025, 1, 0, 0],
+          ['Jeremiyah Love', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'RB', name: 'Elite Workhorse', n: 7, hit: 100.0, nearTotal: 100.0, elite: 71.4, twoPlus: 57.1, rep: 57.1, extraHistoricalBusts: 0,
+        players: [
+          ['Adrian Peterson', 2007, 8, 8, 3],
+          ['Marshawn Lynch', 2007, 6, 5, 1],
+          ['Ezekiel Elliott', 2016, 7, 4, 4],
+          ['Jahmyr Gibbs', 2023, 3, 3, 2],
+          ['Darren McFadden', 2008, 3, 1, 1],
+          ['Ryan Mathews', 2010, 2, 1, 0],
+          ['CJ Spiller', 2010, 1, 1, 0]
+        ]
+      },
+      {
+        pos: 'RB', name: 'Upside Bellcow', n: 3, hit: 100.0, nearTotal: 100.0, elite: 66.7, twoPlus: 66.7, rep: 66.7, extraHistoricalBusts: 0,
+        players: [
+          ['Matt Forte', 2008, 9, 6, 4],
+          ['LeSean McCoy', 2009, 8, 6, 4],
+          ['Najee Harris', 2021, 3, 1, 0]
+        ]
+      },
+      {
+        pos: 'RB', name: 'Upside Workhorse', n: 12, hit: 75.0, nearTotal: 83.3, elite: 41.7, twoPlus: 50.0, rep: 66.7, extraHistoricalBusts: 0,
+        players: [
+          ['Maurice Jones-Drew', 2006, 7, 5, 2],
+          ['Jonathan Taylor', 2020, 6, 5, 2],
+          ['Joe Mixon', 2017, 6, 5, 0],
+          ["Le'Veon Bell", 2013, 5, 4, 3],
+          ['Ray Rice', 2008, 4, 4, 2],
+          ['DeAngelo Williams', 2006, 3, 2, 1],
+          ['Breece Hall', 2022, 3, 1, 0],
+          ['Rashard Mendenhall', 2008, 2, 1, 0],
+          ['Travis Etienne', 2021, 2, 1, 0],
+          ['Beanie Wells', 2009, 1, 0, 0],
+          ['Laurence Maroney', 2006, 0, 0, 0],
+          ['Bishop Sankey', 2014, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'RB', name: 'Upside Committee', n: 5, hit: 0.0, nearTotal: 60.0, elite: 0.0, twoPlus: 0.0, rep: 0.0, extraHistoricalBusts: 0,
+        players: [
+          ['Jonathan Stewart', 2008, 3, 0, 0],
+          ['JK Dobbins', 2020, 1, 0, 0],
+          ['Clyde Edwards-Helaire', 2020, 1, 0, 0],
+          ['LenDale White', 2006, 0, 0, 0],
+          ['David Wilson', 2012, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'RB', name: 'Depth Workhorse', n: 33, hit: 36.4, nearTotal: 60.6, elite: 21.2, twoPlus: 24.2, rep: 66.7, extraHistoricalBusts: 0,
+        players: [
+          ['Alvin Kamara', 2017, 8, 7, 5],
+          ['Derrick Henry', 2016, 8, 6, 5],
+          ['Melvin Gordon', 2015, 6, 3, 2],
+          ['Chris Johnson', 2008, 6, 3, 1],
+          ['DeMarco Murray', 2011, 5, 3, 2],
+          ['David Montgomery', 2019, 4, 3, 0],
+          ["De'Von Achane", 2023, 3, 3, 1],
+          ['David Johnson', 2015, 4, 2, 1],
+          ["D'Andre Swift", 2020, 6, 1, 0],
+          ['Kenneth Walker III', 2022, 3, 1, 0],
+          ['Steve Slaton', 2008, 2, 1, 0],
+          ['Rachaad White', 2022, 2, 1, 0],
+          ['Kevin Smith', 2008, 2, 0, 0],
+          ['TJ Yeldon', 2015, 2, 0, 0],
+          ['Antonio Gibson', 2020, 2, 0, 0],
+          ['Ronnie Hillman', 2012, 1, 0, 0],
+          ['Duke Johnson', 2015, 1, 0, 0],
+          ['Tevin Coleman', 2015, 1, 0, 0],
+          ['Ronald Jones II', 2018, 1, 0, 0],
+          ['Darrell Henderson', 2019, 1, 0, 0],
+          ['Brian Calhoun', 2006, 0, 0, 0],
+          ['Brian Leonard', 2007, 0, 0, 0],
+          ['Garrett Wolfe', 2007, 0, 0, 0],
+          ['Shonn Greene', 2009, 0, 0, 0],
+          ['LaMichael James', 2012, 0, 0, 0],
+          ['Montee Ball', 2013, 0, 0, 0],
+          ['Terrance West', 2014, 0, 0, 0],
+          ['Ty Montgomery', 2015, 0, 0, 0],
+          ['CJ Prosise', 2016, 0, 0, 0],
+          ["D'Onta Foreman", 2017, 0, 0, 0],
+          ['Derrius Guice', 2018, 0, 0, 0],
+          ['Devin Singletary', 2019, 0, 0, 0],
+          ['AJ Dillon', 2020, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'RB', name: 'Depth Committee', n: 65, hit: 18.5, nearTotal: 35.4, elite: 9.2, twoPlus: 12.1, rep: 66.7, extraHistoricalBusts: 28,
+        players: [
+          ['James Conner', 2017, 7, 5, 1],
+          ['Josh Jacobs', 2019, 7, 5, 1],
+          ['Nick Chubb', 2018, 5, 4, 0],
+          ['Jamaal Charles', 2008, 5, 3, 1],
+          ['Kareem Hunt', 2017, 5, 2, 2],
+          ['Joseph Addai', 2006, 4, 2, 1],
+          ['James Cook', 2022, 3, 2, 0],
+          ['Eddie Lacy', 2013, 2, 2, 0],
+          ['Kenyan Drake', 2016, 3, 1, 0],
+          ['Doug Martin', 2012, 2, 1, 1],
+          ['Shane Vereen', 2011, 1, 1, 0],
+          ['Javonte Williams', 2021, 1, 1, 0],
+          ['Miles Sanders', 2019, 3, 0, 0],
+          ['Carlos Hyde', 2014, 2, 0, 0],
+          ['Mikel Leshoure', 2011, 1, 0, 0],
+          ['Stevan Ridley', 2011, 1, 0, 0],
+          ['Jeremy Hill', 2014, 1, 0, 0],
+          ['Rashaad Penny', 2018, 1, 0, 0],
+          ['Kerryon Johnson', 2018, 1, 0, 0],
+          ['Damien Harris', 2019, 1, 0, 0],
+          ['Brian Robinson Jr', 2022, 1, 0, 0],
+          ['TreVeyon Henderson', 2025, 1, 0, 0],
+          ['RJ Harvey', 2025, 1, 0, 0],
+          ['Alexander Mattison', 2019, 0, 0, 0],
+          ['Cam Akers', 2020, 0, 0, 0],
+          ['Zack Moss', 2020, 0, 0, 0],
+          ['Trey Sermon', 2021, 0, 0, 0],
+          ['Zach Charbonnet', 2023, 0, 0, 0],
+          ['Tyjae Spears', 2023, 0, 0, 0],
+          ['Tank Bigsby', 2023, 0, 0, 0],
+          ['Kendre Miller', 2023, 0, 0, 0],
+          ['Blake Corum', 2024, 0, 0, 0],
+          ['Trey Benson', 2024, 0, 0, 0],
+          ['Jonathon Brooks', 2024, 0, 0, 0],
+          ['MarShawn Lloyd', 2024, 0, 0, 0],
+          ['Quinshon Judkins', 2025, 0, 0, 0],
+          ['Kaleb Johnson', 2025, 0, 0, 0],
+          ['Jadarian Price', 2026, 'rookie'],
+          ['Kaelon Black', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'RB', name: 'Clogger Bellcow', n: 10, hit: 10.0, nearTotal: 30.0, elite: 0.0, twoPlus: 10.0, rep: 100.0, extraHistoricalBusts: 0,
+        players: [
+          ['Ahmad Bradshaw', 2007, 4, 2, 0],
+          ['Michael Bush', 2007, 1, 0, 0],
+          ['Kenneth Gainwell', 2021, 1, 0, 0],
+          ['Bernard Scott', 2009, 0, 0, 0],
+          ['Taiwan Jones', 2011, 0, 0, 0],
+          ['Jacquizz Rodgers', 2011, 0, 0, 0],
+          ['Donnel Pumphrey', 2017, 0, 0, 0],
+          ['Jeremy McNichols', 2017, 0, 0, 0],
+          ['Eno Benjamin', 2020, 0, 0, 0],
+          ['Deuce Vaughn', 2023, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'RB', name: 'Clogger Workhorse', n: 55, hit: 12.7, nearTotal: 21.8, elite: 3.6, twoPlus: 3.6, rep: 28.6, extraHistoricalBusts: 34,
+        players: [
+          ['Aaron Jones', 2017, 7, 3, 2],
+          ['Kyren Williams', 2022, 3, 3, 1],
+          ['Tony Pollard', 2019, 3, 1, 0],
+          ['Jordan Howard', 2016, 2, 1, 0],
+          ['Theo Riddick', 2013, 1, 1, 0],
+          ['Chuba Hubbard', 2021, 1, 1, 0],
+          ['Cam Skattebo', 2025, 1, 1, 0],
+          ['Bucky Irving', 2024, 2, 0, 0],
+          ['Jerome Harrison', 2006, 1, 0, 0],
+          ['Dion Lewis', 2011, 1, 0, 0],
+          ['Mike Davis', 2015, 1, 0, 0],
+          ['Tarik Cohen', 2017, 1, 0, 0],
+          ['Tyler Allgeier', 2022, 0, 0, 0],
+          ['Isaiah Spiller', 2022, 0, 0, 0],
+          ['Evan Hull', 2023, 0, 0, 0],
+          ['Braelon Allen', 2024, 0, 0, 0],
+          ['Dylan Laube', 2024, 0, 0, 0],
+          ['Ollie Gordon', 2025, 0, 0, 0],
+          ['LeQuint Allen', 2025, 0, 0, 0],
+          ['Tahj Brooks', 2025, 0, 0, 0],
+          ['Damien Martinez', 2025, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'RB', name: 'Clogger Committee', n: 198, hit: 4.6, nearTotal: 12.6, elite: 0.5, twoPlus: 1.5, rep: 33.3, extraHistoricalBusts: 155,
+        players: [
+          ['Devonta Freeman', 2014, 4, 2, 1],
+          ['Chris Carson', 2017, 3, 2, 0],
+          ['Chase Brown', 2023, 2, 2, 0],
+          ['Justin Forsett', 2008, 2, 1, 0],
+          ['James White', 2014, 2, 1, 0],
+          ['Alfred Morris', 2012, 1, 1, 0],
+          ['Myles Gaskin', 2019, 1, 1, 0],
+          ['Elijah Mitchell', 2021, 1, 1, 0],
+          ['Isiah Pacheco', 2022, 1, 1, 0],
+          ['Lamar Miller', 2012, 4, 0, 0],
+          ['Rhamondre Stevenson', 2021, 3, 0, 0],
+          ['Latavius Murray', 2013, 2, 0, 0],
+          ['Marlon Mack', 2017, 2, 0, 0],
+          ['Ryan Torain', 2008, 1, 0, 0],
+          ['Tim Hightower', 2008, 1, 0, 0],
+          ['Bilal Powell', 2011, 1, 0, 0],
+          ['Chris Thompson', 2013, 1, 0, 0],
+          ['Zac Stacy', 2013, 1, 0, 0],
+          ['Spencer Ware', 2013, 1, 0, 0],
+          ['Rex Burkhead', 2013, 1, 0, 0],
+          ['Andre Ellington', 2013, 1, 0, 0],
+          ['Jay Ajayi', 2015, 1, 0, 0],
+          ['Jamaal Williams', 2017, 1, 0, 0],
+          ['Jerome Ford', 2022, 1, 0, 0],
+          ['Dameon Pierce', 2022, 1, 0, 0],
+          ['Roschon Johnson', 2023, 0, 0, 0],
+          ['Chris Rodriguez Jr', 2023, 0, 0, 0],
+          ['Tyrone Tracy Jr', 2024, 0, 0, 0],
+          ['Kimani Vidal', 2024, 0, 0, 0],
+          ['Jaylen Wright', 2024, 0, 0, 0],
+          ['Ray Davis', 2024, 0, 0, 0],
+          ['Audric Estime', 2024, 0, 0, 0],
+          ['Will Shipley', 2024, 0, 0, 0],
+          ['Isaac Guerendo', 2024, 0, 0, 0],
+          ['Bhayshul Tuten', 2025, 0, 0, 0],
+          ['Kyle Monangai', 2025, 0, 0, 0],
+          ['Woody Marks', 2025, 0, 0, 0],
+          ['Jacory Croskey-Merritt', 2025, 0, 0, 0],
+          ['Dylan Sampson', 2025, 0, 0, 0],
+          ['Devin Neal', 2025, 0, 0, 0],
+          ['Jaydon Blue', 2025, 0, 0, 0],
+          ['DJ Giddens', 2025, 0, 0, 0],
+          ['Jarquez Hunter', 2025, 0, 0, 0],
+          ['Jonah Coleman', 2026, 'rookie'],
+          ['Mike Washington Jr', 2026, 'rookie'],
+          ['Emmett Johnson', 2026, 'rookie'],
+          ['Nicholas Singleton', 2026, 'rookie'],
+          ['Kaytron Allen', 2026, 'rookie'],
+          ['Demond Claiborne', 2026, 'rookie'],
+          ['Seth McGowan', 2026, 'rookie'],
+          ['Adam Randall', 2026, 'rookie'],
+          ['Jamarion Miller', 2026, 'rookie']
+        ]
+      },
+
+      // ---------------- WR Size-Adjusted (near=12+, hit=14+, elite=16+, superElite=18+) ----------------
+      {
+        pos: 'WR', name: 'Cornerstone Alpha Hog', n: 1, hit: 100.0, nearTotal: 100.0, elite: 100.0, twoPlus: 100.0, rep: 100.0, extraHistoricalBusts: 0,
+        players: [
+          ["Ja'Marr Chase", 2021, 5, 5, 5, 3]
+        ]
+      },
+      {
+        pos: 'WR', name: 'Elite Alpha Hog', n: 13, hit: 84.6, nearTotal: 92.3, elite: 69.2, twoPlus: 69.2, rep: 81.8, extraHistoricalBusts: 0,
+        players: [
+          ['Mike Evans', 2014, 11, 10, 7, 1],
+          ['Julio Jones', 2011, 9, 9, 7, 5],
+          ['Calvin Johnson', 2007, 8, 8, 7, 3],
+          ['AJ Green', 2011, 8, 8, 5, 3],
+          ['Amari Cooper', 2015, 8, 6, 0, 0],
+          ['Odell Beckham Jr', 2014, 5, 4, 4, 4],
+          ['Michael Crabtree', 2009, 4, 3, 0, 0],
+          ['Drake London', 2022, 2, 2, 2, 0],
+          ['Jaxon Smith-Njigba', 2023, 2, 2, 1, 1],
+          ['Sammy Watkins', 2014, 2, 1, 1, 0],
+          ['Malik Nabers', 2024, 1, 1, 1, 0],
+          ['Tetairoa McMillan', 2025, 1, 0, 0, 0],
+          ['Justin Blackmon', 2012, 0, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'WR', name: 'Elite Beta Hog', n: 5, hit: 60.0, nearTotal: 80.0, elite: 20.0, twoPlus: 40.0, rep: 66.7, extraHistoricalBusts: 0,
+        players: [
+          ['Percy Harvin', 2009, 4, 3, 2, 0],
+          ['DeVonta Smith', 2021, 3, 3, 0, 0],
+          ['Garrett Wilson', 2022, 3, 1, 0, 0],
+          ['Ted Ginn Jr', 2007, 1, 0, 0, 0],
+          ['Marvin Harrison Jr', 2024, 0, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'WR', name: 'Elite Beta Runt', n: 1, hit: 0.0, nearTotal: 0.0, elite: 0.0, twoPlus: 0.0, rep: 0.0, extraHistoricalBusts: 0,
+        players: [
+          ['Travis Hunter', 2025, 0, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'WR', name: 'Upside Alpha Hog', n: 23, hit: 60.9, nearTotal: 69.6, elite: 52.2, twoPlus: 52.2, rep: 85.7, extraHistoricalBusts: 0,
+        players: [
+          ['Davante Adams', 2014, 10, 10, 6, 4],
+          ['AJ Brown', 2019, 7, 5, 4, 0],
+          ['Demaryius Thomas', 2010, 6, 5, 4, 3],
+          ['Justin Jefferson', 2020, 5, 5, 5, 4],
+          ['Alshon Jeffery', 2012, 6, 4, 3, 0],
+          ['Robert Woods', 2013, 5, 4, 1, 0],
+          ['Jarvis Landry', 2014, 5, 4, 2, 0],
+          ['Dez Bryant', 2010, 5, 3, 3, 3],
+          ['DJ Moore', 2018, 5, 3, 1, 0],
+          ['Allen Robinson', 2014, 4, 3, 2, 1],
+          ['JuJu Smith-Schuster', 2017, 3, 2, 1, 1],
+          ['Hakeem Nicks', 2009, 2, 2, 1, 1],
+          ['Kenny Britt', 2009, 2, 1, 0, 0],
+          ['DeVante Parker', 2015, 1, 1, 0, 0],
+          ['Corey Davis', 2017, 1, 0, 0, 0],
+          ['Quentin Johnston', 2023, 1, 0, 0, 0],
+          ['Dwayne Jarrett', 2007, 0, 0, 0, 0],
+          ['Malcolm Kelly', 2008, 0, 0, 0, 0],
+          ['Nelson Agholor', 2015, 0, 0, 0, 0],
+          ["N'Keal Harry", 2019, 0, 0, 0, 0],
+          ['Laviska Shenault Jr', 2020, 0, 0, 0, 0],
+          ['Treylon Burks', 2022, 0, 0, 0, 0],
+          ['Luther Burden III', 2025, 0, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'WR', name: 'Upside Alpha Runt', n: 14, hit: 50.0, nearTotal: 71.4, elite: 28.6, twoPlus: 21.4, rep: 42.9, extraHistoricalBusts: 0,
+        players: [
+          ['DeAndre Hopkins', 2013, 10, 8, 6, 3],
+          ['Dwayne Bowe', 2007, 4, 3, 1, 0],
+          ['Tee Higgins', 2020, 5, 2, 1, 1],
+          ['Kelvin Benjamin', 2014, 2, 1, 0, 0],
+          ['Mike Williams', 2017, 2, 1, 0, 0],
+          ['Cordarrelle Patterson', 2013, 1, 1, 0, 0],
+          ['Brian Thomas Jr', 2024, 1, 1, 1, 0],
+          ['Darrius Heyward-Bey', 2009, 1, 0, 0, 0],
+          ['Michael Floyd', 2012, 1, 0, 0, 0],
+          ['Rome Odunze', 2024, 1, 0, 0, 0],
+          ['Kevin White', 2015, 0, 0, 0, 0],
+          ['Laquon Treadwell', 2016, 0, 0, 0, 0],
+          ['Terrace Marshall Jr', 2021, 0, 0, 0, 0],
+          ['Emeka Egbuka', 2025, 0, 0, 0, 0],
+          ['Jordyn Tyson', 2026, 'rookie'],
+          ['Kevin Concepcion', 2026, 'rookie'],
+          ['Omar Cooper Jr', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'WR', name: 'Upside Beta Hog', n: 18, hit: 38.9, nearTotal: 61.1, elite: 22.2, twoPlus: 11.1, rep: 28.6, extraHistoricalBusts: 0,
+        players: [
+          ['Brandin Cooks', 2014, 7, 5, 0, 0],
+          ['CeeDee Lamb', 2020, 6, 5, 3, 1],
+          ['Golden Tate', 2010, 5, 1, 1, 0],
+          ['Tyler Boyd', 2016, 3, 1, 0, 0],
+          ['Will Fuller', 2016, 2, 1, 1, 0],
+          ['Jordan Addison', 2023, 2, 1, 0, 0],
+          ['Sidney Rice', 2007, 1, 1, 1, 0],
+          ['Marquise Brown', 2019, 2, 0, 0, 0],
+          ['Jerry Jeudy', 2020, 2, 0, 0, 0],
+          ['Elijah Moore', 2021, 1, 0, 0, 0],
+          ["Wan'Dale Robinson", 2022, 1, 0, 0, 0],
+          ['Jonathan Baldwin', 2011, 0, 0, 0, 0],
+          ['AJ Jenkins', 2012, 0, 0, 0, 0],
+          ['Marqise Lee', 2014, 0, 0, 0, 0],
+          ['Corey Coleman', 2016, 0, 0, 0, 0],
+          ['Rashod Bateman', 2021, 0, 0, 0, 0],
+          ['Tutu Atwell', 2021, 0, 0, 0, 0],
+          ['Skyy Moore', 2022, 0, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'WR', name: 'Upside Beta Runt', n: 21, hit: 47.6, nearTotal: 61.9, elite: 28.6, twoPlus: 33.3, rep: 70.0, extraHistoricalBusts: 0,
+        players: [
+          ['DeSean Jackson', 2008, 7, 3, 2, 0],
+          ['Jeremy Maclin', 2009, 5, 3, 2, 0],
+          ['Jaylen Waddle', 2021, 3, 3, 0, 0],
+          ['Calvin Ridley', 2018, 4, 2, 1, 1],
+          ['Santonio Holmes', 2006, 3, 2, 0, 0],
+          ['Randall Cobb', 2011, 3, 2, 1, 0],
+          ['Chris Olave', 2022, 3, 2, 1, 0],
+          ['Christian Kirk', 2018, 4, 1, 0, 0],
+          ['Curtis Samuel', 2017, 1, 1, 0, 0],
+          ['George Pickens', 2022, 1, 1, 1, 0],
+          ['Kendall Wright', 2012, 2, 0, 0, 0],
+          ['Jameson Williams', 2022, 2, 0, 0, 0],
+          ['Tavon Austin', 2013, 1, 0, 0, 0],
+          ['Justin Hunter', 2013, 0, 0, 0, 0],
+          ['John Ross', 2017, 0, 0, 0, 0],
+          ['Henry Ruggs III', 2020, 0, 0, 0, 0],
+          ['Jalen Reagor', 2020, 0, 0, 0, 0],
+          ['John Metchie III', 2022, 0, 0, 0, 0],
+          ['Jahan Dotson', 2022, 0, 0, 0, 0],
+          ['Xavier Worthy', 2024, 0, 0, 0, 0],
+          ['Matthew Golden', 2025, 0, 0, 0, 0],
+          ['Carnell Tate', 2026, 'rookie'],
+          ['Makai Lemon', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'WR', name: 'Depth Alpha Hog', n: 14, hit: 28.6, nearTotal: 28.6, elite: 14.3, twoPlus: 15.4, rep: 50.0, extraHistoricalBusts: 0,
+        players: [
+          ['Keenan Allen', 2013, 11, 9, 6, 2],
+          ['Chris Godwin', 2017, 5, 4, 2, 1],
+          ['Jordan Matthews', 2014, 3, 1, 0, 0],
+          ['Michael Gallup', 2018, 1, 1, 0, 0],
+          ['Earl Bennett', 2008, 0, 0, 0, 0],
+          ['Ramses Barden', 2009, 0, 0, 0, 0],
+          ['Rueben Randle', 2012, 0, 0, 0, 0],
+          ['Stephen Hill', 2012, 0, 0, 0, 0],
+          ['Leonte Carroo', 2016, 0, 0, 0, 0],
+          ['Chad Williams', 2017, 0, 0, 0, 0],
+          ['Taywan Taylor', 2017, 0, 0, 0, 0],
+          ['James Washington', 2018, 0, 0, 0, 0],
+          ['David Bell', 2022, 0, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'WR', name: 'Depth Alpha Runt', n: 91, hit: 19.8, nearTotal: 28.6, elite: 11.0, twoPlus: 11.0, rep: 55.6, extraHistoricalBusts: 50,
+        players: [
+          ['Cooper Kupp', 2017, 7, 5, 4, 2],
+          ['Greg Jennings', 2006, 6, 4, 4, 0],
+          ['Jordy Nelson', 2008, 5, 4, 4, 2],
+          ['Michael Thomas', 2016, 4, 4, 4, 2],
+          ['DK Metcalf', 2019, 6, 3, 1, 0],
+          ['Eric Decker', 2010, 4, 3, 3, 0],
+          ['Mike Wallace', 2009, 6, 2, 0, 0],
+          ['Terry McLaurin', 2019, 5, 2, 0, 0],
+          ['Deebo Samuel', 2019, 4, 2, 2, 1],
+          ['Brandon Aiyuk', 2020, 3, 2, 0, 0],
+          ['Courtland Sutton', 2018, 3, 1, 0, 0],
+          ['Michael Pittman Jr', 2020, 3, 1, 0, 0],
+          ['Steve Smith NYG', 2007, 2, 1, 1, 0],
+          ['John Brown', 2014, 2, 1, 0, 0],
+          ['Kenny Golladay', 2017, 2, 1, 0, 0],
+          ['Rashee Rice', 2023, 2, 1, 1, 1],
+          ['James Jones', 2007, 1, 1, 0, 0],
+          ['Josh Gordon', 2012, 1, 1, 1, 1],
+          ['Mike Sims-Walker', 2007, 1, 0, 0, 0],
+          ['Brandon LaFell', 2010, 1, 0, 0, 0],
+          ['Torrey Smith', 2011, 1, 0, 0, 0],
+          ['Devin Funchess', 2015, 1, 0, 0, 0],
+          ['Chase Claypool', 2020, 1, 0, 0, 0],
+          ['Alec Pierce', 2022, 1, 0, 0, 0],
+          ['Michael Wilson', 2023, 1, 0, 0, 0],
+          ['Cedric Tillman', 2023, 0, 0, 0, 0],
+          ['Jonathan Mingo', 2023, 0, 0, 0, 0],
+          ['Jalen McMillan', 2024, 0, 0, 0, 0],
+          ['Adonai Mitchell', 2024, 0, 0, 0, 0],
+          ['Keon Coleman', 2024, 0, 0, 0, 0],
+          ['Xavier Legette', 2024, 0, 0, 0, 0],
+          ["Ja'Lynn Polk", 2024, 0, 0, 0, 0],
+          ['Malachi Corley', 2024, 0, 0, 0, 0],
+          ['Jermaine Burton', 2024, 0, 0, 0, 0],
+          ['Luke McCaffrey', 2024, 0, 0, 0, 0],
+          ['Jayden Higgins', 2025, 0, 0, 0, 0],
+          ['Pat Bryant', 2025, 0, 0, 0, 0],
+          ['Tre Harris', 2025, 0, 0, 0, 0],
+          ['Isaac TeSlaa', 2025, 0, 0, 0, 0],
+          ['Savion Williams', 2025, 0, 0, 0, 0],
+          ['Jack Bech', 2025, 0, 0, 0, 0],
+          ['Germie Bernard', 2026, 'rookie'],
+          ["De'Zhaun Stribling", 2026, 'rookie'],
+          ['Malachi Fields', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'WR', name: 'Depth Beta Hog', n: 8, hit: 25.0, nearTotal: 50.0, elite: 12.5, twoPlus: 12.5, rep: 50.0, extraHistoricalBusts: 0,
+        players: [
+          ['Tyler Lockett', 2015, 5, 4, 1, 0],
+          ['Laurent Robinson', 2007, 1, 1, 0, 0],
+          ['Mario Manningham', 2008, 1, 0, 0, 0],
+          ['Josh Downs', 2023, 1, 0, 0, 0],
+          ['Vincent Brown', 2011, 0, 0, 0, 0],
+          ['Andy Isabella', 2019, 0, 0, 0, 0],
+          ['Dyami Brown', 2021, 0, 0, 0, 0],
+          ["D'Wayne Eskridge", 2021, 0, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'WR', name: 'Depth Beta Runt', n: 61, hit: 13.1, nearTotal: 21.3, elite: 4.9, twoPlus: 5.0, rep: 37.5, extraHistoricalBusts: 40,
+        players: [
+          ['TY Hilton', 2012, 6, 3, 3, 0],
+          ['Emmanuel Sanders', 2010, 4, 3, 1, 1],
+          ['Diontae Johnson', 2019, 2, 2, 1, 0],
+          ['Zay Flowers', 2023, 3, 1, 0, 0],
+          ['Eddie Royal', 2008, 1, 1, 0, 0],
+          ['DJ Chark', 2018, 1, 1, 0, 0],
+          ['Tank Dell', 2023, 1, 1, 0, 0],
+          ['Ladd McConkey', 2024, 1, 1, 0, 0],
+          ['Sterling Shepard', 2016, 3, 0, 0, 0],
+          ['Harry Douglas', 2008, 1, 0, 0, 0],
+          ['Zay Jones', 2017, 1, 0, 0, 0],
+          ['Christian Watson', 2022, 1, 0, 0, 0],
+          ['Jayden Reed', 2023, 1, 0, 0, 0],
+          ['Marvin Mims', 2023, 0, 0, 0, 0],
+          ['Tre Tucker', 2023, 0, 0, 0, 0],
+          ['Jalin Hyatt', 2023, 0, 0, 0, 0],
+          ['Ricky Pearsall', 2024, 0, 0, 0, 0],
+          ['Roman Wilson', 2024, 0, 0, 0, 0],
+          ['Jaylin Noel', 2025, 0, 0, 0, 0],
+          ['Kyle Williams', 2025, 0, 0, 0, 0],
+          ['Tai Felton', 2025, 0, 0, 0, 0],
+          ['Denzel Boston', 2026, 'rookie'],
+          ["Ja'Kobi Lane", 2026, 'rookie'],
+          ['Antonio Williams', 2026, 'rookie'],
+          ['Zachariah Branch', 2026, 'rookie'],
+          ['Chris Brazzell II', 2026, 'rookie'],
+          ['Ted Hurst', 2026, 'rookie'],
+          ['Caleb Douglas', 2026, 'rookie'],
+          ['Zavion Thomas', 2026, 'rookie'],
+          ['Chris Bell', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'WR', name: 'Clogger Alpha Hog', n: 12, hit: 16.7, nearTotal: 41.7, elite: 16.7, twoPlus: 8.3, rep: 50.0, extraHistoricalBusts: 0,
+        players: [
+          ['Stefon Diggs', 2015, 10, 9, 4, 2],
+          ['Pierre Garcon', 2008, 5, 1, 1, 0],
+          ['Mike Williams TB', 2010, 2, 0, 0, 0],
+          ['Cecil Shorts', 2011, 2, 0, 0, 0],
+          ['Khalil Shakir', 2022, 1, 0, 0, 0],
+          ['Dezmon Briscoe', 2010, 0, 0, 0, 0],
+          ['Charles Johnson', 2013, 0, 0, 0, 0],
+          ['Aaron Mellette', 2013, 0, 0, 0, 0],
+          ['Pharoh Cooper', 2016, 0, 0, 0, 0],
+          ['Justin Watson', 2018, 0, 0, 0, 0],
+          ['Gabriel Davis', 2020, 0, 0, 0, 0],
+          ['Mike Strachan', 2021, 0, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'WR', name: 'Clogger Alpha Runt', n: 155, hit: 2.6, nearTotal: 3.9, elite: 2.6, twoPlus: 1.9, rep: 75.0, extraHistoricalBusts: 139,
+        players: [
+          ['Brandon Marshall', 2006, 9, 8, 6, 4],
+          ['Amon-Ra St Brown', 2021, 5, 4, 4, 3],
+          ['Puka Nacua', 2023, 3, 3, 3, 2],
+          ['Austin Collie', 2009, 1, 1, 1, 1],
+          ['Rishard Matthews', 2012, 2, 0, 0, 0],
+          ['Jauan Jennings', 2020, 1, 0, 0, 0],
+          ['Kayshon Boutte', 2023, 0, 0, 0, 0],
+          ['Dontayvion Wicks', 2023, 0, 0, 0, 0],
+          ['Jordan Whittington', 2024, 0, 0, 0, 0],
+          ['Javon Baker', 2024, 0, 0, 0, 0],
+          ['Johnny Wilson', 2024, 0, 0, 0, 0],
+          ['Brenden Rice', 2024, 0, 0, 0, 0],
+          ['Elic Ayomanor', 2025, 0, 0, 0, 0],
+          ['Chimere Dike', 2025, 0, 0, 0, 0],
+          ['Jalen Royals', 2025, 0, 0, 0, 0],
+          ['Jordan Watkins', 2025, 0, 0, 0, 0],
+          ['Elijah Sarratt', 2026, 'rookie'],
+          ['Colbie Young', 2026, 'rookie'],
+          ['Kendrick Law', 2026, 'rookie'],
+          ['Josh Cameron', 2026, 'rookie'],
+          ['CJ Williams', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'WR', name: 'Clogger Beta Hog', n: 11, hit: 0.0, nearTotal: 0.0, elite: 0.0, twoPlus: 0.0, rep: 0.0, extraHistoricalBusts: 0,
+        players: [
+          ['Jeff Janis', 2014, 0, 0, 0, 0],
+          ['Rashard Higgins', 2016, 0, 0, 0, 0],
+          ['Daniel Braverman', 2016, 0, 0, 0, 0],
+          ['Trent Taylor', 2017, 0, 0, 0, 0],
+          ['Isaiah Ford', 2017, 0, 0, 0, 0],
+          ['Cedrick Wilson Jr', 2018, 0, 0, 0, 0],
+          ['Richie James', 2018, 0, 0, 0, 0],
+          ['Isaiah Hodgins', 2020, 0, 0, 0, 0],
+          ['Tylan Wallace', 2021, 0, 0, 0, 0],
+          ['Troy Franklin', 2024, 0, 0, 0, 0],
+          ['Ricky White', 2025, 0, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'WR', name: 'Clogger Beta Runt', n: 169, hit: 3.6, nearTotal: 6.5, elite: 1.8, twoPlus: 2.4, rep: 66.7, extraHistoricalBusts: 146,
+        players: [
+          ['Antonio Brown', 2010, 9, 7, 6, 6],
+          ['Tyreek Hill', 2016, 9, 7, 5, 4],
+          ['Julian Edelman', 2009, 6, 6, 2, 1],
+          ['Marvin Jones', 2012, 4, 3, 0, 0],
+          ['Martavis Bryant', 2014, 2, 1, 0, 0],
+          ['Hunter Renfrow', 2019, 1, 1, 0, 0],
+          ['Jamison Crowder', 2015, 2, 0, 0, 0],
+          ['Darnell Mooney', 2020, 2, 0, 0, 0],
+          ['Steve Breaston', 2007, 1, 0, 0, 0],
+          ['Brian Hartline', 2009, 1, 0, 0, 0],
+          ['Darius Slayton', 2019, 1, 0, 0, 0],
+          ['Romeo Doubs', 2022, 0, 0, 0, 0],
+          ['Jalen Nailor', 2022, 0, 0, 0, 0],
+          ['Calvin Austin III', 2022, 0, 0, 0, 0],
+          ['Parker Washington', 2023, 0, 0, 0, 0],
+          ['Demario Douglas', 2023, 0, 0, 0, 0],
+          ['Andrei Iosivas', 2023, 0, 0, 0, 0],
+          ['Malik Washington', 2024, 0, 0, 0, 0],
+          ['Devaughn Vele', 2024, 0, 0, 0, 0],
+          ['Tory Horton', 2025, 0, 0, 0, 0],
+          ['Tez Johnson', 2025, 0, 0, 0, 0],
+          ["Dont'e Thornton", 2025, 0, 0, 0, 0],
+          ['Jaylin Lane', 2025, 0, 0, 0, 0],
+          ['Reggie Virgil', 2026, 'rookie'],
+          ['Skyler Bell', 2026, 'rookie'],
+          ['Brenen Thompson', 2026, 'rookie'],
+          ['Bryce Lance', 2026, 'rookie'],
+          ['Barion Brown', 2026, 'rookie'],
+          ['Kevin Coleman Jr', 2026, 'rookie'],
+          ['Kaden Wetjen', 2026, 'rookie'],
+          ['Emmanuel Henderson', 2026, 'rookie'],
+          ['CJ Daniels', 2026, 'rookie'],
+          ['Malik Benson', 2026, 'rookie'],
+          ['Deion Burks', 2026, 'rookie'],
+          ['Cyrus Allen', 2026, 'rookie'],
+          ['Lewis Bond', 2026, 'rookie']
+        ]
+      },
+
+      // ---------------- TE 1.5 TEP (near=12+, hit=14+, elite=17+) ----------------
+      {
+        pos: 'TE', name: 'Elite Freak', n: 1, hit: 100.0, nearTotal: 100.0, elite: 0.0, twoPlus: 0.0, rep: 0.0, extraHistoricalBusts: 0,
+        players: [
+          ['Kyle Pitts', 2021, 2, 1, 0]
+        ]
+      },
+      {
+        pos: 'TE', name: 'Elite Gifted', n: 1, hit: 100.0, nearTotal: 100.0, elite: 100.0, twoPlus: 100.0, rep: 100.0, extraHistoricalBusts: 0,
+        players: [
+          ['Brock Bowers', 2024, 2, 2, 2]
+        ]
+      },
+      {
+        pos: 'TE', name: 'Upside Freak', n: 6, hit: 66.7, nearTotal: 100.0, elite: 33.3, twoPlus: 66.7, rep: 100.0, extraHistoricalBusts: 0,
+        players: [
+          ['Rob Gronkowski', 2010, 7, 6, 5],
+          ['Greg Olsen', 2007, 6, 4, 0],
+          ['Evan Engram', 2017, 6, 2, 0],
+          ['Vernon Davis', 2006, 4, 2, 1],
+          ['OJ Howard', 2017, 1, 0, 0],
+          ['Noah Fant', 2019, 1, 0, 0],
+          ['Kenyon Sadiq', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'TE', name: 'Upside Gifted', n: 17, hit: 41.2, nearTotal: 70.6, elite: 11.8, twoPlus: 29.4, rep: 71.4, extraHistoricalBusts: 0,
+        players: [
+          ['TJ Hockenson', 2019, 4, 3, 1],
+          ['Trey McBride', 2022, 3, 2, 2],
+          ['Sam LaPorta', 2023, 3, 2, 0],
+          ['David Njoku', 2017, 3, 2, 0],
+          ['Tyler Eifert', 2013, 2, 2, 0],
+          ['Hunter Henry', 2016, 3, 1, 0],
+          ['Eric Ebron', 2014, 2, 1, 0],
+          ['Jermaine Gresham', 2010, 2, 0, 0],
+          ['Marcedes Lewis', 2006, 1, 0, 0],
+          ['Colston Loveland', 2025, 1, 0, 0],
+          ['Harold Fannin Jr', 2025, 1, 0, 0],
+          ['Tyler Warren', 2025, 1, 0, 0],
+          ['Austin Seferian-Jenkins', 2014, 0, 0, 0],
+          ['Jace Amaro', 2014, 0, 0, 0],
+          ['Adam Shaheen', 2017, 0, 0, 0],
+          ['Dalton Kincaid', 2023, 0, 0, 0],
+          ['Michael Mayer', 2023, 0, 0, 0]
+        ]
+      },
+      {
+        pos: 'TE', name: 'Depth Freak', n: 17, hit: 17.7, nearTotal: 35.3, elite: 11.8, twoPlus: 11.8, rep: 66.7, extraHistoricalBusts: 0,
+        players: [
+          ['Travis Kelce', 2013, 12, 9, 7],
+          ['Jimmy Graham', 2010, 7, 4, 4],
+          ['Jared Cook', 2009, 2, 1, 0],
+          ['Coby Fleener', 2012, 1, 0, 0],
+          ['Mike Gesicki', 2018, 1, 0, 0],
+          ['Dawson Knox', 2019, 1, 0, 0],
+          ['Joe Klopfenstein', 2006, 0, 0, 0],
+          ['Leonard Pope', 2006, 0, 0, 0],
+          ['Tony Scheffler', 2006, 0, 0, 0],
+          ['Brad Cottam', 2008, 0, 0, 0],
+          ['Rob Housler', 2011, 0, 0, 0],
+          ['Michael Egnew', 2012, 0, 0, 0],
+          ['Jelani Woods', 2022, 0, 0, 0],
+          ['Darnell Washington', 2023, 0, 0, 0],
+          ['Luke Musgrave', 2023, 0, 0, 0],
+          ['Luke Schoonmaker', 2023, 0, 0, 0],
+          ['Tip Reiman', 2024, 0, 0, 0],
+          ['Eli Stowers', 2026, 'rookie'],
+          ['Oscar Delp', 2026, 'rookie'],
+          ['Marlin Klein', 2026, 'rookie'],
+          ['Sam Roush', 2026, 'rookie'],
+          ['Eli Raridon', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'TE', name: 'Depth Gifted', n: 63, hit: 17.5, nearTotal: 23.8, elite: 6.4, twoPlus: 6.4, rep: 36.4, extraHistoricalBusts: 40,
+        players: [
+          ['Zach Ertz', 2013, 8, 4, 3],
+          ['Mark Andrews', 2018, 6, 4, 1],
+          ['Jordan Reed', 2013, 3, 3, 1],
+          ['Dallas Goedert', 2018, 5, 2, 0],
+          ['Martellus Bennett', 2008, 4, 1, 0],
+          ['Brandon Pettigrew', 2009, 2, 1, 0],
+          ['Austin Hooper', 2016, 2, 1, 1],
+          ['Fred Davis', 2008, 1, 1, 0],
+          ['Kyle Rudolph', 2011, 1, 1, 0],
+          ['Jonnu Smith', 2017, 1, 1, 0],
+          ['Tucker Kraft', 2023, 1, 1, 0],
+          ['Zach Miller', 2007, 2, 0, 0],
+          ['Jermichael Finley', 2008, 2, 0, 0],
+          ['Dustin Keller', 2008, 1, 0, 0],
+          ['Cole Kmet', 2020, 1, 0, 0],
+          ['Hayden Hurst', 2018, 0, 0, 0],
+          ['Pat Freiermuth', 2021, 0, 0, 0],
+          ['Greg Dulcich', 2022, 0, 0, 0],
+          ['Brenton Strange', 2023, 0, 0, 0],
+          ['Ben Sinnott', 2024, 0, 0, 0],
+          ['Elijah Arroyo', 2025, 0, 0, 0],
+          ['Mason Taylor', 2025, 0, 0, 0],
+          ['Terrance Ferguson', 2025, 0, 0, 0],
+          ['Max Klare', 2026, 'rookie'],
+          ['Nate Boerkircher', 2026, 'rookie'],
+          ['Will Kacmarek', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'TE', name: 'Clogger Freak', n: 20, hit: 15.0, nearTotal: 20.0, elite: 10.0, twoPlus: 10.0, rep: 66.7, extraHistoricalBusts: 9,
+        players: [
+          ['George Kittle', 2017, 8, 8, 5],
+          ['Darren Waller', 2015, 3, 3, 1],
+          ['Jordan Cameron', 2011, 1, 1, 0],
+          ['Logan Thomas', 2014, 1, 0, 0],
+          ['Albert Okwuegbunam', 2020, 0, 0, 0],
+          ['Charlie Kolar', 2022, 0, 0, 0],
+          ['Daniel Bellinger', 2022, 0, 0, 0],
+          ['Will Mallory', 2023, 0, 0, 0],
+          ['Zack Kuntz', 2023, 0, 0, 0],
+          ['Jared Wiley', 2024, 0, 0, 0],
+          ['Theo Johnson', 2024, 0, 0, 0],
+          ['Matthew Hibner', 2026, 'rookie']
+        ]
+      },
+      {
+        pos: 'TE', name: 'Clogger Gifted', n: 172, hit: 4.7, nearTotal: 8.1, elite: 2.9, twoPlus: 1.8, rep: 37.5, extraHistoricalBusts: 149,
+        players: [
+          ['Delanie Walker', 2006, 5, 2, 1],
+          ['Julius Thomas', 2011, 3, 2, 1],
+          ['Aaron Hernandez', 2010, 2, 2, 1],
+          ['Owen Daniels', 2006, 3, 1, 1],
+          ['Dalton Schultz', 2018, 3, 1, 0],
+          ['Brent Celek', 2007, 2, 1, 0],
+          ['Gary Barnidge', 2008, 1, 1, 1],
+          ['Zach Miller CHI', 2009, 1, 1, 0],
+          ['Dennis Pitta', 2010, 2, 0, 0],
+          ['Jake Ferguson', 2022, 2, 0, 0],
+          ['Brandon Myers', 2009, 1, 0, 0],
+          ['Charles Clay', 2011, 1, 0, 0],
+          ['Tyler Higbee', 2016, 1, 0, 0],
+          ['Cade Otton', 2022, 1, 0, 0],
+          ['Isaiah Likely', 2022, 0, 0, 0],
+          ['Chigoziem Okonkwo', 2022, 0, 0, 0],
+          ['Noah Gray', 2021, 0, 0, 0],
+          ['AJ Barner', 2024, 0, 0, 0],
+          ['Cade Stover', 2024, 0, 0, 0],
+          ["Ja'Tavion Sanders", 2024, 0, 0, 0],
+          ['Gunnar Helm', 2025, 0, 0, 0],
+          ['Oronde Gadsden', 2025, 0, 0, 0],
+          ['Mitchell Evans', 2025, 0, 0, 0],
+          ['Justin Joly', 2026, 'rookie'],
+          ['Jack Endries', 2026, 'rookie'],
+          ['Joe Royer', 2026, 'rookie'],
+          ['Dallen Bentley', 2026, 'rookie'],
+          ['Tanner Koziol', 2026, 'rookie'],
+          ['Josh Cuevas', 2026, 'rookie'],
+          ['Riley Nowakowski', 2026, 'rookie'],
+          ['Seydou Traore', 2026, 'rookie'],
+          ['Bauer Sharp', 2026, 'rookie'],
+          ['Jaren Kanak', 2026, 'rookie'],
+          ['Carsen Ryan', 2026, 'rookie']
+        ]
+      }
+    ];
+
+    // =========================================================================
+    // 3. NORMALIZE DATA & INDEX ALL PLAYERS FOR INSTANT LOOKUP
+    // =========================================================================
+    const BUCKETS = [];
+    const ALL_PLAYERS = [];
+    const PLAYER_BY_ID = new Map();
+    const BUCKET_BY_ID = new Map();
+
+    let nextPlayerId = 1;
+
+    RAW_BUCKETS.forEach((raw, bIdx) => {
+      const bucketId = `${raw.pos}_${bIdx}`;
+      const isClogger = raw.name.toLowerCase().startsWith('clogger');
+      const nearOnlyPct = Math.max(0, Number((raw.nearTotal - raw.hit).toFixed(1)));
+      const bustPct = Math.max(0, Number((100 - raw.nearTotal).toFixed(1)));
+
+      const parsedPlayers = raw.players.map(tuple => {
+        const name = tuple[0];
+        const year = tuple[1];
+        const isRookie = tuple[2] === 'rookie';
+        const near = isRookie ? 0 : Number(tuple[2] || 0);
+        const hit = isRookie ? 0 : Number(tuple[3] || 0);
+        const elite = isRookie ? 0 : Number(tuple[4] || 0);
+        const superElite = (!isRookie && raw.pos === 'WR') ? Number(tuple[5] || 0) : 0;
+
+        let status = 'bust';
+        if (isRookie) status = 'rookie';
+        else if (hit > 0) status = 'hit';
+        else if (near > 0) status = 'near';
+
+        const playerObj = {
+          id: `p_${nextPlayerId++}`,
+          name,
+          norm: normStr(name),
+          year,
+          pos: raw.pos,
+          bucketId,
+          bucketName: raw.name,
+          isRookie,
+          near,
+          hit,
+          elite,
+          superElite,
+          status
+        };
+        ALL_PLAYERS.push(playerObj);
+        PLAYER_BY_ID.set(playerObj.id, playerObj);
+        return playerObj;
+      });
+
+      const bucketObj = {
+        id: bucketId,
+        pos: raw.pos,
+        name: raw.name,
+        isClogger,
+        n: raw.n,
+        hitPct: raw.hit,
+        nearTotalPct: raw.nearTotal,
+        nearOnlyPct,
+        bustPct,
+        elitePct: raw.elite,
+        twoPlusPct: raw.twoPlus,
+        repPct: raw.rep,
+        extraHistoricalBusts: raw.extraHistoricalBusts || 0,
+        players: parsedPlayers
+      };
+      BUCKETS.push(bucketObj);
+      BUCKET_BY_ID.set(bucketId, bucketObj);
+    });
+
+    // =========================================================================
+    // 4. APPLICATION STATE
+    // =========================================================================
+    const state = {
+      pos: 'QB',
+      outcome: 'all', // 'all' | 'hit' | 'near' | 'bust' | 'rookie'
+      hideOldCloggerBusts: true,
+      expandedBustBuckets: new Set(),
+      modalPlayerId: null,
+      modalSubTab: 'all',
+      searchHighlightIdx: -1,
+      searchResults: [],
+      theme: 'dark'
+    };
+
+    // =========================================================================
+    // 5. UTILITY HELPERS
+    // =========================================================================
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function normStr(s) {
+      return String(s || '').toLowerCase()
+        .replace(/['’.]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+    }
+
+    function shortYear(y) {
+      return `'${String(y).slice(-2)}`;
+    }
+
+    function statusMeta(status) {
+      switch (status) {
+        case 'hit':
+          return {
+            label: 'Hit',
+            chipCls: 'bg-emerald-100/90 hover:bg-emerald-200/90 dark:bg-emerald-500/18 dark:hover:bg-emerald-500/30 text-emerald-950 dark:text-emerald-100 border-emerald-300 dark:border-emerald-500/45',
+            badgeCls: 'bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950',
+            pillBadge: 'bg-emerald-700/15 dark:bg-emerald-400/20 text-emerald-900 dark:text-emerald-200'
+          };
+        case 'near':
+          return {
+            label: 'Near Hit',
+            chipCls: 'bg-amber-100/90 hover:bg-amber-200/90 dark:bg-amber-500/18 dark:hover:bg-amber-500/30 text-amber-950 dark:text-amber-100 border-amber-300 dark:border-amber-500/45',
+            badgeCls: 'bg-amber-500 text-slate-950 dark:bg-amber-400 dark:text-slate-950',
+            pillBadge: 'bg-amber-700/15 dark:bg-amber-400/20 text-amber-950 dark:text-amber-200'
+          };
+        case 'rookie':
+          return {
+            label: '2026 Rookie',
+            chipCls: 'bg-sky-100/90 hover:bg-sky-200/90 dark:bg-sky-500/18 dark:hover:bg-sky-500/30 text-sky-950 dark:text-sky-100 border-sky-300 dark:border-sky-500/45',
+            badgeCls: 'bg-sky-600 text-white dark:bg-sky-400 dark:text-slate-950',
+            pillBadge: 'bg-sky-700/15 dark:bg-sky-400/20 text-sky-900 dark:text-sky-200'
+          };
+        default:
+          return {
+            label: 'Bust',
+            chipCls: 'bg-rose-100/85 hover:bg-rose-200/90 dark:bg-rose-500/15 dark:hover:bg-rose-500/28 text-rose-950 dark:text-rose-100 border-rose-300 dark:border-rose-500/40',
+            badgeCls: 'bg-rose-600 text-white dark:bg-rose-500 dark:text-white',
+            pillBadge: 'bg-rose-700/15 dark:bg-rose-400/20 text-rose-900 dark:text-rose-200'
+          };
+      }
+    }
+
+    function formatSeasonLine(p) {
+      const m = POS_META[p.pos];
+      if (p.isRookie) return '2026 Rookie Class · Pending NFL sample';
+      if (p.status === 'bust') return `0 seasons at ${m.nearLbl}`;
+      const parts = [];
+      if (p.hit > 0) parts.push(`${p.hit}x ${m.hitLbl.replace(' PPG', '')}`);
+      if (p.elite > 0) parts.push(`${p.elite}x ${m.eliteLbl.replace(' PPG', '')}`);
+      if (p.pos === 'WR' && p.superElite > 0) parts.push(`${p.superElite}x 18+`);
+      if (p.hit === 0 && p.near > 0) parts.push(`${p.near}x ${m.nearLbl.replace(' PPG', '')}`);
+      else if (p.near > p.hit) parts.push(`${p.near}x ${m.nearLbl.replace(' PPG', '')}`);
+      return parts.join(' · ');
+    }
+
+    // =========================================================================
+    // 6. THEME HANDLING (DEFAULT DARK SLATE)
+    // =========================================================================
+    function applyTheme() {
+      const isDark = state.theme === 'dark';
+      document.documentElement.classList.toggle('dark', isDark);
+      document.querySelectorAll('.theme-icon').forEach(el => { el.textContent = isDark ? '☀️' : '🌙'; });
+      document.querySelectorAll('.theme-label').forEach(el => { el.textContent = isDark ? 'Light' : 'Dark'; });
+      try { localStorage.setItem('dpbe_theme_v1', state.theme); } catch (e) {}
+    }
+
+    function toggleTheme() {
+      state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      applyTheme();
+    }
+
+    // =========================================================================
+    // 7. RENDER CONTROLS & BUCKET CARDS GRID
+    // =========================================================================
+    function syncControlStyles() {
+      document.querySelectorAll('.pos-tab').forEach(btn => {
+        const active = btn.dataset.pos === state.pos;
+        btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        btn.className = `pos-tab px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition cursor-pointer ${
+          active
+            ? 'bg-sky-600 text-white shadow-md shadow-sky-600/25'
+            : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/70'
+        }`;
+      });
+
+      const outcomeStyles = {
+        all:    { on: 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-sm', off: 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700' },
+        hit:    { on: 'bg-emerald-600 text-white shadow-sm', off: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20' },
+        near:   { on: 'bg-amber-500 text-slate-950 shadow-sm', off: 'bg-amber-50 dark:bg-amber-500/10 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/20' },
+        bust:   { on: 'bg-rose-600 text-white shadow-sm', off: 'bg-rose-50 dark:bg-rose-500/10 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 hover:bg-rose-100 dark:hover:bg-rose-500/20' },
+        rookie: { on: 'bg-sky-600 text-white shadow-sm', off: 'bg-sky-50 dark:bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30 hover:bg-sky-100 dark:hover:bg-sky-500/20' }
+      };
+
+      document.querySelectorAll('.outcome-pill').forEach(btn => {
+        const key = btn.dataset.outcome;
+        const active = key === state.outcome;
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        btn.className = `outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer ${
+          active ? outcomeStyles[key].on : outcomeStyles[key].off
+        }`;
+      });
+    }
+
+    function renderPlayerChip(p) {
+      const sm = statusMeta(p.status);
+      let countBadge = '';
+      if (p.status === 'hit') {
+        const star = (p.elite > 0 || p.superElite > 0) ? ' ★' : '';
+        countBadge = `<span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold ${sm.pillBadge}">${p.hit}x${star}</span>`;
+      } else if (p.status === 'near') {
+        countBadge = `<span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold ${sm.pillBadge}">${p.near}x</span>`;
+      } else if (p.status === 'rookie') {
+        countBadge = `<span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold ${sm.pillBadge}">'26</span>`;
+      }
+
+      const yrBadge = p.isRookie
+        ? ''
+        : `<span class="opacity-70 text-[10px] font-semibold">${shortYear(p.year)}</span>`;
+
+      return `<button type="button" data-player-id="${esc(p.id)}"
+        title="${esc(p.name)} (${p.year}) — ${esc(formatSeasonLine(p))}"
+        class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition active:scale-[0.98] cursor-pointer ${sm.chipCls}">
+        <span>${esc(p.name)}</span>
+        ${yrBadge}
+        ${countBadge}
+      </button>`;
+    }
+
+    function renderBucketsGrid() {
+      const grid = document.getElementById('bucketsGrid');
+      const metaEl = document.getElementById('posSummaryMeta');
+      const bannerEl = document.getElementById('posInsightBanner');
+      const posBuckets = BUCKETS.filter(b => b.pos === state.pos);
+      const pm = POS_META[state.pos];
+
+      const totalSample = posBuckets.reduce((sum, b) => sum + b.n, 0);
+      const totalRookies = posBuckets.reduce((sum, b) => sum + b.players.filter(p => p.isRookie).length, 0);
+      metaEl.textContent = `${posBuckets.length} Buckets · ${totalSample.toLocaleString()} Historical Samples · ${totalRookies} 2026 Rookies`;
+
+      bannerEl.innerHTML = `
+        <div class="flex items-start sm:items-center gap-2.5">
+          <span class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold shrink-0 ${pm.badgeCls}">${esc(pm.label)}</span>
+          <p class="text-slate-700 dark:text-slate-300 font-medium leading-relaxed">${esc(pm.insight)}</p>
+        </div>
+        <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+          Hit: <span class="text-emerald-600 dark:text-emerald-400">${esc(pm.hitLbl)}</span> ·
+          Near: <span class="text-amber-600 dark:text-amber-400">${esc(pm.nearLbl)}</span> ·
+          Elite: <span class="text-sky-600 dark:text-sky-400">${esc(pm.eliteLbl)}</span>
+        </div>`;
+
+      grid.innerHTML = posBuckets.map(b => {
+        // Order players: Hits (desc by hit, elite, near) -> Near Hits (desc by near) -> 2026 Rookies -> Busts (desc by year)
+        const hits = b.players.filter(p => p.status === 'hit').sort((a, c) => (c.hit - a.hit) || (c.elite - a.elite) || (c.near - a.near));
+        const nears = b.players.filter(p => p.status === 'near').sort((a, c) => (c.near - a.near) || (c.year - a.year));
+        const rookies = b.players.filter(p => p.status === 'rookie');
+        const busts = b.players.filter(p => p.status === 'bust').sort((a, c) => c.year - a.year);
+
+        const isExpanded = state.expandedBustBuckets.has(b.id);
+        const hidePre2019 = state.hideOldCloggerBusts && b.isClogger && !isExpanded;
+
+        const visibleBusts = hidePre2019 ? busts.filter(p => p.year >= 2019) : busts;
+        const hiddenNamedBustsCount = hidePre2019 ? (busts.length - visibleBusts.length) : 0;
+        const totalCollapsedBusts = hiddenNamedBustsCount + b.extraHistoricalBusts;
+
+        // Apply active outcome filter
+        let shownPlayers = [];
+        let showCollapsedPill = false;
+
+        if (state.outcome === 'all') {
+          shownPlayers = [...hits, ...nears, ...rookies, ...visibleBusts];
+          showCollapsedPill = totalCollapsedBusts > 0 || (state.hideOldCloggerBusts && b.isClogger && isExpanded && busts.some(p => p.year < 2019));
+        } else if (state.outcome === 'hit') {
+          shownPlayers = hits;
+        } else if (state.outcome === 'near') {
+          shownPlayers = nears;
+        } else if (state.outcome === 'rookie') {
+          shownPlayers = rookies;
+        } else if (state.outcome === 'bust') {
+          shownPlayers = visibleBusts;
+          showCollapsedPill = totalCollapsedBusts > 0 || (state.hideOldCloggerBusts && b.isClogger && isExpanded && busts.some(p => p.year < 2019));
+        }
+
+        // Stacked Bar Widths
+        const hitW = b.hitPct;
+        const nearW = b.nearOnlyPct;
+        const bustW = b.bustPct;
+
+        // Collapsed / Expandable Busts Pill HTML
+        let collapsedPillHtml = '';
+        if (showCollapsedPill) {
+          if (hiddenNamedBustsCount > 0) {
+            const label = b.extraHistoricalBusts > 0
+              ? `+${totalCollapsedBusts} earlier busts (${hiddenNamedBustsCount} named · show)`
+              : `+${hiddenNamedBustsCount} earlier pre-2019 busts (click to show)`;
+            collapsedPillHtml = `
+              <button type="button" data-toggle-busts="${esc(b.id)}"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-dashed border-rose-400/70 dark:border-rose-500/50 bg-rose-50/70 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-900/50 transition cursor-pointer">
+                <span>${esc(label)}</span>
+              </button>`;
+          } else if (state.hideOldCloggerBusts && b.isClogger && isExpanded && busts.some(p => p.year < 2019)) {
+            collapsedPillHtml = `
+              <button type="button" data-toggle-busts="${esc(b.id)}"
+                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-dashed border-slate-400 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
+                Hide pre-2019 busts
+              </button>`;
+            if (b.extraHistoricalBusts > 0) {
+              collapsedPillHtml += `
+                <span class="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-dashed border-rose-300 dark:border-rose-500/40 bg-rose-50/60 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 text-xs font-semibold">
+                  +${b.extraHistoricalBusts} earlier historical busts (2006–2025)
+                </span>`;
+            }
+          } else if (b.extraHistoricalBusts > 0) {
+            collapsedPillHtml = `
+              <span class="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-dashed border-rose-300 dark:border-rose-500/40 bg-rose-50/60 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 text-xs font-semibold"
+                title="Additional unrostered/historical 0-hit players included in the n=${b.n} spreadsheet sample">
+                +${b.extraHistoricalBusts} earlier historical busts
+              </span>`;
+          }
+        }
+
+        const chipsContent = (shownPlayers.length === 0 && !collapsedPillHtml)
+          ? `<span class="text-xs italic text-slate-500 dark:text-slate-400 py-1">No players in this bucket match the "${esc(state.outcome)}" filter.</span>`
+          : shownPlayers.map(renderPlayerChip).join('') + collapsedPillHtml;
+
+        const repDesc = `Of ${b.pos}s who hit ${pm.hitLbl} once, % who hit ${pm.hitLbl.replace(' PPG', '')} in 2+ seasons`;
+
+        return `
+          <article class="bg-white dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col gap-4">
+            <!-- Card Header -->
+            <div class="flex flex-wrap items-start justify-between gap-2">
+              <div class="space-y-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-wide ${pm.badgeCls}">${esc(b.pos)}</span>
+                  <h2 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">${esc(b.name)}</h2>
+                </div>
+                <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                  Sample Size: <strong class="text-slate-800 dark:text-slate-200">n = ${b.n}</strong>
+                  ${rookies.length ? ` · <span class="text-sky-600 dark:text-sky-400 font-bold">${rookies.length} in 2026 Class</span>` : ''}
+                </p>
+              </div>
+
+              <!-- Headline Hit Rate Pill -->
+              <div class="text-right">
+                <div class="text-xl sm:text-2xl font-extrabold leading-none ${
+                  b.hitPct >= 60 ? 'text-emerald-600 dark:text-emerald-400'
+                  : b.hitPct >= 25 ? 'text-amber-600 dark:text-amber-400'
+                  : 'text-rose-600 dark:text-rose-400'
+                }">${b.hitPct.toFixed(1)}%</div>
+                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">Hit Rate</div>
+              </div>
+            </div>
+
+            <!-- 4 Key Metrics Grid -->
+            <div class="grid grid-cols-4 gap-2">
+              <div class="rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 px-2.5 py-2 text-center">
+                <div class="text-xs sm:text-sm font-extrabold text-emerald-700 dark:text-emerald-400">${b.hitPct.toFixed(1)}%</div>
+                <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">Hit (${esc(pm.hitLbl.replace(' PPG', ''))})</div>
+              </div>
+              <div class="rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 px-2.5 py-2 text-center cursor-help"
+                title="${esc(repDesc)}">
+                <div class="text-xs sm:text-sm font-extrabold text-sky-700 dark:text-sky-400">${b.repPct.toFixed(1)}%</div>
+                <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate inline-flex items-center justify-center gap-0.5">
+                  <span>Repeater</span>
+                  <span class="text-sky-600 dark:text-sky-400 font-bold" aria-hidden="true">ⓘ</span>
+                </div>
+              </div>
+              <div class="rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 px-2.5 py-2 text-center">
+                <div class="text-xs sm:text-sm font-extrabold text-indigo-700 dark:text-indigo-400">${b.twoPlusPct.toFixed(1)}%</div>
+                <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">2+ Seasons</div>
+              </div>
+              <div class="rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 px-2.5 py-2 text-center">
+                <div class="text-xs sm:text-sm font-extrabold text-amber-700 dark:text-amber-400">${b.elitePct.toFixed(1)}%</div>
+                <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">Elite (${esc(pm.eliteLbl.replace(' PPG', ''))})</div>
+              </div>
+            </div>
+
+            <!-- Horizontal Stacked Color-Coded Outcome Bar -->
+            <div class="space-y-1.5">
+              <div class="w-full h-3.5 rounded-full overflow-hidden flex bg-slate-200 dark:bg-slate-800"
+                role="img" aria-label="Outcome breakdown: ${hitW.toFixed(1)}% Hits, ${nearW.toFixed(1)}% Near Hits Only, ${bustW.toFixed(1)}% Busts">
+                ${hitW > 0 ? `<div class="bg-emerald-500 dark:bg-emerald-500 h-full transition-all duration-300" style="width:${hitW}%"></div>` : ''}
+                ${nearW > 0 ? `<div class="bg-amber-400 dark:bg-amber-400 h-full transition-all duration-300" style="width:${nearW}%"></div>` : ''}
+                ${bustW > 0 ? `<div class="bg-rose-500 dark:bg-rose-500 h-full transition-all duration-300" style="width:${bustW}%"></div>` : ''}
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold">
+                <span class="text-emerald-700 dark:text-emerald-400">Hit ${hitW.toFixed(1)}%</span>
+                <span class="text-amber-700 dark:text-amber-300">Near Hit Only ${nearW.toFixed(1)}%</span>
+                <span class="text-rose-700 dark:text-rose-400">Bust ${bustW.toFixed(1)}%</span>
+              </div>
+            </div>
+
+            <!-- Clickable Player Chips -->
+            <div class="pt-3 border-t border-slate-200/80 dark:border-slate-800">
+              <div class="flex flex-wrap gap-1.5">
+                ${chipsContent}
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // 8. GLOBAL SEARCH AUTOCOMPLETE
+    // =========================================================================
+    const searchInput = document.getElementById('globalSearch');
+    const searchDropdown = document.getElementById('searchDropdown');
+
+    function closeSearchDropdown() {
+      searchDropdown.classList.add('hidden');
+      searchInput.setAttribute('aria-expanded', 'false');
+      state.searchHighlightIdx = -1;
+    }
+
+    function renderSearchDropdown() {
+      const q = normStr(searchInput.value);
+      if (!q) {
+        closeSearchDropdown();
+        return;
+      }
+
+      // Score matches: exact prefix > word start > substring
+      const matches = [];
+      for (const p of ALL_PLAYERS) {
+        const hay = `${p.norm} ${normStr(p.bucketName)} ${p.pos.toLowerCase()} ${p.year}`;
+        if (!hay.includes(q)) continue;
+        let score = 0;
+        if (p.norm.startsWith(q)) score += 100;
+        else if (p.norm.includes(q)) score += 60;
+        else score += 20;
+        if (p.status === 'hit') score += 10 + p.hit;
+        if (p.isRookie) score += 8;
+        matches.push({ p, score });
+      }
+
+      matches.sort((a, b) => b.score - a.score || b.p.year - a.p.year);
+      state.searchResults = matches.slice(0, 14).map(m => m.p);
+      state.searchHighlightIdx = state.searchResults.length ? 0 : -1;
+
+      if (!state.searchResults.length) {
+        searchDropdown.innerHTML = `
+          <div class="px-4 py-3 text-xs font-medium text-slate-500 dark:text-slate-400">
+            No players found matching "<strong>${esc(searchInput.value)}</strong>".
+          </div>`;
+      } else {
+        searchDropdown.innerHTML = state.searchResults.map((p, idx) => {
+          const sm = statusMeta(p.status);
+          const pm = POS_META[p.pos];
+          const hl = idx === state.searchHighlightIdx ? 'bg-sky-50 dark:bg-slate-800' : '';
+          return `
+            <button type="button" role="option" data-search-pid="${esc(p.id)}" data-idx="${idx}"
+              aria-selected="${idx === state.searchHighlightIdx ? 'true' : 'false'}"
+              class="search-opt w-full px-3.5 py-2.5 text-left flex items-center justify-between gap-2 hover:bg-sky-50 dark:hover:bg-slate-800 transition cursor-pointer ${hl}">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold shrink-0 ${pm.badgeCls}">${esc(p.pos)}</span>
+                <div class="min-w-0">
+                  <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                    ${esc(p.name)} <span class="text-slate-500 dark:text-slate-400 font-semibold text-xs">(${p.year})</span>
+                  </div>
+                  <div class="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                    ${esc(p.bucketName)} · ${esc(formatSeasonLine(p))}
+                  </div>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0 ${sm.badgeCls}">${esc(sm.label)}</span>
+            </button>`;
+        }).join('');
+      }
+
+      searchDropdown.classList.remove('hidden');
+      searchInput.setAttribute('aria-expanded', 'true');
+    }
+
+    function updateSearchHighlight() {
+      searchDropdown.querySelectorAll('.search-opt').forEach((el, idx) => {
+        const active = idx === state.searchHighlightIdx;
+        el.classList.toggle('bg-sky-50', active);
+        el.classList.toggle('dark:bg-slate-800', active);
+        el.setAttribute('aria-selected', active ? 'true' : 'false');
+        if (active) el.scrollIntoView({ block: 'nearest' });
+      });
+    }
+
+    // =========================================================================
+    // 9. RANGE OF OUTCOMES MODAL
+    // =========================================================================
+    const modalEl = document.getElementById('outcomeModal');
+    const modalBodyScroll = document.getElementById('modalBodyScroll');
+    let lastFocusedEl = null;
+
+    // When embedded, the iframe is as tall as its content, so a plain fixed/inset-0 modal would center
+    // in the middle of the whole frame. Pin it to the part of the frame visible in the parent window.
+    function positionModalForEmbed() {
+      if (!EMBEDDED) return;
+      const panel = document.getElementById('outcomeModalPanel');
+      try {
+        const pw = window.parent;
+        const rect = window.frameElement.getBoundingClientRect();
+        const hdr = pw.document.querySelector('header');
+        const topEdge = Math.max(0, hdr ? hdr.getBoundingClientRect().bottom : 0);
+        const visTop = Math.max(0, topEdge - rect.top);
+        const visH = Math.max(320, Math.min(pw.innerHeight, rect.bottom) - Math.max(topEdge, rect.top));
+        Object.assign(modalEl.style, { top: `${visTop}px`, bottom: 'auto', height: `${visH}px` });
+        if (panel) panel.style.maxHeight = `${Math.round(visH * 0.94)}px`;
+      } catch (e) {
+        Object.assign(modalEl.style, { top: '', bottom: '', height: '' });
+        if (panel) panel.style.maxHeight = '';
+      }
+    }
+
+    function setParentScrollLock(lock) {
+      if (!EMBEDDED) return;
+      try { window.parent.document.documentElement.style.overflow = lock ? 'hidden' : ''; } catch (e) {}
+    }
+
+    function openPlayerModal(playerId, resetSubTab = true) {
+      const p = PLAYER_BY_ID.get(playerId);
+      if (!p) return;
+      const b = BUCKET_BY_ID.get(p.bucketId);
+      if (!b) return;
+
+      if (!state.modalPlayerId) {
+        lastFocusedEl = document.activeElement;
+      }
+
+      state.modalPlayerId = playerId;
+      if (resetSubTab) state.modalSubTab = 'all';
+
+      renderModalContent(p, b);
+
+      positionModalForEmbed();
+      modalEl.classList.remove('modal-closed');
+      modalEl.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+      setParentScrollLock(true);
+      modalBodyScroll.scrollTop = 0;
+
+      // Move focus to close button for accessibility
+      setTimeout(() => {
+        document.getElementById('modalCloseBtn')?.focus();
+      }, 50);
+    }
+
+    function closePlayerModal() {
+      if (!state.modalPlayerId) return;
+      state.modalPlayerId = null;
+      modalEl.classList.remove('modal-open');
+      modalEl.classList.add('modal-closed');
+      document.body.style.overflow = '';
+      setParentScrollLock(false);
+      if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') {
+        lastFocusedEl.focus();
+      }
+    }
+
+    function renderModalContent(p, b) {
+      const pm = POS_META[p.pos];
+      const sm = statusMeta(p.status);
+
+      // Header Badges & Title
+      const posBadge = document.getElementById('modalPosBadge');
+      posBadge.className = `px-2 py-0.5 rounded-md text-[11px] font-extrabold tracking-wide ${pm.badgeCls}`;
+      posBadge.textContent = pm.label;
+
+      document.getElementById('modalBucketBadge').textContent = b.name;
+
+      const statBadge = document.getElementById('modalStatusBadge');
+      statBadge.className = `px-2.5 py-0.5 rounded-full text-[11px] font-extrabold ${sm.badgeCls}`;
+      statBadge.textContent = sm.label;
+
+      document.getElementById('modalPlayerName').textContent = p.name;
+      document.getElementById('modalDraftYear').textContent = `Draft Class: ${p.year}`;
+
+      // Recorded Seasons Badges for Selected Player
+      const seasonsEl = document.getElementById('modalPlayerSeasons');
+      if (p.isRookie) {
+        seasonsEl.innerHTML = `
+          <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-sky-100 dark:bg-sky-500/20 text-sky-900 dark:text-sky-200 border border-sky-300 dark:border-sky-500/40">
+            2026 Rookie Prospect — Historical Bucket Projection Shown Below
+          </span>`;
+      } else {
+        const tiers = [
+          { lbl: pm.nearLbl, val: p.near, cls: p.near > 0 ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-950 dark:text-amber-200 border-amber-300 dark:border-amber-500/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700' },
+          { lbl: pm.hitLbl, val: p.hit, cls: p.hit > 0 ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-950 dark:text-emerald-200 border-emerald-300 dark:border-emerald-500/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700' },
+          { lbl: pm.eliteLbl, val: p.elite, cls: p.elite > 0 ? 'bg-sky-100 dark:bg-sky-500/20 text-sky-950 dark:text-sky-200 border-sky-300 dark:border-sky-500/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700' }
+        ];
+        if (p.pos === 'WR') {
+          tiers.push({
+            lbl: '18+ PPG',
+            val: p.superElite,
+            cls: p.superElite > 0 ? 'bg-indigo-100 dark:bg-indigo-500/25 text-indigo-950 dark:text-indigo-200 border-indigo-300 dark:border-indigo-500/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+          });
+        }
+        seasonsEl.innerHTML = tiers.map(t => `
+          <span class="px-2.5 py-1 rounded-lg text-[11px] font-bold border ${t.cls}">
+            ${esc(t.lbl)}: <strong>${t.val}</strong> ${t.val === 1 ? 'season' : 'seasons'}
+          </span>`).join('');
+      }
+
+      // Probability Gauge
+      document.getElementById('modalSampleSize').textContent = `Bucket Sample: n = ${b.n} (2006–2025)`;
+
+      const probBar = document.getElementById('modalProbBar');
+      probBar.innerHTML = `
+        ${b.hitPct > 0 ? `<div class="bg-emerald-500 h-full flex items-center justify-center text-[10px] font-extrabold text-slate-950 overflow-hidden" style="width:${b.hitPct}%">${b.hitPct >= 14 ? b.hitPct.toFixed(1) + '%' : ''}</div>` : ''}
+        ${b.nearOnlyPct > 0 ? `<div class="bg-amber-400 h-full flex items-center justify-center text-[10px] font-extrabold text-slate-950 overflow-hidden" style="width:${b.nearOnlyPct}%">${b.nearOnlyPct >= 14 ? b.nearOnlyPct.toFixed(1) + '%' : ''}</div>` : ''}
+        ${b.bustPct > 0 ? `<div class="bg-rose-500 h-full flex items-center justify-center text-[10px] font-extrabold text-white overflow-hidden" style="width:${b.bustPct}%">${b.bustPct >= 14 ? b.bustPct.toFixed(1) + '%' : ''}</div>` : ''}
+      `;
+
+      document.getElementById('modalProbLegend').innerHTML = `
+        <span class="text-emerald-700 dark:text-emerald-400">● Hit Odds: ${b.hitPct.toFixed(1)}%</span>
+        <span class="text-amber-700 dark:text-amber-300">● Near Hit Only: ${b.nearOnlyPct.toFixed(1)}%</span>
+        <span class="text-rose-700 dark:text-rose-400">● Bust Odds: ${b.bustPct.toFixed(1)}%</span>
+      `;
+
+      const modalRepDesc = `Of ${b.pos}s who hit ${pm.hitLbl} once, % who hit ${pm.hitLbl.replace(' PPG', '')} in 2+ seasons`;
+
+      document.getElementById('modalKpiGrid').innerHTML = `
+        <div class="rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-500/30 p-2.5 text-center">
+          <div class="text-base sm:text-lg font-extrabold text-emerald-600 dark:text-emerald-400">${b.hitPct.toFixed(1)}%</div>
+          <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Hit (${esc(pm.hitLbl.replace(' PPG', ''))})</div>
+        </div>
+        <div class="rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 p-2.5 text-center">
+          <div class="text-base sm:text-lg font-extrabold text-amber-600 dark:text-amber-400">${b.nearOnlyPct.toFixed(1)}%</div>
+          <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Near Hit Only</div>
+        </div>
+        <div class="rounded-xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-500/30 p-2.5 text-center">
+          <div class="text-base sm:text-lg font-extrabold text-rose-600 dark:text-rose-400">${b.bustPct.toFixed(1)}%</div>
+          <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Bust Floor</div>
+        </div>
+        <div class="rounded-xl bg-white dark:bg-slate-900 border border-sky-200 dark:border-sky-500/30 p-2.5 text-center">
+          <div class="text-base sm:text-lg font-extrabold text-sky-600 dark:text-sky-400">${b.elitePct.toFixed(1)}%</div>
+          <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Elite (${esc(pm.eliteLbl.replace(' PPG', ''))})</div>
+        </div>
+        <div class="col-span-2 sm:col-span-1 rounded-xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-500/30 p-2.5 text-center cursor-help"
+          title="${esc(modalRepDesc)}">
+          <div class="text-base sm:text-lg font-extrabold text-indigo-600 dark:text-indigo-400">${b.repPct.toFixed(1)}%</div>
+          <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Repeater Odds</div>
+          <div class="text-[9px] leading-tight font-medium text-indigo-700/85 dark:text-indigo-300/85 mt-1">${esc(modalRepDesc)}</div>
+        </div>
+      `;
+
+      renderModalOutcomeColumns(p, b);
+    }
+
+    function renderModalOutcomeColumns(selectedPlayer, b) {
+      // Sync subtab styles
+      document.querySelectorAll('.modal-subtab').forEach(btn => {
+        const active = btn.dataset.mtab === state.modalSubTab;
+        btn.className = `modal-subtab px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+          active
+            ? 'bg-sky-600 text-white shadow-sm'
+            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+        }`;
+      });
+
+      const hits = b.players.filter(x => x.status === 'hit').sort((a, c) => (c.hit - a.hit) || (c.elite - a.elite) || (c.superElite - a.superElite) || (c.near - a.near));
+      const nears = b.players.filter(x => x.status === 'near').sort((a, c) => (c.near - a.near) || (c.year - a.year));
+      const busts = b.players.filter(x => x.status === 'bust').sort((a, c) => c.year - a.year);
+      const rookies = b.players.filter(x => x.status === 'rookie');
+      const totalBustCount = busts.length + b.extraHistoricalBusts;
+
+      const pm = POS_META[b.pos];
+
+      function compRow(cp, accentCls) {
+        const isCurrent = cp.id === selectedPlayer.id;
+        const ring = isCurrent ? 'ring-2 ring-sky-500 bg-sky-50/70 dark:bg-sky-500/15' : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800';
+        const statsTxt = cp.status === 'hit'
+          ? `${cp.hit}x ${pm.hitLbl.replace(' PPG', '')}${cp.elite > 0 ? ` · ${cp.elite}x ${pm.eliteLbl.replace(' PPG', '')}` : ''}${cp.pos === 'WR' && cp.superElite > 0 ? ` · ${cp.superElite}x 18+` : ''}`
+          : cp.status === 'near'
+            ? `${cp.near}x ${pm.nearLbl.replace(' PPG', '')}`
+            : cp.status === 'rookie'
+              ? '2026 Rookie'
+              : `0x ${pm.nearLbl.replace(' PPG', '')}`;
+
+        return `
+          <button type="button" data-modal-switch="${esc(cp.id)}"
+            class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-left transition cursor-pointer ${ring}">
+            <div class="min-w-0">
+              <div class="text-xs font-bold text-slate-900 dark:text-white truncate">
+                ${esc(cp.name)} <span class="text-slate-500 dark:text-slate-400 font-semibold">(${cp.year})</span>
+                ${isCurrent ? '<span class="ml-1 text-[10px] font-extrabold text-sky-600 dark:text-sky-400">• VIEWING</span>' : ''}
+              </div>
+            </div>
+            <span class="text-[11px] font-extrabold whitespace-nowrap shrink-0 ${accentCls}">${esc(statsTxt)}</span>
+          </button>`;
+      }
+
+      const sections = [];
+
+      // 1. Ceiling & Hits
+      if (state.modalSubTab === 'all' || state.modalSubTab === 'hit') {
+        sections.push(`
+          <div class="rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-500/30 p-3.5 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <h4 class="text-xs font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                Ceiling &amp; Hits (${hits.length})
+              </h4>
+              <span class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400">${esc(pm.hitLbl)}</span>
+            </div>
+            <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+              ${hits.length ? hits.map(x => compRow(x, 'text-emerald-700 dark:text-emerald-400')).join('') : '<p class="text-xs italic text-slate-500 dark:text-slate-400">No historical hits recorded in this bucket yet.</p>'}
+            </div>
+          </div>`);
+      }
+
+      // 2. Near Hits / Flex Starters
+      if (state.modalSubTab === 'all' || state.modalSubTab === 'near') {
+        sections.push(`
+          <div class="rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/30 p-3.5 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <h4 class="text-xs font-extrabold uppercase tracking-wider text-amber-900 dark:text-amber-300">
+                Near Hits / Flex Starters (${nears.length})
+              </h4>
+              <span class="text-[10px] font-bold text-amber-800 dark:text-amber-400">${esc(pm.nearLbl)} only</span>
+            </div>
+            <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+              ${nears.length ? nears.map(x => compRow(x, 'text-amber-700 dark:text-amber-300')).join('') : '<p class="text-xs italic text-slate-500 dark:text-slate-400">No near-hit-only players in this bucket.</p>'}
+            </div>
+          </div>`);
+      }
+
+      // 3. Busts / Floor Outcomes
+      if (state.modalSubTab === 'all' || state.modalSubTab === 'bust') {
+        const extraNote = b.extraHistoricalBusts > 0
+          ? `<div class="px-3 py-2 rounded-xl border border-dashed border-rose-300 dark:border-rose-500/40 bg-rose-100/50 dark:bg-rose-950/40 text-[11px] font-bold text-rose-800 dark:text-rose-200">
+               + ${b.extraHistoricalBusts} additional historical busts (2006–2025) in sample
+             </div>`
+          : '';
+        sections.push(`
+          <div class="rounded-xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-500/30 p-3.5 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <h4 class="text-xs font-extrabold uppercase tracking-wider text-rose-800 dark:text-rose-300">
+                Busts / Floor Outcomes (${totalBustCount})
+              </h4>
+              <span class="text-[10px] font-bold text-rose-700 dark:text-rose-400">0x ${esc(pm.nearLbl)}</span>
+            </div>
+            <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+              ${busts.length ? busts.map(x => compRow(x, 'text-rose-700 dark:text-rose-400')).join('') : (b.extraHistoricalBusts ? '' : '<p class="text-xs italic text-slate-500 dark:text-slate-400">Zero busts recorded in this bucket!</p>')}
+              ${extraNote}
+            </div>
+          </div>`);
+      }
+
+      // 4. 2026 Class Comps
+      if (state.modalSubTab === 'all' || state.modalSubTab === 'rookie') {
+        sections.push(`
+          <div class="rounded-xl bg-sky-50/60 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-500/30 p-3.5 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <h4 class="text-xs font-extrabold uppercase tracking-wider text-sky-800 dark:text-sky-300">
+                2026 Class Comps (${rookies.length})
+              </h4>
+              <span class="text-[10px] font-bold text-sky-700 dark:text-sky-400">Same Profile Bucket</span>
+            </div>
+            <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+              ${rookies.length ? rookies.map(x => compRow(x, 'text-sky-700 dark:text-sky-300')).join('') : '<p class="text-xs italic text-slate-500 dark:text-slate-400">No 2026 rookies currently mapped to this bucket.</p>'}
+            </div>
+          </div>`);
+      }
+
+      const container = document.getElementById('modalOutcomesContent');
+      container.className = state.modalSubTab === 'all'
+        ? 'grid grid-cols-1 md:grid-cols-2 gap-3.5'
+        : 'grid grid-cols-1 gap-3.5';
+      container.innerHTML = sections.join('');
+    }
+
+    // =========================================================================
+    // 10. EVENT WIRING & INITIALIZATION
+    // =========================================================================
+    function wireEvents() {
+      // Theme Toggles
+      document.getElementById('themeToggleMobile')?.addEventListener('click', toggleTheme);
+      document.getElementById('themeToggleDesktop')?.addEventListener('click', toggleTheme);
+
+      // Position Filter Tabs
+      document.querySelectorAll('.pos-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.pos = btn.dataset.pos;
+          syncControlStyles();
+          renderBucketsGrid();
+        });
+      });
+
+      // Outcome Filter Pills
+      document.querySelectorAll('.outcome-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.outcome = btn.dataset.outcome;
+          syncControlStyles();
+          renderBucketsGrid();
+        });
+      });
+
+      // Hide Pre-2019 Busts in Clogger Tiers Toggle
+      document.getElementById('hideOldCloggerBusts')?.addEventListener('change', e => {
+        state.hideOldCloggerBusts = Boolean(e.target.checked);
+        state.expandedBustBuckets.clear();
+        renderBucketsGrid();
+      });
+
+      // Global Search Input + Keyboard Navigation
+      searchInput.addEventListener('input', renderSearchDropdown);
+      searchInput.addEventListener('focus', () => {
+        if (searchInput.value.trim()) renderSearchDropdown();
+      });
+      searchInput.addEventListener('keydown', e => {
+        if (searchDropdown.classList.contains('hidden')) return;
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (state.searchResults.length) {
+            state.searchHighlightIdx = (state.searchHighlightIdx + 1) % state.searchResults.length;
+            updateSearchHighlight();
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (state.searchResults.length) {
+            state.searchHighlightIdx = (state.searchHighlightIdx - 1 + state.searchResults.length) % state.searchResults.length;
+            updateSearchHighlight();
+          }
+        } else if (e.key === 'Enter') {
+          if (state.searchHighlightIdx >= 0 && state.searchResults[state.searchHighlightIdx]) {
+            e.preventDefault();
+            const chosen = state.searchResults[state.searchHighlightIdx];
+            closeSearchDropdown();
+            searchInput.value = '';
+            openPlayerModal(chosen.id, true);
+          }
+        } else if (e.key === 'Escape') {
+          closeSearchDropdown();
+        }
+      });
+
+      // Close autocomplete on outside click
+      document.addEventListener('click', e => {
+        if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
+          closeSearchDropdown();
+        }
+      });
+
+      // Delegated Clicks (Player Chips, Search Results, Bust Expander, Modal Switch)
+      document.addEventListener('click', e => {
+        const searchBtn = e.target.closest('[data-search-pid]');
+        if (searchBtn) {
+          const pid = searchBtn.dataset.searchPid;
+          closeSearchDropdown();
+          searchInput.value = '';
+          openPlayerModal(pid, true);
+          return;
+        }
+
+        const chipBtn = e.target.closest('[data-player-id]');
+        if (chipBtn) {
+          openPlayerModal(chipBtn.dataset.playerId, true);
+          return;
+        }
+
+        const toggleBustBtn = e.target.closest('[data-toggle-busts]');
+        if (toggleBustBtn) {
+          const bid = toggleBustBtn.dataset.toggleBusts;
+          if (state.expandedBustBuckets.has(bid)) state.expandedBustBuckets.delete(bid);
+          else state.expandedBustBuckets.add(bid);
+          renderBucketsGrid();
+          return;
+        }
+
+        const switchBtn = e.target.closest('[data-modal-switch]');
+        if (switchBtn) {
+          openPlayerModal(switchBtn.dataset.modalSwitch, false);
+          return;
+        }
+
+        const mtabBtn = e.target.closest('[data-mtab]');
+        if (mtabBtn && state.modalPlayerId) {
+          state.modalSubTab = mtabBtn.dataset.mtab;
+          const p = PLAYER_BY_ID.get(state.modalPlayerId);
+          const b = p ? BUCKET_BY_ID.get(p.bucketId) : null;
+          if (p && b) renderModalOutcomeColumns(p, b);
+          return;
+        }
+      });
+
+      // Modal Close Handlers (Close buttons, Backdrop click, ESC key)
+      document.getElementById('modalCloseBtn')?.addEventListener('click', closePlayerModal);
+      document.getElementById('modalFooterCloseBtn')?.addEventListener('click', closePlayerModal);
+      modalEl.addEventListener('click', e => {
+        if (e.target === modalEl) closePlayerModal();
+      });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && state.modalPlayerId) {
+          closePlayerModal();
+        }
+      });
+    }
+
+    function initEmbedded() {
+      if (!EMBEDDED) return;
+      document.documentElement.classList.add('embedded');
+      // Theme is owned by index.html's toggle
+      window.addEventListener('message', e => {
+        if (e.origin !== location.origin) return;
+        if (e.data && e.data.type === 'dtc-theme' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
+          state.theme = e.data.theme;
+          applyTheme();
+        }
+      });
+      // Report content height so the parent frame grows/shrinks with filters, expanded busts, etc.
+      const post = () => {
+        try { window.parent.postMessage({ type: 'dtc-height', height: document.body.offsetHeight }, location.origin); } catch (e) {}
+      };
+      if ('ResizeObserver' in window) new ResizeObserver(post).observe(document.body);
+      window.addEventListener('load', post);
+      post();
+    }
+
+    function init() {
+      try {
+        const savedTheme = localStorage.getItem('dpbe_theme_v1');
+        if (savedTheme === 'light' || savedTheme === 'dark') state.theme = savedTheme;
+      } catch (e) {}
+
+      applyTheme();
+      syncControlStyles();
+      renderBucketsGrid();
+      wireEvents();
+      initEmbedded();
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  })();
+  </script>
+</body>
+</html>
