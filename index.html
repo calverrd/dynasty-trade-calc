@@ -86,6 +86,7 @@
           <a href="#league" data-tab="league" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">League</a>
           <a href="#scout" data-tab="scout" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Scout &amp; Waivers</a>
           <a href="#buckets" data-tab="buckets" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Profile Buckets</a>
+          <a href="#rookies" data-tab="rookies" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookie WRs</a>
           <a href="#about" data-tab="about" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">How it works</a>
         </nav>
 
@@ -446,6 +447,12 @@
     <section id="view-buckets" class="hidden">
       <iframe id="buckets-frame" data-src="./bucket-explorer.html" title="Dynasty Profile Bucket Explorer"
         class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1400px;" loading="lazy"></iframe>
+    </section>
+
+    <!-- ==================== TAB: ROOKIE WR WEEKS 1-4 (rookie-wr-tracker.html, lazy iframe) ==================== -->
+    <section id="view-rookies" class="hidden">
+      <iframe id="rookies-frame" data-src="./rookie-wr-tracker.html" title="Rookie WR Weeks 1-4 Tracker"
+        class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1400px;"></iframe>
     </section>
 
     <!-- ==================== TAB 6: HOW IT WORKS ==================== -->
@@ -942,9 +949,31 @@
       } catch (e) { /* cross-origin: rely on postMessage height below */ }
     }
 
-    // Optional: bucket-explorer.html may post { type: 'dtc-height', height } itself
+    // ---- Rookie WRs iframe: same lazy load / theme / height pattern ----
+    function loadRookiesFrame() {
+      const fr = document.getElementById('rookies-frame');
+      if (!fr || fr.getAttribute('src')) return;
+      fr.addEventListener('load', syncRookiesFrameTheme);
+      fr.src = fr.dataset.src;
+    }
+    function syncRookiesFrameTheme() {
+      const fr = document.getElementById('rookies-frame');
+      if (!fr || !fr.getAttribute('src')) return;
+      const dark = document.documentElement.classList.contains('dark');
+      try { fr.contentWindow.postMessage({ type: 'dtc-theme', theme: dark ? 'dark' : 'light' }, '*'); } catch (e) {}
+      try { fr.contentDocument.documentElement.classList.toggle('dark', dark); } catch (e) {}
+    }
+    function resizeRookiesFrame(h) {
+      const fr = document.getElementById('rookies-frame');
+      const n = Math.ceil(Number(h) || 0);
+      if (fr && n > 200 && Math.abs(parseFloat(fr.style.height) - n) > 1) fr.style.height = `${n}px`;
+    }
+
+    // Embedded pages may post { type: 'dtc-height', height }; the rookie tracker adds frame: 'rookies'
     window.addEventListener('message', e => {
-      if (e.origin === location.origin && e.data && e.data.type === 'dtc-height') resizeBucketsFrame(e.data.height);
+      if (e.origin !== location.origin || !e.data || e.data.type !== 'dtc-height') return;
+      if (e.data.frame === 'rookies') resizeRookiesFrame(e.data.height);
+      else resizeBucketsFrame(e.data.height);
     });
 
     function applyTheme() {
@@ -955,6 +984,7 @@
       } catch (e) {}
       root.classList.toggle('dark', dark);
       syncBucketsFrameTheme();
+      syncRookiesFrameTheme();
     }
 
     function save() {
@@ -3105,9 +3135,9 @@
     }
 
     function switchTab(tab) {
-      if (!['chart', 'calc', 'league', 'scout', 'buckets', 'about'].includes(tab)) tab = 'calc';
+      if (!['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'about'].includes(tab)) tab = 'calc';
       st.tab = tab;
-      ['chart', 'calc', 'league', 'scout', 'buckets', 'about'].forEach(t => {
+      ['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'about'].forEach(t => {
         const sec = document.getElementById(`view-${t}`);
         if (sec) sec.classList.toggle('hidden', t !== tab);
       });
@@ -3115,6 +3145,7 @@
         a.classList.toggle('active', a.dataset.tab === tab);
       });
       if (tab === 'buckets') loadBucketsFrame();
+      if (tab === 'rookies') loadRookiesFrame();
       if (tab === 'league') loadTradeHistory();
       try { history.replaceState(null, '', `#${tab}`); } catch (e) {}
     }
@@ -3472,7 +3503,7 @@
       wireEvents();
       loadFallbackDataset();
       const initialHash = (location.hash || '').replace('#', '');
-      switchTab(['chart', 'calc', 'league', 'scout', 'buckets', 'about'].includes(initialHash) ? initialHash : 'calc');
+      switchTab(['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'about'].includes(initialHash) ? initialHash : 'calc');
       syncLiveSleeperAndFC(true);
     });
   })();
