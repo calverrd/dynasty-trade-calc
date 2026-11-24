@@ -2044,7 +2044,7 @@
         <button type="button" data-bm-switch="${esc(x.id)}" class="w-full flex items-center gap-2 text-left text-xs px-2 py-1 rounded-lg cursor-pointer ${x.id === b.id ? 'bg-sky-100 dark:bg-sky-500/20 font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}">
           <span class="w-5 text-slate-400 tabular-nums">${i + 1}</span>
           <span class="flex-1 truncate">${esc(x.name)}</span>
-          <span class="w-24 h-2 rounded bg-slate-200 dark:bg-slate-800 overflow-hidden"><span class="block h-full bg-emerald-500" style="width:${x.hitPct}%"></span></span>
+          <span class="w-24 sm:w-32 h-2.5 rounded bg-slate-200 dark:bg-slate-800 overflow-hidden flex" title="Hit ${x.hitPct.toFixed(1)}%${x.noNear ? '' : ` · Near ${x.nearOnlyPct.toFixed(1)}%`} · Bust ${x.bustPct.toFixed(1)}%"><span class="block h-full bg-emerald-500" style="width:${x.hitPct}%"></span><span class="block h-full bg-amber-400" style="width:${x.noNear ? 0 : x.nearOnlyPct}%"></span><span class="block h-full bg-rose-500" style="width:${x.bustPct}%"></span></span>
           <span class="w-12 text-right tabular-nums">${x.hitPct.toFixed(0)}%</span>
           <span class="w-12 text-right text-slate-400 tabular-nums">n=${x.n}</span>
         </button>`).join('');
@@ -2112,7 +2112,7 @@
         </section>
 
         <section class="space-y-1.5">
-          <h3 class="text-sm font-extrabold">Every ${esc(b.pos)} bucket by hit rate</h3>
+          <h3 class="text-sm font-extrabold">Every ${esc(b.pos)} bucket by hit rate <span class="font-normal text-[11px] text-slate-500 dark:text-slate-400"><span class="text-emerald-500">■</span> hit${b.noNear ? '' : ' <span class="text-amber-400">■</span> near hit'} <span class="text-rose-500">■</span> bust</span></h3>
           <div class="space-y-0.5">${rankRows}</div>
         </section>`;
     }
