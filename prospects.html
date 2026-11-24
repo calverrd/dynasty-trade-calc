@@ -14,7 +14,7 @@
   <style>
     body { font-family: 'Montserrat', system-ui, -apple-system, sans-serif; }
     button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
-    .pos-btn[aria-pressed="true"] { background: #2563eb; color: #fff; }
+    .pos-btn[aria-pressed="true"], .odds-btn[aria-pressed="true"] { background: #2563eb; color: #fff; }
     th.sortable { cursor: pointer; user-select: none; }
     th.sortable:hover { color: #0ea5e9; }
   </style>
@@ -29,15 +29,23 @@
     <details class="rounded-xl border border-sky-200 dark:border-sky-500/30 bg-sky-50 dark:bg-sky-500/10 text-sm" open>
       <summary class="cursor-pointer px-4 py-3 font-bold">How to read this</summary>
       <div class="px-4 pb-4 space-y-2 leading-relaxed text-slate-700 dark:text-slate-300">
-        <p>Rates come from your Profile Buckets history: every past player with that position and profile type, across all draft tiers. Hit = QB 20+, RB 15+, WR 14+, TE 12+ PPG in a season (your bucket thresholds). Starter = QB 16+, RB/WR 12+.</p>
+        <p>Rates come from your Profile Buckets history: every past player with that position and profile type. Use the <strong>Safe / Upside</strong> switch to change what the odds mean. <strong>Safe</strong> = at least one 12+ PPG season (QB 16+). <strong>Upside</strong> = a hit: 14+ PPG for WRs and TEs, 15+ for RBs, 20+ for QBs. The bars always show the full split.</p>
         <p><strong>Each prospect's odds use his tier + type</strong> (e.g., Upside Hog WR) from the second chart. When fewer than 3 past players share that exact combination, the odds fall back to the type as a whole and say so.</p>
         <p><strong>These are loose.</strong> Tier matters more than type: a Hog WR in the Elite tier hit 78%, but a Clogger-tier Hog hit 9%. Expect a prospect's odds to move whenever his tier changes.</p>
       </div>
     </details>
 
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="inline-flex rounded-lg border border-slate-300 dark:border-slate-700 overflow-hidden text-xs sm:text-sm font-semibold" role="group" aria-label="Odds shown">
+        <button type="button" class="odds-btn px-3 py-1.5" data-odds="safe" aria-pressed="false">Safe</button>
+        <button type="button" class="odds-btn px-3 py-1.5 border-l border-slate-300 dark:border-slate-700" data-odds="upside" aria-pressed="true">Upside</button>
+      </div>
+      <span id="oddsNote" class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400"></span>
+    </div>
+
     <section class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3">
       <div class="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 class="text-sm font-bold">Loose hit rate by profile type</h2>
+        <h2 class="text-sm font-bold">Loose odds by profile type</h2>
         <div class="flex gap-3 text-[11px] text-slate-500 dark:text-slate-400">
           <span><span class="inline-block w-2 h-2 rounded-sm bg-emerald-700 mr-1"></span>Elite</span>
           <span><span class="inline-block w-2 h-2 rounded-sm bg-emerald-400 mr-1"></span>Hit</span>
@@ -50,7 +58,7 @@
 
     <section class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3">
       <div>
-        <h2 class="text-sm font-bold">Same type, by draft tier (hit rate)</h2>
+        <h2 class="text-sm font-bold">Same type, by tier (<span class="oddsLbl">upside</span> odds)</h2>
         <p class="text-xs text-slate-500 dark:text-slate-400">Once a prospect's draft tier is known, read his odds from his row. Cells with fewer than 5 players are faded.</p>
       </div>
       <div class="overflow-x-auto"><table class="w-full text-xs sm:text-sm"><thead id="tierHead"></thead><tbody id="tierBody"></tbody></table></div>
@@ -78,7 +86,7 @@
               <th class="sortable text-left py-2 px-2" data-k="pos">Pos</th>
               <th class="sortable text-left py-2 px-2" data-k="tierRank">Tier</th>
               <th class="sortable text-left py-2 px-2" data-k="type">Type</th>
-              <th class="sortable text-left py-2 pl-2" data-k="hit">Loose odds (tier + type)</th>
+              <th class="sortable text-left py-2 pl-2" data-k="hit">Loose <span class="oddsLbl">upside</span> odds (tier + type)</th>
             </tr>
           </thead>
           <tbody id="rows" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
@@ -95,7 +103,9 @@
     const ORDER = ['QB', 'RB', 'WR', 'TE'];
     const S = {};
     D.stats.forEach(s => { S[s.pos + '|' + s.type] = s; });
-    const hitOf = s => (s.pos === 'TE' ? s.l1 : s.l2);   // TE hit = 12+ (lowest tier)
+    // Safe = 12+ PPG (QB 16+); Upside = a "hit": WR/TE 14+, RB 15+, QB 20+ (your bucket thresholds)
+    let ODDS = 'upside';
+    const hitOf = s => (ODDS === 'safe' ? s.l1 : s.l2);
     const labels = pos => {
       const [a, b, c] = D.th[pos];
       return pos === 'TE' ? [`${c} PPG`, `${b} PPG`, `${a} PPG`] : [`Elite ${c}`, `Hit ${b}`, `Starter ${a}`];
@@ -113,6 +123,7 @@
     const posTag = p => `<span class="inline-block w-8 text-center text-[10px] font-extrabold rounded px-1 py-0.5 ${{ QB: 'bg-rose-500/15 text-rose-600 dark:text-rose-300', RB: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', WR: 'bg-sky-500/15 text-sky-700 dark:text-sky-300', TE: 'bg-amber-500/20 text-amber-700 dark:text-amber-300' }[p] || ''}">${p}</span>`;
     const boardCount = (pos, type) => D.pros.filter(p => p.pos === pos && p.type === type).length;
 
+    function renderTop() {
     // type chart
     const stats = D.stats.slice().sort((a, b) => ORDER.indexOf(a.pos) - ORDER.indexOf(b.pos) || hitOf(b) - hitOf(a));
     document.getElementById('typeChart').innerHTML = stats.map(s => {
@@ -120,7 +131,7 @@
       return `<div>
         <div class="flex justify-between items-baseline text-xs mb-1 gap-2">
           <span class="flex items-center gap-1.5">${posTag(s.pos)}<strong>${esc(s.type)}</strong><span class="text-[11px] text-slate-500 dark:text-slate-400">${s.n} past players${nb ? ` · ${nb} on your board` : ''}</span></span>
-          <span class="text-slate-500 dark:text-slate-400 whitespace-nowrap">${hitOf(s)}% hit</span>
+          <span class="text-slate-500 dark:text-slate-400 whitespace-nowrap">${hitOf(s)}% ${ODDS}</span>
         </div>${bar(s)}</div>`;
     }).join('');
 
@@ -131,11 +142,13 @@
       ${D.tiers.map(t => {
         const c = s.tiers[t];
         if (!c) return '<td class="text-center py-2 px-2 text-slate-400">—</td>';
-        const cls = c.hit >= 50 ? 'text-emerald-700 dark:text-emerald-300 font-extrabold' : c.hit >= 25 ? 'text-amber-700 dark:text-amber-300 font-bold' : 'text-rose-600 dark:text-rose-400 font-semibold';
-        return `<td class="text-center py-2 px-2 tabular-nums ${c.n < 5 ? 'opacity-45' : ''}" title="${c.n} players"><span class="${cls}">${c.hit}%</span><span class="text-[10px] text-slate-400 ml-1">${c.n}</span></td>`;
+        const h = hitOf({ pos: s.pos, ...c });
+        const cls = h >= 50 ? 'text-emerald-700 dark:text-emerald-300 font-extrabold' : h >= 25 ? 'text-amber-700 dark:text-amber-300 font-bold' : 'text-rose-600 dark:text-rose-400 font-semibold';
+        return `<td class="text-center py-2 px-2 tabular-nums ${c.n < 5 ? 'opacity-45' : ''}" title="${c.n} players"><span class="${cls}">${h}%</span><span class="text-[10px] text-slate-400 ml-1">${c.n}</span></td>`;
       }).join('')}
       <td class="text-center py-2 pl-2 tabular-nums font-bold">${hitOf(s)}%<span class="text-[10px] text-slate-400 ml-1">${s.n}</span></td></tr>`).join('');
 
+    }
     // prospect list
     const st = { pos: '', type: '', tier: '', q: '', k: 'hit', dir: -1 };
     D.pros.forEach(p => {
@@ -155,6 +168,7 @@
       const o = document.createElement('option'); o.value = k; o.textContent = k.replace('|', ' · '); tsel.appendChild(o);
     });
     function render() {
+      D.pros.forEach(p => { p.hit = p.s ? hitOf(p.s) : null; });
       const rows = D.pros.filter(p => (!st.pos || p.pos === st.pos) && (!st.tier || p.tier === st.tier) && (!st.type || p.pos + '|' + p.type === st.type) && (!st.q || p.n.toLowerCase().includes(st.q)))
         .sort((a, b) => {
           const va = a[st.k], vb = b[st.k];
@@ -181,7 +195,17 @@
     document.querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => {
       const k = th.dataset.k; st.dir = st.k === k ? -st.dir : (k === 'hit' ? -1 : 1); st.k = k; render();
     }));
-    render();
+    function setOdds(m) {
+      ODDS = m;
+      document.querySelectorAll('.odds-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.odds === m)));
+      document.querySelectorAll('.oddsLbl').forEach(el => { el.textContent = m; });
+      document.getElementById('oddsNote').textContent = m === 'safe'
+        ? 'Safe = odds of at least one 12+ PPG season (QB 16+).'
+        : 'Upside = odds of a hit: a 14+ PPG season for WRs and TEs, 15+ for RBs, 20+ for QBs.';
+      renderTop(); render();
+    }
+    document.querySelectorAll('.odds-btn').forEach(b => b.addEventListener('click', () => setOdds(b.dataset.odds)));
+    setOdds('upside');
 
     // embedded in the hub: theme + height
     const EMBEDDED = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
