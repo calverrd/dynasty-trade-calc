@@ -176,7 +176,7 @@
     <section id="view-calc" class="space-y-4">
       <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
         <summary class="cursor-pointer font-bold">How to use this tab</summary>
-        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Pick the two teams</strong> at the top (your team is usually side A), then add players or picks to each side with the search boxes or the roster quick-add.</li><li><strong>Read the verdict:</strong> it compares the two sides after the value adjustment (which accounts for getting the best player). Within the Fair ±% slider counts as fair; otherwise the suggestions show what to add to the short side.</li><li><strong>Before → after ranks:</strong> the table shows how each team's QB / RB / WR / TE ranks, starting lineup, win-now and total value would move. Screenshot it to pitch the deal.</li><li><strong>Picks</strong> show their elite / starter / bust odds under the name, based on where that pick is projected to land. Players in a sell window are tagged.</li><li><strong>Trade ideas:</strong> pick one of your players in the idea finder for fair offers from teams whose needs fit yours. To go after a specific player, tap <strong>Offer</strong> on a rookie or bucket tab, or <strong>Find offers for him</strong> on his player card, and the Trade Finder loads the best-fitting package.</li></ul>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Pick the two teams</strong> at the top (your team is usually side A), then add players or picks to each side with the search boxes or the roster quick-add.</li><li><strong>Read the verdict:</strong> it compares the two sides after the value adjustment (which accounts for getting the best player). Within the Fair ±% slider counts as fair; otherwise the suggestions show what to add to the short side.</li><li><strong>Before → after ranks:</strong> the table shows how each team's QB / RB / WR / TE ranks, starting lineup, win-now and total value would move. Tap <strong>Copy DM pitch</strong> under it for a ready-to-send Sleeper message.</li><li><strong>Picks</strong> show their elite / starter / bust odds under the name, based on where that pick is projected to land. Players in a sell window are tagged.</li><li><strong>Trade ideas:</strong> pick one of your players in the idea finder for fair offers from teams whose needs fit yours. To go after a specific player, tap <strong>Offer</strong> on a rookie or bucket tab, or <strong>Find offers for him</strong> on his player card, and the Trade Finder loads the best-fitting package.</li></ul>
       </details>
       <!-- Top Action Bar -->
       <div class="flex flex-wrap items-center justify-between gap-2">
@@ -329,7 +329,7 @@
     <section id="view-league" class="hidden space-y-4">
       <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
         <summary class="cursor-pointer font-bold">How to use this tab</summary>
-        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Draft order:</strong> the strip projects next year's rookie draft. Choose whether your league orders it by standings or by Max PF; it's saved per league and sets every pick's Early / Mid / Late value and odds.</li><li><strong>Sell windows on your roster:</strong> your starters at the age where production usually drops, with the contenders weakest at that position as likely buyers.</li><li><strong>Power rankings:</strong> click any column to sort. Position columns rank each team's value at that spot; Fit scores how well a team's surpluses match your needs; Max PF and Win Now show who's actually strong this season.</li><li><strong>Find a partner:</strong> filter to Contenders, Rebuilders or teams with next year's 1st, then tap <strong>Trade →</strong> to open the calculator against that team.</li><li><strong>Trade history</strong> at the bottom grades every trade in the league at today's values, so you can see who tends to win deals.</li></ul>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Draft order:</strong> the strip projects next year's rookie draft. Choose whether your league orders it by standings or by Max PF; it's saved per league and sets every pick's Early / Mid / Late value and odds.</li><li><strong>Sell windows on your roster:</strong> your starters at the age where production usually drops, with the contenders weakest at that position as likely buyers.</li><li><strong>Power rankings:</strong> click any column to sort. Position columns rank each team's value at that spot; Fit scores how well a team's surpluses match your needs; Max PF and Win Now show who's actually strong this season.</li><li><strong>Find a partner:</strong> filter to Contenders, Rebuilders or teams with next year's 1st, then tap <strong>Trade →</strong> to open the calculator against that team.</li><li><strong>Playoff odds:</strong> simulates the rest of the regular season. Bubble teams (35–75%) are the likeliest buyers for veterans; unlucky teams with a strong lineup but poor odds may sell theirs.</li><li><strong>Team timeline:</strong> ages every roster 1 and 2 years forward on historical age curves, to show whose window is closing and who is a year away.</li><li><strong>Pick ownership:</strong> who holds extra or missing picks for the next three drafts.</li><li><strong>Handcuffs:</strong> backups for your RB1s held elsewhere, and backups you hold that another team's RB1 needs (easy throw-ins).</li><li><strong>Trade history</strong> at the bottom grades every trade in the league at today's values, so you can see who tends to win deals.</li></ul>
       </details>
       <!-- 2027 Draft Order Strip -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5">
@@ -351,6 +351,9 @@
 
       <!-- Sell windows on my roster -->
       <div id="sellCard" class="hidden bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5"></div>
+
+      <!-- Playoff odds + bubble buyers -->
+      <div id="playoffCard" class="hidden bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5"></div>
 
       <!-- League Power Rankings Table -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
@@ -394,6 +397,11 @@
         </div>
       </div>
 
+      <!-- Team timeline, pick ownership, handcuffs -->
+      <div id="timelineCard" class="hidden bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5"></div>
+      <div id="pickGridCard" class="hidden bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5"></div>
+      <div id="handcuffCard" class="hidden bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5"></div>
+
       <!-- League Trade History (graded at today's values) -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
         <div>
@@ -408,7 +416,7 @@
     <section id="view-scout" class="hidden space-y-4">
       <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
         <summary class="cursor-pointer font-bold">How to use this tab</summary>
-        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Sell-High Radar:</strong> your players whose value is ahead of their profile: low repeat-rate spikes, big KTC-vs-FantasyCalc gaps, and aging players. Shop these first.</li><li><strong>Buy-Low Targets:</strong> high repeat-rate players on other rosters that the market is discounting.</li><li><strong>Risers and Fallers:</strong> the biggest recent value moves on rostered players in your league.</li><li><strong>Best Available:</strong> the most valuable unrostered players in your league, with Sleeper add trends. Check it before waivers run.</li><li>Tap any name for his value history and odds; everything follows the value mix you set at the top.</li></ul>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Sell-High Radar:</strong> your players whose value is ahead of their profile: low repeat-rate spikes, big KTC-vs-FantasyCalc gaps, and aging players. Shop these first.</li><li><strong>Buy-Low Targets:</strong> high repeat-rate players on other rosters that the market is discounting.</li><li><strong>Rookie Buy Targets:</strong> rookies and second-year players on other teams with a BUY, Year 2 JUMPED or CHEAP flag from the rookie tabs.</li><li><strong>Risers and Fallers:</strong> the biggest recent value moves on rostered players in your league.</li><li><strong>Backfield Stash Alerts:</strong> free-agent RB2s behind aging starters, worth a bench spot before the starter gets hurt or falls off.</li><li><strong>Best Available:</strong> the most valuable unrostered players in your league, with Sleeper add trends. Check it before waivers run.</li><li>Tap any name for his value history and odds; everything follows the value mix you set at the top.</li></ul>
       </details>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- Sell-High Radar -->
@@ -433,6 +441,15 @@
         </div>
       </div>
 
+      <!-- Rookie buy targets -->
+      <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5">
+        <div>
+          <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">🌱 Rookie Buy Targets (Other Rosters)</h2>
+          <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Rookies and second-year players on other teams with a BUY tag (role ahead of points), a Year 2 JUMPED tag, or CHEAP pricing (KTC ranks them well below their hit odds). From the rookie tabs, refreshed every Tuesday. Offer loads the best-fitting package.</p>
+        </div>
+        <div id="rookieTargetsList" class="space-y-2"></div>
+      </div>
+
       <!-- Risers & Fallers -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
@@ -449,6 +466,15 @@
           <div><div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1.5">Risers</div><div id="risersList" class="space-y-1.5"></div></div>
           <div><div class="text-[11px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400 mb-1.5">Fallers</div><div id="fallersList" class="space-y-1.5"></div></div>
         </div>
+      </div>
+
+      <!-- Backfield stash alerts -->
+      <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5">
+        <div>
+          <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">🧲 Backfield Stash Alerts</h2>
+          <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Unrostered RB2s behind starters aged 27+ (the age RBs usually fall off). Next-man-up is ranked by value, not the official depth chart.</p>
+        </div>
+        <div id="stashList"></div>
       </div>
 
       <!-- Best Available Free Agents / Waiver Scanner -->
@@ -1761,6 +1787,8 @@
         ppr: typeof sc.rec === 'number' ? sc.rec : 1,
         tep: typeof sc.bonus_rec_te === 'number' ? sc.bonus_rec_te : 0,
         rounds: Number(d.settings?.draft_rounds) || 4,
+        playoffWeekStart: Number(d.settings?.playoff_week_start) || 15,
+        playoffTeams: Number(d.settings?.playoff_teams) || 6,
         season: Number(d.season) || null,
         prevId: d.previous_league_id ? String(d.previous_league_id) : '',
         slots: slots.length ? slots : ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX']
@@ -2656,7 +2684,7 @@
           <span><strong>Start-${startN} Impact:</strong></span>
           <span>${esc(nA)}: <strong class="${dA >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${dA >= 0 ? '+' : ''}${fmt(dA)}</strong></span>
           <span>${esc(nB)}: <strong class="${dB >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${dB >= 0 ? '+' : ''}${fmt(dB)}</strong></span>
-        </div>${impact}`;
+        </div>${impact}<div class="pt-2 flex flex-wrap items-center gap-2"><button type="button" data-copypitch="1" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Copy DM pitch</button><span class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">A short Sleeper message: what each side gets, how their position ranks improve, and why it fits their window. Your internal tags stay out of it.</span></div>`;
       } else {
         lineupBox.classList.add('hidden');
       }
@@ -3584,6 +3612,340 @@
       }).join('')}</div>`;
     }
 
+    // ============================================================================
+    // 11C. LEAGUE EXTRAS: PLAYOFF ODDS, TEAM TIMELINE, PICK GRID, HANDCUFFS (+ Scout: rookie targets, stashes)
+    // ============================================================================
+    const cardHead = (title, sub) => `<div><h2 class="text-sm font-bold">${title}</h2>${sub ? `<p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">${sub}</p>` : ''}</div>`;
+    const MUTED = 'text-[#5d6672] dark:text-[#98a2ae]';
+
+    // ---- Rookie signals from the weekly refresh (signals.json): hit odds + BUY / JUMPED tags ----
+    let SIGNALS = null;
+    fetch(`./signals.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
+      if (d && d.players) { SIGNALS = d; try { all(); } catch (e) { /* app not ready yet */ } }
+    }).catch(() => {});
+    function signalPlayers() {
+      if (!SIGNALS || !P.length) return [];
+      const byName = new Map();
+      P.forEach(p => { if (!p.pick) byName.set(`${normName(p.name)}|${p.pos}`, p); });
+      const out = SIGNALS.players.map(s => ({ s, p: byName.get(`${normName(s.n)}|${s.pos}`) })).filter(x => x.p);
+      // Model vs market, same rule as the rookie tabs: odds rank vs KTC rank among unsettled rookies at the position
+      ['WR', 'RB', 'TE'].forEach(pos => {
+        const key = '8';
+        const pool = out.filter(x => x.s.pos === pos && x.s.hp && x.s.hp[key] != null && x.p.k > 0);
+        const n = pool.length;
+        if (n < 6) return;
+        const th = Math.max(3, Math.round(n * 0.2));
+        const byK = pool.slice().sort((a, b) => b.p.k - a.p.k);
+        pool.slice().sort((a, b) => b.s.hp[key] - a.s.hp[key] || b.p.k - a.p.k).forEach((x, i) => {
+          const kr = byK.indexOf(x) + 1, gap = kr - (i + 1);
+          x.mv = { hp: x.s.hp[key], hr: i + 1, kr, n, flag: gap >= th ? 'cheap' : gap <= -th ? 'pricey' : '' };
+        });
+      });
+      return out;
+    }
+
+    function renderRookieTargets() {
+      const el = document.getElementById('rookieTargetsList');
+      if (!el) return;
+      const xs = signalPlayers().filter(x => OWN[x.p.id] !== ME && (x.s.sig.includes('buy') || x.s.sig.includes('jump') || (x.mv && x.mv.flag === 'cheap')));
+      if (!SIGNALS) { el.innerHTML = `<div class="text-xs ${MUTED} py-2">Rookie signals load from the weekly refresh (signals.json).</div>`; return; }
+      if (!xs.length) { el.innerHTML = `<div class="text-xs ${MUTED} py-2">No BUY, JUMPED or CHEAP rookies on other rosters right now.</div>`; return; }
+      const score = x => (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 3 : 0) + (x.s.sig.includes('buy') ? 2 : 0) + (x.s.sig.includes('jump') ? 1.5 : 0) + (x.mv && x.mv.flag === 'cheap' ? 1 : 0) + (x.mv ? x.mv.hp / 100 : 0);
+      xs.sort((a, b) => score(b) - score(a));
+      const why = x => {
+        const r = [];
+        if (x.s.sig.includes('buy')) r.push('BUY: role ahead of his points (13 of 21 historical BUYs hit)');
+        if (x.s.sig.includes('jump')) r.push(`Year 2 JUMPED (${x.s.pos === 'RB' ? '79%' : x.s.pos === 'TE' ? '33%' : '31%'} hit historically)`);
+        if (x.mv && x.mv.flag === 'cheap') r.push(`CHEAP: ${x.mv.hp}% odds (#${x.mv.hr} of ${x.mv.n}) but KTC #${x.mv.kr}`);
+        else if (x.mv) r.push(`${x.mv.hp}% odds`);
+        return r.join(' · ');
+      };
+      el.innerHTML = xs.slice(0, 10).map(x => {
+        const o = OWN[x.p.id];
+        return `<div class="p-2.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">${posTag(x.p.pos)}<button type="button" data-player="${x.p.id}" class="text-xs font-bold truncate hover:underline cursor-pointer">${esc(x.p.name)}</button><span class="text-[11px] font-bold ${MUTED}">${fmt(V[x.p.id])}</span><span class="text-[10px] ${MUTED}">'${String(x.s.yr).slice(2)}${x.s.rd ? ` R${x.s.rd}` : ' UDFA'}</span></div>
+            <div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium mt-0.5">${o ? `On ${esc(T[o]?.n || o)}` : 'Free agent'} · ${esc(why(x))}</div>
+          </div>
+          ${o ? `<button type="button" data-acquire="${x.p.id}" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white shrink-0 cursor-pointer">Offer →</button>` : `<span class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 shrink-0">Add him</span>`}
+        </div>`;
+      }).join('');
+    }
+
+    // ---- Team timeline: project each team's starting value 1 and 2 years out ----
+    // Age curves from nflverse 2015-2024: how much of a player's PPG typically carries into next season at
+    // each age (dropping out counts as zero), scaled so the position average = 1. That leaves only the age
+    // effect: young players gain, old players lose. QBs showed no reliable age effect, so they barely move.
+    const AGE_R = {
+      start: 21,
+      RB: [1.15, 1.15, 1.15, 1.117, 1.098, 1.002, 0.97, 0.889, 0.867, 0.813, 0.813, 0.712, 0.712, 0.712, 0.712, 0.712, 0.712],
+      WR: [1.15, 1.15, 1.106, 1.077, 1.026, 1.026, 0.996, 0.984, 0.918, 0.865, 0.813, 0.813, 0.79, 0.79, 0.79, 0.79, 0.79],
+      TE: [0.945, 1.054, 1.145, 1.12, 1.072, 1.025, 1.025, 0.957, 0.902, 0.815, 0.815, 0.815, 0.786, 0.72, 0.72, 0.72, 0.72],
+      QB: [1.03, 1.03, 1.03, 1.03, 1.03, 1.03, 1.03, 1, 1, 1, 1, 1, 1, 0.93, 0.93, 0.93, 0.93]
+    };
+    function ageRet(pos, age) {
+      const arr = AGE_R[pos];
+      if (!arr || !age) return 1;
+      const i = Math.max(0, Math.min(arr.length - 1, Math.floor(age) - AGE_R.start));
+      return arr[i];
+    }
+    function projValue(id, years) {
+      const p = P[id];
+      if (!p) return 0;
+      let v = V[id] || 0;
+      if (p.pick) return v;
+      for (let j = 0; j < years; j++) v *= ageRet(p.pos, p.age ? Number(p.age) + j : null);
+      return v;
+    }
+    function renderTimeline() {
+      const el = document.getElementById('timelineCard');
+      if (!el) return;
+      if (owners.length < 4) { el.classList.add('hidden'); return; }
+      el.classList.remove('hidden');
+      const rows = owners.map(o => {
+        const ids = T[o].ids || [];
+        const s = [0, 1, 2].map(y => solveLineup(ids, id => projValue(id, y)).total);
+        return { o, s };
+      });
+      const rk = y => { const m = {}; rows.slice().sort((a, b) => b.s[y] - a.s[y]).forEach((r, i) => { m[r.o] = i + 1; }); return m; };
+      const r0 = rk(0), r1 = rk(1), r2 = rk(2);
+      const n = rows.length;
+      const label = r => {
+        const d = r0[r.o] - r2[r.o];
+        if (r0[r.o] <= Math.ceil(n / 3) && d <= -3) return ['Window closing', 'bg-rose-500/15 text-rose-700 dark:text-rose-300'];
+        if (r0[r.o] > Math.ceil(n / 2) && d >= 3) return ['Rising', 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'];
+        if (d <= -3) return ['Aging', 'bg-amber-500/15 text-amber-800 dark:text-amber-300'];
+        if (d >= 3) return ['Getting better', 'bg-sky-500/15 text-sky-700 dark:text-sky-300'];
+        return ['', ''];
+      };
+      const pct = (a, b) => { const x = b ? Math.round(100 * (a - b) / b) : 0; return `<span class="${x >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${x >= 0 ? '+' : ''}${x}%</span>`; };
+      const cell = (r, y) => `<td class="py-1.5 px-1.5 text-right tabular-nums whitespace-nowrap"><span class="font-semibold">#${[r0, r1, r2][y][r.o]}</span>${y ? ` <span class="text-[10px]">${pct(r.s[y], r.s[0])}</span>` : ` <span class="text-[10px] ${MUTED}">${fmt(r.s[0])}</span>`}</td>`;
+      el.innerHTML = cardHead('Team timeline', 'Each team\'s best starting lineup by value today, then projected 1 and 2 years out by aging every player along historical age curves (picks hold their value; rookies drafted later aren\'t included). Ranks are what matter: a rough guide to whose window is closing and who is a year away, not a forecast.') +
+        `<div class="overflow-x-auto"><table class="w-full text-xs border-collapse">
+          <thead><tr class="text-[10px] uppercase tracking-wider ${MUTED}"><th class="text-left py-1 pr-2">Team</th><th class="text-right px-1.5">Now</th><th class="text-right px-1.5">${(activeLeague.season || 2026) + 1}</th><th class="text-right px-1.5">${(activeLeague.season || 2026) + 2}</th><th class="text-left pl-2">Trend</th></tr></thead>
+          <tbody>${rows.sort((a, b) => r0[a.o] - r0[b.o]).map(r => { const [lab, cls] = label(r); return `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1.5 pr-2 font-semibold whitespace-nowrap">${esc(T[r.o].n)}${r.o === ME ? ' <span class="text-[10px] px-1 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td>${cell(r, 0)}${cell(r, 1)}${cell(r, 2)}<td class="pl-2">${lab ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${cls}">${lab}</span>` : ''}</td></tr>`; }).join('')}</tbody>
+        </table></div>`;
+    }
+
+    // ---- Pick ownership grid (Sleeper traded picks, next three drafts) ----
+    function renderPickGrid() {
+      const el = document.getElementById('pickGridCard');
+      if (!el) return;
+      if (owners.length < 4) { el.classList.add('hidden'); return; }
+      el.classList.remove('hidden');
+      const maxRd = Math.min(3, Math.max(2, activeLeague.rounds || 4));
+      const cols = [];
+      DRAFT_YEARS.forEach((y, i) => { for (let rd = 1; rd <= (i === 0 ? maxRd : 2); rd++) cols.push([y, rd]); });
+      const grid = {};
+      owners.forEach(o => {
+        grid[o] = {};
+        (T[o].pk || []).forEach(([id, via]) => {
+          const p = P[id];
+          if (!p || !p.pick) return;
+          const k = `${p.year}_${p.rd}`;
+          (grid[o][k] = grid[o][k] || []).push(via === 'own' ? 'own' : via);
+        });
+      });
+      const firsts = o => DRAFT_YEARS.reduce((s, y) => s + ((grid[o][`${y}_1`] || []).length), 0);
+      const byFirsts = owners.slice().sort((a, b) => firsts(b) - firsts(a) || (T[a].slot || 99) - (T[b].slot || 99));
+      const cell = (o, y, rd) => {
+        const v = grid[o][`${y}_${rd}`] || [];
+        const n = v.length, others = v.filter(x => x !== 'own');
+        const cls = n === 0 ? 'bg-rose-500/12 text-rose-700 dark:text-rose-300' : n >= 2 ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 font-extrabold' : '';
+        const tip = n ? v.map(x => (x === 'own' ? 'own pick' : `via ${x}`)).join(', ') : 'traded away';
+        return `<td class="py-1 px-1 text-center tabular-nums ${cls}" title="${esc(tip)}">${n || '–'}${others.length ? '<sup>*</sup>' : ''}</td>`;
+      };
+      el.innerHTML = cardHead('Pick ownership', `How many of each future pick every team holds (from Sleeper's traded picks). Green = extra picks, red = traded away, * = includes a pick acquired from another team (hover for whose). Sorted by total 1sts.`) +
+        `<div class="overflow-x-auto"><table class="w-full text-xs border-collapse">
+          <thead><tr class="text-[10px] uppercase tracking-wider ${MUTED}"><th class="text-left py-1 pr-2">Team</th>${cols.map(([y, rd]) => `<th class="px-1 text-center">'${String(y).slice(2)} ${ORD_NAME[rd]}</th>`).join('')}<th class="px-1 text-center">1sts</th></tr></thead>
+          <tbody>${byFirsts.map(o => `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1 pr-2 font-semibold whitespace-nowrap">${esc(T[o].n)}${o === ME ? ' <span class="text-[10px] px-1 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td>${cols.map(([y, rd]) => cell(o, y, rd)).join('')}<td class="px-1 text-center font-extrabold">${firsts(o)}</td></tr>`).join('')}</tbody>
+        </table></div>`;
+    }
+
+    // ---- Handcuffs: RB1 / RB2 on each NFL team (ranked by this-season value) ----
+    function backfields() {
+      const val = p => (HAS_RDV() ? (p.rdv || 0) : (V[p.id] || 0));
+      const teams = {};
+      P.forEach(p => { if (!p.pick && p.pos === 'RB' && p.team && p.team !== 'FA') (teams[p.team] = teams[p.team] || []).push(p); });
+      const out = [];
+      Object.entries(teams).forEach(([tm, rbs]) => {
+        rbs.sort((a, b) => val(b) - val(a));
+        if (rbs.length < 2 || val(rbs[0]) <= 0) return;
+        out.push({ tm, rb1: rbs[0], rb2: rbs[1] });
+      });
+      return out;
+    }
+    function bfOf(p) {
+      const s = SIGNALS && SIGNALS.players.find(x => x.pos === 'RB' && normName(x.n) === normName(p.name));
+      return s && s.bf8 != null ? ` · ${Math.round(100 * s.bf8)}% backfield share` : '';
+    }
+    function renderHandcuffs() {
+      const el = document.getElementById('handcuffCard');
+      if (!el) return;
+      if (!owners.length || !T[ME]) { el.classList.add('hidden'); return; }
+      el.classList.remove('hidden');
+      const bfs = backfields().filter(b => OWN[b.rb1.id]);
+      const who = id => (OWN[id] ? (OWN[id] === ME ? 'you' : T[OWN[id]]?.n || OWN[id]) : 'free agent');
+      const line = (b, txt) => `<div class="py-1 border-b border-[#eef0f4] dark:border-[#232933]"><span class="font-semibold">${esc(b.rb2.name)}</span> <span class="${MUTED}">(${esc(b.tm)} RB2)</span> ${txt}</div>`;
+      const mine = bfs.filter(b => OWN[b.rb1.id] === ME && OWN[b.rb2.id] !== ME);
+      const sweet = bfs.filter(b => OWN[b.rb2.id] === ME && OWN[b.rb1.id] !== ME);
+      const league = bfs.filter(b => OWN[b.rb1.id] !== ME && OWN[b.rb2.id] && OWN[b.rb2.id] !== OWN[b.rb1.id] && OWN[b.rb2.id] !== ME);
+      el.innerHTML = cardHead('Handcuffs', `Each NFL team's top two RBs by ${HAS_RDV() ? 'this-season (FantasyCalc redraft)' : 'dynasty'} value, which isn't always the official depth chart. Use it to find insurance and easy throw-ins.`) +
+        `<div class="grid md:grid-cols-3 gap-3 text-xs">
+          <div><div class="font-bold mb-1">Your RB1s without their backup</div>${mine.length ? mine.map(b => line(b, `behind your ${esc(b.rb1.name)} · held by <strong>${esc(who(b.rb2.id))}</strong>${bfOf(b.rb2)}`)).join('') : `<div class="${MUTED}">Every RB1 you own has his backup on your roster, or there's no clear one.</div>`}</div>
+          <div><div class="font-bold mb-1">Sweeteners you hold</div>${sweet.length ? sweet.map(b => line(b, `backs up ${esc(b.rb1.name)} on <strong>${esc(who(b.rb1.id))}</strong>: an easy add-on when you trade with them`)).join('') : `<div class="${MUTED}">You don't hold another team's RB1 backup.</div>`}</div>
+          <div><div class="font-bold mb-1">Split around the league</div>${league.length ? league.slice(0, 8).map(b => line(b, `backs up ${esc(b.rb1.name)} (${esc(who(b.rb1.id))}) but is on <strong>${esc(who(b.rb2.id))}</strong>`)).join('') : `<div class="${MUTED}">No split backfields.</div>`}</div>
+        </div>`;
+    }
+    function renderStashAlerts() {
+      const el = document.getElementById('stashList');
+      if (!el) return;
+      if (!owners.length) { el.innerHTML = ''; return; }
+      const xs = backfields().filter(b => !OWN[b.rb2.id] && b.rb1.age && Number(b.rb1.age) >= 26.5)
+        .sort((a, b) => (V[b.rb2.id] || 0) - (V[a.rb2.id] || 0)).slice(0, 8);
+      el.innerHTML = xs.length ? xs.map(b => `<div class="flex items-center justify-between gap-2 py-1.5 border-b border-[#eef0f4] dark:border-[#232933] text-xs">
+          <span class="min-w-0">${posTag('RB')} <button type="button" data-player="${b.rb2.id}" class="font-semibold hover:underline cursor-pointer">${esc(b.rb2.name)}</button> <span class="${MUTED}">${esc(b.tm)} · behind ${esc(b.rb1.name)} (age ${Number(b.rb1.age).toFixed(1)}, ${esc(OWN[b.rb1.id] ? T[OWN[b.rb1.id]]?.n || '' : 'FA')})${bfOf(b.rb2)}</span></span>
+          <span class="font-bold shrink-0">${fmt(V[b.rb2.id])}</span></div>`).join('')
+        : `<div class="text-xs ${MUTED} py-2">No unrostered RB2s behind aging starters right now.</div>`;
+    }
+
+    // ---- Playoff odds (simulates the rest of the regular season) ----
+    let PLAYOFF = { key: '', data: null, loading: false };
+    async function loadPlayoffData() {
+      const lg = activeLeague;
+      const key = `${lg.id}|${owners.length}|${Object.values(T).map(t => t.r).join(',')}`;
+      if (!lg.id || PLAYOFF.loading || PLAYOFF.key === key) return;
+      PLAYOFF.loading = true;
+      try {
+        const regEnd = (Number(lg.playoffWeekStart) || 15) - 1;
+        const reqs = [];
+        for (let w = 1; w <= regEnd; w++) reqs.push(fetch(`https://api.sleeper.app/v1/league/${lg.id}/matchups/${w}`).then(r => (r.ok ? r.json() : [])).catch(() => []));
+        const weeks = await Promise.all(reqs);
+        PLAYOFF = { key, data: { weeks, regEnd }, loading: false };
+        renderPlayoffCard();
+      } catch (e) {
+        PLAYOFF.loading = false;
+      }
+    }
+    function simulatePlayoffs() {
+      const d = PLAYOFF.data;
+      if (!d) return null;
+      const keys = owners.slice();
+      const n = keys.length;
+      const rec = k => { const [w = 0, l = 0, t = 0] = String(T[k].r || '0-0').split('-').map(Number); return { w, l, t, g: w + l + t }; };
+      const G = Math.max(...keys.map(k => rec(k).g));
+      const keyByRid = {}; keys.forEach(k => { keyByRid[T[k].rid] = k; });
+      // scores from completed weeks
+      const scores = {}; keys.forEach(k => { scores[k] = []; });
+      for (let w = 1; w <= Math.min(G, d.regEnd); w++) (d.weeks[w - 1] || []).forEach(m => { const k = keyByRid[m.roster_id]; if (k && m.points != null) scores[k].push(Number(m.points) || 0); });
+      const all = Object.values(scores).flat();
+      const mean = all.length ? all.reduce((a, b) => a + b, 0) / all.length : 110;
+      let ss = 0, cnt = 0;
+      keys.forEach(k => { const s = scores[k], m = s.length ? s.reduce((a, b) => a + b, 0) / s.length : mean; s.forEach(x => { ss += (x - m) ** 2; cnt++; }); });
+      const sd = cnt > 10 ? Math.sqrt(ss / cnt) : 22;
+      const rows = getLeaguePartnerProfiles().rows;
+      const wn = {}; rows.forEach(r => { wn[r.o] = r.winNow || 0; });
+      const wnMean = keys.reduce((s, k) => s + (wn[k] || 0), 0) / n;
+      const mu = {}; const mpg = {};
+      keys.forEach(k => {
+        const s = scores[k];
+        const pfpg = s.length ? s.reduce((a, b) => a + b, 0) / s.length : mean;
+        mu[k] = wnMean > 0 ? 0.5 * pfpg + 0.5 * mean * (wn[k] / wnMean) : pfpg;
+        mpg[k] = G ? (T[k].mpf || 0) / G : mean * 1.15;
+      });
+      const remaining = [];
+      for (let w = G + 1; w <= d.regEnd; w++) {
+        const byM = {};
+        (d.weeks[w - 1] || []).forEach(m => { if (m.matchup_id) (byM[m.matchup_id] = byM[m.matchup_id] || []).push(keyByRid[m.roster_id]); });
+        remaining.push(Object.values(byM).filter(p => p.length === 2 && p[0] && p[1]));
+      }
+      const pt = Math.min(n, Number(activeLeague.playoffTeams) || 6);
+      const byes = pt === 6 ? 2 : pt === 12 ? 4 : 0;
+      const N = 2000;
+      const res = {}; keys.forEach(k => { res[k] = { po: 0, bye: 0, last: 0 }; });
+      const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+      for (let i = 0; i < N; i++) {
+        const w = {}, pf = {}, mp = {};
+        keys.forEach(k => { const r = rec(k); w[k] = r.w + 0.5 * r.t; pf[k] = T[k].pf || 0; mp[k] = T[k].mpf || 0; });
+        remaining.forEach(week => {
+          week.forEach(([a, b]) => {
+            const sa = mu[a] + sd * gauss(), sb = mu[b] + sd * gauss();
+            pf[a] += sa; pf[b] += sb;
+            if (sa > sb) w[a]++; else w[b]++;
+          });
+          keys.forEach(k => { mp[k] += mpg[k] + 0.7 * sd * gauss(); });
+        });
+        const order = keys.slice().sort((a, b) => w[b] - w[a] || pf[b] - pf[a]);
+        order.forEach((k, idx) => { if (idx < pt) res[k].po++; if (idx < byes) res[k].bye++; });
+        const lastK = activeLeague.draftOrder === 'maxpf' ? keys.slice().sort((a, b) => mp[a] - mp[b])[0] : order[n - 1];
+        res[lastK].last++;
+      }
+      keys.forEach(k => { ['po', 'bye', 'last'].forEach(x => { res[k][x] = Math.round(100 * res[k][x] / N); }); });
+      return { res, G, regEnd: d.regEnd, pt, byes, left: remaining.length, sd: Math.round(sd), wn };
+    }
+    function renderPlayoffCard() {
+      const el = document.getElementById('playoffCard');
+      if (!el) return;
+      if (owners.length < 4 || !activeLeague.id) { el.classList.add('hidden'); return; }
+      el.classList.remove('hidden');
+      if (!PLAYOFF.data || PLAYOFF.loading) {
+        el.innerHTML = cardHead('Playoff odds', 'Loading this season\'s matchups from Sleeper…');
+        loadPlayoffData();
+        return;
+      }
+      const sim = simulatePlayoffs();
+      if (!sim) return;
+      if (sim.left === 0) { el.innerHTML = cardHead('Playoff odds', `The regular season is over (${sim.G} weeks played).`); return; }
+      const n = owners.length;
+      const wnRank = {}; owners.slice().sort((a, b) => (sim.wn[b] || 0) - (sim.wn[a] || 0)).forEach((k, i) => { wnRank[k] = i + 1; });
+      const flag = k => {
+        const r = sim.res[k];
+        if (k === ME) return '';
+        if (r.po >= 35 && r.po <= 75) return ['Bubble: may pay for vets', 'bg-amber-500/15 text-amber-800 dark:text-amber-300'];
+        if (r.po < 15 && wnRank[k] <= Math.ceil(n / 2)) return ['Unlucky: may sell vets', 'bg-sky-500/15 text-sky-700 dark:text-sky-300'];
+        return '';
+      };
+      const lastLbl = activeLeague.draftOrder === 'maxpf' ? 'Lowest Max PF' : 'Worst record';
+      const bar = x => `<div class="flex items-center gap-1.5 justify-end"><span class="tabular-nums font-semibold w-8 text-right">${x}%</span><div class="w-12 h-1.5 rounded bg-[#e3e6eb] dark:bg-[#2a3039] overflow-hidden hidden sm:block"><div class="h-full bg-blue-600" style="width:${x}%"></div></div></div>`;
+      const keys = owners.slice().sort((a, b) => sim.res[b].po - sim.res[a].po || sim.res[b].bye - sim.res[a].bye);
+      el.innerHTML = cardHead('Playoff odds', `${sim.left} regular-season week${sim.left === 1 ? '' : 's'} left; top ${sim.pt} make the playoffs${sim.byes ? ` (top ${sim.byes} get byes)` : ''}. 2,000 simulations of the remaining Sleeper matchups. Each team's weekly score is drawn around a blend of its points per game so far and its Win Now lineup, with this league's week-to-week spread (±${sim.sd}). ${lastLbl} % is the chance of the 1.01 under your draft-order setting. <strong>Bubble</strong> teams (35–75%) are the most likely to pay for veterans; <strong>unlucky</strong> teams (strong Win Now, under 15%) may sell theirs.`) +
+        `<div class="overflow-x-auto"><table class="w-full text-xs border-collapse">
+          <thead><tr class="text-[10px] uppercase tracking-wider ${MUTED}"><th class="text-left py-1 pr-2">Team</th><th class="px-1.5 text-left">Record</th><th class="px-1.5 text-right">Playoffs</th>${sim.byes ? '<th class="px-1.5 text-right">Bye</th>' : ''}<th class="px-1.5 text-right">${lastLbl}</th><th class="pl-2 text-left">Trade read</th></tr></thead>
+          <tbody>${keys.map(k => { const r = sim.res[k]; const f = flag(k); return `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1.5 pr-2 font-semibold whitespace-nowrap">${esc(T[k].n)}${k === ME ? ' <span class="text-[10px] px-1 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td><td class="px-1.5 ${MUTED} whitespace-nowrap">${esc(T[k].r)}</td><td class="px-1.5">${bar(r.po)}</td>${sim.byes ? `<td class="px-1.5 text-right tabular-nums">${r.bye}%</td>` : ''}<td class="px-1.5 text-right tabular-nums">${r.last}%</td><td class="pl-2">${f ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap ${f[1]}">${f[0]}</span>` : ''}</td></tr>`; }).join('')}</tbody>
+        </table></div>`;
+    }
+
+    // ---- Copy a short DM pitch for the trade in the calculator ----
+    function buildPitch() {
+      if (!st.tA || !st.tB || !T[st.tA] || !T[st.tB] || !st.A.length || !st.B.length) return '';
+      const mySide = st.tB === ME ? 'B' : 'A';
+      const them = mySide === 'A' ? st.tB : st.tA;
+      const theyGet = (mySide === 'A' ? st.A : st.B).map(x => P[x.id]?.name).filter(Boolean);
+      const iGet = (mySide === 'A' ? st.B : st.A).map(x => P[x.id]?.name).filter(Boolean);
+      const give = new Set((mySide === 'A' ? st.B : st.A).map(x => x.id));   // what THEY send
+      const recv = (mySide === 'A' ? st.A : st.B).map(x => x.id);            // what THEY receive
+      const t = T[them];
+      const idsAfter = (t.ids || []).filter(id => !give.has(id)).concat(recv.filter(id => !P[id]?.pick));
+      const pksAfter = (t.pk || []).map(([id]) => id).filter(id => !give.has(id)).concat(recv.filter(id => P[id]?.pick));
+      const before = {}, after = {};
+      owners.forEach(o => { before[o] = teamStrength(T[o].ids || [], (T[o].pk || []).map(([id]) => id)); after[o] = before[o]; });
+      after[them] = teamStrength(idsAfter, pksAfter);
+      const rank = (map, cat) => 1 + owners.filter(o => (map[o][cat] || 0) > (map[them][cat] || 0)).length;
+      const bullets = [];
+      const ups = ['QB', 'RB', 'WR', 'TE'].map(c => [c, rank(before, c), rank(after, c)]).filter(([, a, b]) => b < a).sort((x, y) => (x[2] - x[1]) - (y[2] - y[1]));
+      if (ups.length) bullets.push(`Your ${ups.slice(0, 2).map(([c, a, b]) => `${c} room goes from #${a} to #${b}`).join(' and ')} in the league`);
+      const nowGain = (after[them].NOW || 0) - (before[them].NOW || 0);
+      if (HAS_RDV() && nowGain > 0) bullets.push(`Your best lineup this season gets stronger (win-now #${rank(before, 'NOW')} → #${rank(after, 'NOW')})`);
+      const arch = teamArchetype(them).archetype;
+      const pickIn = recv.filter(id => P[id]?.pick).length;
+      const ageOf = ids => { let a = 0, v = 0; ids.forEach(id => { const p = P[id]; if (p && !p.pick && p.age) { a += p.age * (V[id] || 0); v += V[id] || 0; } }); return v ? a / v : null; };
+      const youngIn = ageOf(recv), oldOut = ageOf([...give]);
+      if (arch === 'contender' && !bullets.some(b => b.includes('this season'))) bullets.push('Adds help for a title run this year');
+      if (arch === 'rebuild' && (pickIn || (youngIn && oldOut && youngIn < oldOut - 1))) bullets.push(pickIn ? 'Adds draft capital for your rebuild' : 'Gets younger for your rebuild');
+      const first = t.u || (t.n || 'there').split(' ')[0];
+      return `Hey ${first}, trade idea for you:\n\nYou get: ${theyGet.join(', ')}\nI get: ${iGet.join(', ')}\n\n${bullets.slice(0, 3).map(b => `• ${b}`).join('\n')}${bullets.length ? '\n\n' : ''}Open to tweaks if you want to adjust it.`;
+    }
+
     function all() {
       syncControls();
       renderChart();
@@ -3591,8 +3953,10 @@
       renderTradeIdeas();
       renderLeague();
       renderSellCard();
+      try { renderPlayoffCard(); renderTimeline(); renderPickGrid(); renderHandcuffs(); } catch (e) { console.error(e); }
       sendLeagueToFrames();
       renderScout();
+      try { renderRookieTargets(); renderStashAlerts(); } catch (e) { console.error(e); }
       renderMovers();
       renderTradeHistory();
       if (st.pm && !document.getElementById('playerModal')?.classList.contains('hidden')) renderPlayerModal();
@@ -3936,6 +4300,10 @@
           document.getElementById('tradeIdeasSection')?.scrollIntoView({ behavior: 'smooth' });
           return;
         }
+        const pitchBtn = e.target.closest('[data-copypitch]');
+        if (pitchBtn) { const txt = buildPitch(); if (txt) copyText(txt); else toast('Add players to both sides first.'); return; }
+        const acqBtn = e.target.closest('[data-acquire]');
+        if (acqBtn) { startAcquire(Number(acqBtn.dataset.acquire)); return; }
         const buyOfferBtn = e.target.closest('[data-buyoffer]');
         if (buyOfferBtn) {
           const pId = Number(buyOfferBtn.dataset.buyoffer);
