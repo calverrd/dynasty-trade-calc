@@ -19,6 +19,7 @@ regular season is complete.
 """
 import json
 import math
+import os
 import re
 import sys
 from datetime import datetime, timezone
@@ -397,10 +398,39 @@ def write_ppg():
 
 write_ppg()
 
+# Devon's Hit Rates sheet (his scoring) is the source of truth for career tiers when a player is in it.
+# sheet_tiers.json: "POS|normalized name|class" -> [12+ seasons, mid seasons, elite seasons]
+# (WR 12/14/14, RB 12/15/15, TE 12/14/17). Players not in the sheet keep the nflverse tier.
+SHEET_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sheet_tiers.json")
+SHEET = json.load(open(SHEET_PATH)) if os.path.exists(SHEET_PATH) else {}
+
+
+def apply_sheet(rows, pos):
+    n = 0
+    for o in rows:
+        h = SHEET.get(f"{pos}|{norm_name(o['n'])}|{o['yr']}")
+        o.pop("sh", None)
+        if not h:
+            continue
+        h12, hmid, hel = h
+        if pos == "TE":
+            t = "g17" if hel else "g14" if hmid else "g12" if h12 else None
+        else:
+            t = "green" if hel else "yellow" if h12 else None
+        if t is None:
+            t = "tbd" if o["tier"] == "tbd" else "red"
+        if t != o["tier"]:
+            o["tier"], o["sh"] = t, 1
+            n += 1
+    print(pos, n, "tiers set from the Hit Rates sheet")
+    return rows
+
+
 for pos, fname in (("RB", "rookie-rb-tracker.html"), ("TE", "rookie-te-tracker.html"), ("WR", "rookie-wr-tracker.html")):
     path = f"{SITE}/{fname}"
     s, rows = read_data(path)
     old = json.loads(json.dumps(rows))
     rows = wr_update(rows) if pos == "WR" else build_rb_te(pos)
+    rows = apply_sheet(rows, pos)
     write_data(path, s, rows, old)
     print(pos, len(rows), "rows;", sum(1 for o in rows if o["y2t"]), "Year 2 tags")
