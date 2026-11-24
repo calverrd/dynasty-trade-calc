@@ -324,7 +324,7 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div>
             <h2 class="text-sm font-bold">League Power Rankings &amp; Trade Partner Matcher</h2>
-            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Auto-tagged by Contender/Rebuild status, weakest starting position, and next-draft 1st ownership. QB–TE columns rank each team's value at that position (green = top quarter, red = bottom quarter). Click a column header to sort, or a row to expand.</p>
+            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Auto-tagged by Contender/Rebuild status, weakest starting position, and next-draft 1st ownership. QB–TE columns rank each team's value at that position (green = top quarter, red = bottom quarter). Age is value-weighted (blue = youngest quarter, amber = oldest). Fit (0–100) scores how well a team's surpluses and needs complement yours; "you→WR" means you can send them WR value they lack. Click a column header to sort, or a row to expand.</p>
           </div>
           <div id="leagueFilterBar" class="inline-flex flex-wrap rounded-lg border border-[#d6dbe3] dark:border-[#2e3540] overflow-hidden text-xs bg-[#f6f7f9] dark:bg-[#0f1216]">
             <button type="button" data-lfilter="ALL" class="lfilter-btn px-2.5 py-1.5 font-semibold cursor-pointer">All</button>
@@ -346,6 +346,8 @@
                 <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="posRB" title="Sort by RB rank (value of RBs on roster)">RB<span class="lsort-arrow"></span></th>
                 <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="posWR" title="Sort by WR rank (value of WRs on roster)">WR<span class="lsort-arrow"></span></th>
                 <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="posTE" title="Sort by TE rank (value of TEs on roster)">TE<span class="lsort-arrow"></span></th>
+                <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="age" title="Value-weighted roster age (players only)">Age<span class="lsort-arrow"></span></th>
+                <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="fit" title="How well this team's needs and surpluses complement yours (0-100)">Fit<span class="lsort-arrow"></span></th>
                 <th class="py-2 pr-2 text-right cursor-pointer select-none hover:text-blue-600" data-lsort="start" title="Sort by starting lineup value">Start Value<span class="lsort-arrow"></span></th>
                 <th class="py-2 pr-2 text-right hidden sm:table-cell cursor-pointer select-none hover:text-blue-600" data-lsort="picks" title="Sort by draft pick value">Picks<span class="lsort-arrow"></span></th>
                 <th class="py-2 pr-2 text-right cursor-pointer select-none hover:text-blue-600" data-lsort="total" title="Sort by total value">Total Value<span class="lsort-arrow"></span></th>
@@ -1348,7 +1350,14 @@
         });
         const totalVal = posTotals.QB + posTotals.RB + posTotals.WR + posTotals.TE + posTotals.PICK;
         const arch = teamArchetype(o);
-        return { o, t, startVal, posTotals, totalVal, count27First, arch };
+        // Value-weighted roster age (players only): stars count more than bench guys
+        let ageW = 0, ageV = 0;
+        (t.ids || []).forEach(id => {
+          const p = P[id], a = Number(p && p.age), v = V[id] || 0;
+          if (p && !p.pick && a > 0 && v > 0) { ageW += a * v; ageV += v; }
+        });
+        const age = ageV ? ageW / ageV : null;
+        return { o, t, startVal, posTotals, totalVal, count27First, arch, age };
       }).sort((a, b) => b.totalVal - a.totalVal);
 
       const posRanks = { QB: {}, RB: {}, WR: {}, TE: {}, PICK: {} };
@@ -2787,6 +2796,37 @@
         return r.arch.archetype === st.leagueFilter;
       });
 
+      // ---- Fit with me: complementary surpluses/needs by position (value vs league average) ----
+      const FIT_POS = ['QB', 'RB', 'WR', 'TE'];
+      const fit = {};
+      try {
+        const avg = {};
+        FIT_POS.forEach(pos => { avg[pos] = allRows.reduce((a, x) => a + x.posTotals[pos], 0) / Math.max(1, allRows.length); });
+        const dev = x => Object.fromEntries(FIT_POS.map(pos => [pos, avg[pos] ? (x.posTotals[pos] - avg[pos]) / avg[pos] : 0]));
+        const meRow = allRows.find(x => x.o === ME);
+        if (meRow) {
+          const md = dev(meRow);
+          const raw = {};
+          allRows.forEach(x => {
+            if (x.o === ME) return;
+            const xd = dev(x);
+            const give = {}, get = {};
+            FIT_POS.forEach(pos => {
+              give[pos] = Math.max(0, md[pos]) * Math.max(0, -xd[pos]);   // my surplus fills their hole
+              get[pos] = Math.max(0, xd[pos]) * Math.max(0, -md[pos]);    // their surplus fills my hole
+            });
+            const G = Object.values(give).reduce((a, b) => a + b, 0), R = Object.values(get).reduce((a, b) => a + b, 0);
+            const best = o => { const e = Object.entries(o).sort((a, b) => b[1] - a[1])[0]; return e && e[1] > 0 ? e[0] : null; };
+            raw[x.o] = { v: G + R + Math.min(G, R), send: best(give), recv: best(get) };   // two-way deals get a bonus
+          });
+          const mx = Math.max(...Object.values(raw).map(z => z.v), 1e-9);
+          Object.entries(raw).forEach(([o, z]) => { fit[o] = { score: Math.round(100 * z.v / mx), send: z.send, recv: z.recv }; });
+        }
+      } catch (e) { /* fit unavailable */ }
+      const ages = allRows.map(x => x.age).filter(a => a != null).sort((a, b) => a - b);
+      const youngCut = ages[Math.max(0, Math.ceil(ages.length * 0.25) - 1)];
+      const oldCut = ages[Math.min(ages.length - 1, Math.floor(ages.length * 0.75))];
+
       // Column sorting (click a header). Any failure falls back to the default power-rank order.
       try {
         const ls = st.leagueSort || { k: 'rank', dir: 1 };
@@ -2807,7 +2847,9 @@
           posQB: r => posRanks.QB[r.o] ?? 99,
           posRB: r => posRanks.RB[r.o] ?? 99,
           posWR: r => posRanks.WR[r.o] ?? 99,
-          posTE: r => posRanks.TE[r.o] ?? 99
+          posTE: r => posRanks.TE[r.o] ?? 99,
+          age: r => r.age ?? 99,
+          fit: r => (fit[r.o] ? fit[r.o].score : -1)
         }[ls.k];
         if (keyFn && ls.k !== 'rank') {
           rows.sort((a, b) => {
@@ -2840,7 +2882,7 @@
 
       const tbody = document.getElementById('leagueBody');
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="12" class="py-6 text-center text-xs text-[#5d6672] dark:text-[#98a2ae]">No teams match this filter.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="14" class="py-6 text-center text-xs text-[#5d6672] dark:text-[#98a2ae]">No teams match this filter.</td></tr>`;
         return;
       }
 
@@ -2866,7 +2908,7 @@
           }).join('');
 
           detail = `<tr class="bg-[#f6f7f9]/80 dark:bg-[#0f1216]/70">
-            <td colspan="12" class="p-3 space-y-3">
+            <td colspan="14" class="p-3 space-y-3">
               <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">${posCards}</div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                 <div>
@@ -2907,6 +2949,8 @@
             const c = rk <= topQ ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : rk >= botQ ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : 'text-[#5d6672] dark:text-[#98a2ae]';
             return `<td class="py-2.5 px-1.5 text-center"><span class="inline-block min-w-[2.2rem] px-1.5 py-0.5 rounded-md text-xs font-bold tabular-nums ${c}" title="${pos}: ${fmt(r.posTotals[pos])} value · #${rk} of ${nTeams}">#${rk}</span></td>`;
           }).join('')}
+          <td class="py-2.5 px-1.5 text-center text-xs tabular-nums ${r.age == null ? '' : r.age <= youngCut ? 'text-sky-600 dark:text-sky-400 font-bold' : r.age >= oldCut ? 'text-amber-600 dark:text-amber-400 font-bold' : ''}" title="Value-weighted roster age${r.age <= youngCut ? ' · one of the youngest rosters' : r.age >= oldCut ? ' · one of the oldest rosters' : ''}">${r.age == null ? '—' : r.age.toFixed(1)}</td>
+          <td class="py-2.5 px-1.5 text-center">${r.o === ME ? '<span class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">you</span>' : fit[r.o] ? `<div class="inline-block min-w-[2.2rem] px-1.5 py-0.5 rounded-md text-xs font-extrabold tabular-nums ${fit[r.o].score >= 70 ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300' : fit[r.o].score >= 40 ? 'text-blue-700 dark:text-blue-300' : 'text-[#5d6672] dark:text-[#98a2ae]'}" title="Fit with your roster (0-100, best partner = 100)">${fit[r.o].score}</div><div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae] whitespace-nowrap mt-0.5">${fit[r.o].send ? `you→${fit[r.o].send}` : ''}${fit[r.o].send && fit[r.o].recv ? ' · ' : ''}${fit[r.o].recv ? `${fit[r.o].recv}→you` : ''}</div>` : '—'}</td>
           <td class="py-2.5 pr-2 text-right font-semibold">${fmt(r.startVal)}</td>
           <td class="py-2.5 pr-2 text-right hidden sm:table-cell text-[#5d6672] dark:text-[#98a2ae]">${fmt(r.posTotals.PICK)}</td>
           <td class="py-2.5 pr-2 text-right font-extrabold">${fmt(r.totalVal)}</td>
@@ -3297,7 +3341,7 @@
         const k = th.dataset.lsort;
         const cur = st.leagueSort || { k: 'rank', dir: 1 };
         // Numbers start high-to-low; rank and team start A-Z / 1-up. Click again to flip.
-        st.leagueSort = cur.k === k ? { k, dir: -cur.dir } : { k, dir: (k === 'rank' || k === 'team' || k === 'profile' || k.startsWith('pos')) ? 1 : -1 };
+        st.leagueSort = cur.k === k ? { k, dir: -cur.dir } : { k, dir: (k === 'rank' || k === 'team' || k === 'profile' || k === 'age' || k.startsWith('pos')) ? 1 : -1 };
         renderLeague();
       });
       document.getElementById('waiverSearch')?.addEventListener('input', e => { st.waiverQ = e.target.value; renderScout(); });
