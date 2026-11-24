@@ -1,15 +1,19 @@
 // Scrapes KeepTradeCut dynasty rankings and writes:
 //   ./ktc.json          – today's values (what index.html loads)
 //   ./ktc-history.json  – one compact snapshot per day (last 120 days) for the trend graphs
-// Step 1: plain fetch() + parse `playersArray` out of the HTML.
-// Step 2 (fallback): headless Chromium via Playwright, read window.playersArray.
+// Step 1: KTC's JSON endpoint (/dynasty-rankings/player-pool). Since Nov 2026 the
+//         rankings page ships `playersArray = []` and loads players from this URL.
+// Step 2: plain fetch() of the HTML + parse `playersArray` (the old page format).
+// Step 3 (fallback): headless Chromium via Playwright, wait for window.playersArray to fill.
+// Each step counts as failed if it returns fewer than MIN_PLAYERS, so the next one is tried.
 // Also attaches Sleeper player IDs (so KTC-only players can be matched to Sleeper rosters).
-// Fails (non-zero exit) if fewer than MIN_PLAYERS are found, so a bad scrape
+// Fails (non-zero exit) if every step comes up short, so a bad scrape
 // never overwrites good data.
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 
 const URL = "https://keeptradecut.com/dynasty-rankings";
+const POOL_URL = "https://keeptradecut.com/dynasty-rankings/player-pool";
 const SLEEPER_PLAYERS = "https://api.sleeper.app/v1/players/nfl";
 const OUT = "ktc.json";
 const HISTORY = "ktc-history.json";
@@ -141,6 +145,27 @@ async function sleeperIndex() {
   }
 }
 
+function requireEnough(arr, label) {
+  if (!Array.isArray(arr)) throw new Error(`${label}: no player array`);
+  if (arr.length < MIN_PLAYERS) throw new Error(`${label}: only ${arr.length} entries`);
+  return arr;
+}
+
+async function viaPool() {
+  const res = await fetch(POOL_URL, {
+    headers: {
+      "User-Agent": UA,
+      Accept: "application/json,text/plain,*/*",
+      "Accept-Language": "en-US,en;q=0.9",
+      Referer: URL,
+    },
+  });
+  if (!res.ok) throw new Error(`player-pool HTTP ${res.status}`);
+  const j = await res.json();
+  const arr = Array.isArray(j) ? j : (j && (j.players || j.data));
+  return requireEnough(arr, "player-pool");
+}
+
 async function viaFetch() {
   const res = await fetch(URL, {
     headers: {
@@ -152,7 +177,7 @@ async function viaFetch() {
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const arr = extractPlayersArray(await res.text());
   if (!arr) throw new Error("playersArray not found in HTML (likely bot protection)");
-  return arr;
+  return requireEnough(arr, "HTML playersArray");
 }
 
 async function viaPlaywright() {
@@ -164,32 +189,35 @@ async function viaPlaywright() {
     const read = () =>
       typeof playersArray !== "undefined" ? playersArray : window.playersArray; // eslint-disable-line no-undef
     await page.waitForFunction(
-      () => {
+      (min) => {
         const a = typeof playersArray !== "undefined" ? playersArray : window.playersArray; // eslint-disable-line no-undef
-        return Array.isArray(a) && a.length > 0;
+        return Array.isArray(a) && a.length >= min;
       },
-      null,
-      { timeout: 45000 }
+      MIN_PLAYERS,
+      { timeout: 60000 }
     );
     let arr = await page.evaluate(read);
     if (!Array.isArray(arr)) arr = extractPlayersArray(await page.content());
-    if (!arr) throw new Error("playersArray not found after browser load");
-    return arr;
+    return requireEnough(arr, "Playwright");
   } finally {
     await browser.close();
   }
 }
 
 async function main() {
-  let raw;
-  try {
-    raw = await viaFetch();
-    console.log(`fetch(): found ${raw.length} entries`);
-  } catch (e) {
-    console.warn(`fetch() failed: ${e.message} -> trying Playwright`);
-    raw = await viaPlaywright();
-    console.log(`Playwright: found ${raw.length} entries`);
+  let raw = null;
+  const errors = [];
+  for (const [label, fn] of [["player-pool", viaPool], ["fetch()", viaFetch], ["Playwright", viaPlaywright]]) {
+    try {
+      raw = await fn();
+      console.log(`${label}: found ${raw.length} entries`);
+      break;
+    } catch (e) {
+      console.warn(`${label} failed: ${e.message}`);
+      errors.push(e.message);
+    }
   }
+  if (!raw) throw new Error(`All KTC sources failed (${errors.join("; ")}). Not writing ${OUT}.`);
 
   const players = normalize(raw, await sleeperIndex());
   if (players.length < MIN_PLAYERS) {
