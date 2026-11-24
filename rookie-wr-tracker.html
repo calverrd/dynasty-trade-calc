@@ -132,6 +132,9 @@
         <option value="mid">Usage 8–15</option>
         <option value="lo">Usage under 8</option>
       </select>
+      <select id="bucketf" class="px-3 py-2 rounded-lg text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700">
+        <option value="">All profile buckets</option>
+      </select>
       <select id="tagf" class="px-3 py-2 rounded-lg text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700">
         <option value="">All tags</option>
         <option value="buy">BUY only</option>
@@ -192,7 +195,7 @@
       tbd:    { label: 'Too early (2025–26)', pill: 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700/40 dark:text-slate-200 dark:border-slate-600' }
     };
 
-    const st = { k: 'tot', dir: -1, q: '', yr: '', draft: '', tiers: new Set(Object.keys(TIERS)), hideEmpty: true, usage: '', tag: '', mode: 4 };
+    const st = { k: 'tot', dir: -1, q: '', yr: '', draft: '', tiers: new Set(Object.keys(TIERS)), hideEmpty: true, usage: '', tag: '', mode: 4, bucket: '' };
     const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const norm = s => s.normalize('NFKD').replace(/[^\w\s]/g, '').toLowerCase();
 
@@ -235,6 +238,30 @@
     document.getElementById('search').addEventListener('input', e => { st.q = norm(e.target.value.trim()); render(); });
     ysel.addEventListener('change', e => { st.yr = e.target.value; render(); });
     document.getElementById('draft').addEventListener('change', e => { st.draft = e.target.value; render(); });
+    // Profile bucket filter: tiers (Cornerstone counts as Elite), then each bucket
+    const tierOf = b => { const w = b.split(' ')[0]; return w === 'Cornerstone' ? 'Elite' : w; };
+    (() => {
+      const sel = document.getElementById('bucketf');
+      const withB = DATA.filter(p => p.b);
+      const tiers = ['Elite', 'Upside', 'Depth', 'Clogger'];
+      const order = b => tiers.indexOf(tierOf(b)) * 100 + (b.includes('Alpha') ? 0 : 10) + (b.includes('Hog') ? 0 : 1);
+      const names = [...new Set(withB.map(p => p.b))].sort((a, b) => order(a) - order(b));
+      const cnt = f => DATA.filter(f).length;
+      sel.insertAdjacentHTML('beforeend',
+        `<optgroup label="By tier">${tiers.map(t => `<option value="tier:${t}">${t} tier (${cnt(p => p.b && tierOf(p.b) === t)})</option>`).join('')}</optgroup>` +
+        `<optgroup label="By bucket">${names.map(n => `<option value="b:${esc(n)}">${esc(n)} (${cnt(p => p.b === n)})</option>`).join('')}</optgroup>` +
+        `<optgroup label="Other"><option value="none">Not in Profile Buckets (${cnt(p => !p.b)})</option></optgroup>`);
+      sel.addEventListener('change', e => { st.bucket = e.target.value; render(); });
+    })();
+    function bucketOk(p) {
+      const v = st.bucket;
+      if (!v) return true;
+      if (v === 'none') return !p.b;
+      if (!p.b) return false;
+      if (v.startsWith('tier:')) return tierOf(p.b) === v.slice(5);
+      return p.b === v.slice(2);
+    }
+
     document.getElementById('tagf').addEventListener('change', e => {
       const was = st.tag; st.tag = e.target.value;
       const box = document.getElementById('hideEmpty');
@@ -348,6 +375,7 @@
         st.tiers.has(p.tier) &&
         (!st.yr || p.yr === +st.yr) &&
         draftOk(p) &&
+        bucketOk(p) &&
         (!st.tag || p.tags.includes(st.tag)) &&
         (!st.usage || (st.usage === 'hi' ? p.u >= 15 : st.usage === 'mid' ? (p.u >= 8 && p.u < 15) : p.u < 8)) &&
         (!st.hideEmpty || p.tot !== null) &&
