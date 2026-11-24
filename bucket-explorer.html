@@ -65,6 +65,16 @@
       opacity: 1;
     }
 
+    /* Bucket detail modal (same enter/exit behaviour as the player modal) */
+    #bucketModal { transition: opacity 0.2s ease, visibility 0.2s ease; }
+    #bucketModal.modal-closed { opacity: 0; visibility: hidden; pointer-events: none; }
+    #bucketModal.modal-open { opacity: 1; visibility: visible; pointer-events: auto; }
+    #bucketModalPanel { transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease; }
+    #bucketModal.modal-closed #bucketModalPanel { transform: translateY(14px) scale(0.97); opacity: 0; }
+    #bucketModal.modal-open #bucketModalPanel { transform: translateY(0) scale(1); opacity: 1; }
+    th.bm-sort { cursor: pointer; user-select: none; }
+    th.bm-sort:hover { color: #0ea5e9; }
+
     /* Focus rings for WCAG keyboard accessibility */
     button:focus-visible,
     input:focus-visible,
@@ -263,6 +273,20 @@
   <footer class="max-w-7xl mx-auto px-4 sm:px-6 py-8 text-center text-xs text-slate-500 dark:text-slate-400">
     Dynasty Profile Bucket Explorer · Historical 2006–2025 Samples + 2026 Rookie Class · ★ indicates 1+ Elite Spike season
   </footer>
+
+  <!-- ==================== BUCKET DETAIL MODAL ==================== -->
+  <div id="bucketModal" role="dialog" aria-modal="true" aria-labelledby="bucketModalTitle"
+    class="modal-closed fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-5 bg-slate-950/75 backdrop-blur-sm">
+    <div id="bucketModalPanel"
+      class="w-full max-w-5xl max-h-[92vh] flex flex-col rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/90 shadow-2xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3 bg-slate-50/90 dark:bg-slate-950/60">
+        <div id="bucketModalHeader" class="min-w-0 space-y-1"></div>
+        <button id="bucketModalClose" type="button" aria-label="Close bucket details"
+          class="shrink-0 w-9 h-9 rounded-xl bg-slate-200/80 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold cursor-pointer">✕</button>
+      </div>
+      <div id="bucketModalBody" class="overflow-y-auto p-5 space-y-6 text-sm"></div>
+    </div>
+  </div>
 
   <!-- ==================== RANGE OF OUTCOMES MODAL ==================== -->
   <div id="outcomeModal" role="dialog" aria-modal="true" aria-labelledby="modalPlayerName"
@@ -1753,7 +1777,7 @@
               <div class="space-y-1">
                 <div class="flex flex-wrap items-center gap-2">
                   <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-wide ${pm.badgeCls}">${esc(b.pos)}</span>
-                  <h2 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">${esc(b.name)}</h2>
+                  <h2 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white"><button type="button" data-open-bucket="${esc(b.id)}" title="Open full bucket details" class="text-left hover:text-sky-600 dark:hover:text-sky-400 underline decoration-dotted decoration-slate-400/70 underline-offset-4 cursor-pointer">${esc(b.name)} <span class="text-xs align-middle opacity-60" aria-hidden="true">⤢</span></button></h2>
                 </div>
                 <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
                   Sample Size: <strong class="text-slate-800 dark:text-slate-200">n = ${b.n}</strong>
@@ -1913,9 +1937,10 @@
 
     // When embedded, the iframe is as tall as its content, so a plain fixed/inset-0 modal would center
     // in the middle of the whole frame. Pin it to the part of the frame visible in the parent window.
-    function positionModalForEmbed() {
+    function positionModalForEmbed(m = modalEl, panelId = 'outcomeModalPanel') {
       if (!EMBEDDED) return;
-      const panel = document.getElementById('outcomeModalPanel');
+      const modalEl = m;
+      const panel = document.getElementById(panelId);
       try {
         const pw = window.parent;
         const rect = window.frameElement.getBoundingClientRect();
@@ -1935,6 +1960,193 @@
       if (!EMBEDDED) return;
       try { window.parent.document.documentElement.style.overflow = lock ? 'hidden' : ''; } catch (e) {}
     }
+
+
+    // =========================================================================
+    // BUCKET DETAIL MODAL (click a bucket title)
+    // =========================================================================
+    const bucketModalEl = document.getElementById('bucketModal');
+    const bucketModalBody = document.getElementById('bucketModalBody');
+    const bm = { id: null, sort: 'outcome', dir: -1 };
+
+    function bmTierBar(parts) { // parts: [{v, cls, label}]
+      const tot = parts.reduce((a, p) => a + p.v, 0) || 1;
+      return `<div class="w-full h-4 rounded-full overflow-hidden flex bg-slate-200 dark:bg-slate-800">${parts.filter(p => p.v > 0).map(p =>
+        `<div class="${p.cls} h-full" style="width:${100 * p.v / tot}%" title="${esc(p.label)}: ${p.v}"></div>`).join('')}</div>`;
+    }
+    function bmPct(n, d) { return d ? Math.round(100 * n / d) : 0; }
+
+    function renderBucketModal() {
+      const b = BUCKET_BY_ID.get(bm.id); if (!b) return;
+      const pm = POS_META[b.pos];
+      const posB = BUCKETS.filter(x => x.pos === b.pos);
+      const nTot = posB.reduce((a, x) => a + x.n, 0) || 1;
+      const avg = k => posB.reduce((a, x) => a + x[k] * x.n, 0) / nTot;
+      const ranked = [...posB].sort((x, y) => y.hitPct - x.hitPct || y.n - x.n);
+      const rank = ranked.findIndex(x => x.id === b.id) + 1;
+      const vets = b.players.filter(p => !p.isRookie);
+      const rookies = b.players.filter(p => p.isRookie);
+      const hitLbl = pm.hitLbl.replace(' PPG', '');
+
+      document.getElementById('bucketModalHeader').innerHTML = `
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="px-2 py-0.5 rounded-md text-[11px] font-extrabold tracking-wide ${pm.badgeCls}">${esc(pm.label)}</span>
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">#${rank} of ${posB.length} ${esc(b.pos)} buckets by hit rate</span>
+        </div>
+        <h2 id="bucketModalTitle" class="text-lg sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">${esc(b.name)}</h2>
+        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">n = ${b.n} historical players · ${vets.length} named here${b.extraHistoricalBusts ? ` + ${b.extraHistoricalBusts} unnamed historical busts` : ''}${rookies.length ? ` · ${rookies.length} in the 2026 class` : ''}</p>`;
+
+      // --- Stat tiles vs position average ---
+      const tiles = [
+        ['Hit', 'hitPct', `${pm.hitLbl}`, 'text-emerald-700 dark:text-emerald-400'],
+        ...(b.noNear ? [] : [['Near hit only', 'nearOnlyPct', pm.nearLbl, 'text-amber-700 dark:text-amber-300']]),
+        ['Bust', 'bustPct', 'never reached near/hit', 'text-rose-700 dark:text-rose-400'],
+        ['Elite', 'elitePct', pm.eliteLbl, 'text-sky-700 dark:text-sky-400'],
+        ['2+ seasons', 'twoPlusPct', `hit ${hitLbl} twice+`, 'text-indigo-700 dark:text-indigo-400'],
+        ['Repeater', 'repPct', 'of hitters, % who hit again', 'text-violet-700 dark:text-violet-400'],
+      ].map(([lbl, k, sub, cls]) => {
+        const v = b[k], a = avg(k), d = v - a;
+        const good = k === 'bustPct' ? d < 0 : d > 0;
+        const dTxt = Math.abs(d) < 0.5 ? 'about average' : `${d > 0 ? '+' : ''}${d.toFixed(1)} vs ${esc(b.pos)} avg`;
+        return `<div class="rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 p-3">
+          <div class="text-xl font-extrabold ${cls}">${v.toFixed(1)}%</div>
+          <div class="text-[11px] font-bold text-slate-700 dark:text-slate-200">${esc(lbl)}</div>
+          <div class="text-[10px] text-slate-500 dark:text-slate-400">${esc(sub)}</div>
+          <div class="text-[10px] font-bold mt-1 ${Math.abs(d) < 0.5 ? 'text-slate-500' : good ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${dTxt}</div>
+        </div>`;
+      }).join('');
+
+      // --- Hit-season depth among named veterans ---
+      const depth = [0, 1, 2, 3, 4].map(n => vets.filter(p => n === 4 ? p.hit >= 4 : p.hit === n).length);
+      const maxD = Math.max(...depth, 1);
+      const depthRows = ['0', '1', '2', '3', '4+'].map((l, i) => `
+        <div class="flex items-center gap-2 text-xs">
+          <span class="w-[4.5rem] shrink-0 whitespace-nowrap font-semibold text-slate-600 dark:text-slate-300">${l} season${l === '1' ? '' : 's'}</span>
+          <div class="flex-1 h-3 rounded bg-slate-100 dark:bg-slate-800 overflow-hidden"><div class="${i === 0 ? 'bg-rose-500' : 'bg-emerald-500'} h-full" style="width:${100 * depth[i] / maxD}%"></div></div>
+          <span class="w-8 text-right font-bold tabular-nums">${depth[i]}</span>
+        </div>`).join('');
+      const eliteN = vets.filter(p => p.elite > 0).length;
+      const superN = b.pos === 'WR' ? vets.filter(p => p.superElite > 0).length : 0;
+
+      // --- Draft-era breakdown (named players only) ---
+      const eras = [[0, 2014, '2006–2014'], [2015, 2020, '2015–2020'], [2021, 2025, '2021–2025']].map(([lo, hi, lbl]) => {
+        const g = vets.filter(p => p.year >= lo && p.year <= hi);
+        const h = g.filter(p => p.status === 'hit').length, nr = g.filter(p => p.status === 'near').length;
+        return `<div class="rounded-xl border border-slate-200 dark:border-slate-800 p-3 space-y-1.5">
+          <div class="flex items-baseline justify-between"><span class="text-xs font-bold">${lbl}</span><span class="text-[11px] text-slate-500 dark:text-slate-400">${g.length} named</span></div>
+          ${g.length ? bmTierBar([{ v: h, cls: 'bg-emerald-500', label: 'Hit' }, { v: nr, cls: 'bg-amber-400', label: 'Near' }, { v: g.length - h - nr, cls: 'bg-rose-500', label: 'Bust' }]) : '<div class="text-[11px] text-slate-400">No named players</div>'}
+          ${g.length ? `<div class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">${h} hit (${bmPct(h, g.length)}%)</div>` : ''}
+        </div>`;
+      }).join('');
+
+      // --- Position ranking list ---
+      const rankRows = ranked.map((x, i) => `
+        <button type="button" data-bm-switch="${esc(x.id)}" class="w-full flex items-center gap-2 text-left text-xs px-2 py-1 rounded-lg cursor-pointer ${x.id === b.id ? 'bg-sky-100 dark:bg-sky-500/20 font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}">
+          <span class="w-5 text-slate-400 tabular-nums">${i + 1}</span>
+          <span class="flex-1 truncate">${esc(x.name)}</span>
+          <span class="w-24 h-2 rounded bg-slate-200 dark:bg-slate-800 overflow-hidden"><span class="block h-full bg-emerald-500" style="width:${x.hitPct}%"></span></span>
+          <span class="w-12 text-right tabular-nums">${x.hitPct.toFixed(0)}%</span>
+          <span class="w-12 text-right text-slate-400 tabular-nums">n=${x.n}</span>
+        </button>`).join('');
+
+      // --- Sortable player table ---
+      const order = { hit: 0, near: 1, rookie: 2, bust: 3 };
+      const key = {
+        name: p => p.norm, year: p => p.year, near: p => p.near, hit: p => p.hit, elite: p => p.elite, superElite: p => p.superElite,
+        outcome: p => -(order[p.status] * 1000) + p.hit * 10 + p.elite
+      }[bm.sort];
+      const players = [...b.players].sort((x, y) => {
+        const a = key(x), c = key(y);
+        return (a < c ? -1 : a > c ? 1 : 0) * bm.dir || (y.year - x.year);
+      });
+      const sm = s => statusMeta(s);
+      const cols = [['name', 'Player', 'text-left'], ['year', 'Draft', 'text-right'], ['outcome', 'Outcome', 'text-left'],
+        ...(b.noNear ? [] : [['near', pm.nearLbl.replace(' PPG', '') + ' seasons', 'text-right']]),
+        ['hit', hitLbl + ' seasons', 'text-right'], ['elite', pm.eliteLbl.replace(' PPG', '') + ' seasons', 'text-right'],
+        ...(b.pos === 'WR' ? [['superElite', '18+ seasons', 'text-right']] : [])];
+      const th = cols.map(([k, l, a]) => `<th class="bm-sort py-2 px-2 ${a} ${bm.sort === k ? 'text-sky-600 dark:text-sky-400' : ''}" data-bm-sort="${k}">${esc(l)} ${bm.sort === k ? (bm.dir === 1 ? '▲' : '▼') : ''}</th>`).join('');
+      const tr = players.map(p => `
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer" data-bm-player="${esc(p.id)}">
+          <td class="py-1.5 px-2 font-semibold">${esc(p.name)}</td>
+          <td class="py-1.5 px-2 text-right tabular-nums">${p.year}</td>
+          <td class="py-1.5 px-2"><span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${sm(p.status).badgeCls}">${esc(sm(p.status).label)}</span></td>
+          ${b.noNear ? '' : `<td class="py-1.5 px-2 text-right tabular-nums">${p.isRookie ? '–' : p.near}</td>`}
+          <td class="py-1.5 px-2 text-right tabular-nums font-bold">${p.isRookie ? '–' : p.hit}</td>
+          <td class="py-1.5 px-2 text-right tabular-nums">${p.isRookie ? '–' : p.elite}</td>
+          ${b.pos === 'WR' ? `<td class="py-1.5 px-2 text-right tabular-nums">${p.isRookie ? '–' : p.superElite}</td>` : ''}
+        </tr>`).join('');
+
+      bucketModalBody.innerHTML = `
+        <section class="space-y-2">
+          ${bmTierBar([{ v: b.hitPct, cls: 'bg-emerald-500', label: 'Hit %' }, { v: b.nearOnlyPct, cls: 'bg-amber-400', label: 'Near only %' }, { v: b.bustPct, cls: 'bg-rose-500', label: 'Bust %' }])}
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-${b.noNear ? 5 : 6} gap-2.5">${tiles}</div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">Rates use the full sample (n = ${b.n}). Comparisons are against the sample-weighted average of all ${esc(b.pos)} buckets.</p>
+        </section>
+
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div class="space-y-2">
+            <h3 class="text-sm font-extrabold">How many ${esc(hitLbl)} seasons? <span class="font-normal text-slate-500 dark:text-slate-400">(${vets.length} named players)</span></h3>
+            ${depthRows}
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">${eliteN} reached ${esc(pm.eliteLbl)}${b.pos === 'WR' ? `, ${superN} reached 18+ PPG` : ''} at least once.${b.extraHistoricalBusts ? ` Excludes ${b.extraHistoricalBusts} unnamed busts.` : ''}</p>
+          </div>
+          <div class="space-y-2">
+            <h3 class="text-sm font-extrabold">Hit rate by draft era <span class="font-normal text-slate-500 dark:text-slate-400">(named players)</span></h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">${eras}</div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">Named players only, so eras with many unnamed busts look better than they were. Use it for direction, not exact rates.</p>
+          </div>
+        </section>
+
+        ${rookies.length ? `<section class="space-y-2">
+          <h3 class="text-sm font-extrabold">2026 class in this bucket</h3>
+          <div class="flex flex-wrap gap-1.5">${rookies.map(renderPlayerChip).join('')}</div>
+        </section>` : ''}
+
+        <section class="space-y-2">
+          <h3 class="text-sm font-extrabold">All named players <span class="font-normal text-slate-500 dark:text-slate-400">· tap a column to sort, tap a player for his range of outcomes</span></h3>
+          <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+            <table class="w-full text-xs">
+              <thead class="bg-slate-50 dark:bg-slate-950/60 text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400"><tr>${th}</tr></thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">${tr}</tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="space-y-1.5">
+          <h3 class="text-sm font-extrabold">Every ${esc(b.pos)} bucket by hit rate</h3>
+          <div class="space-y-0.5">${rankRows}</div>
+        </section>`;
+    }
+
+    let bucketLastFocus = null;
+    function openBucketModal(id) {
+      if (!BUCKET_BY_ID.has(id)) return;
+      if (!bm.id) bucketLastFocus = document.activeElement;
+      bm.id = id; bm.sort = 'outcome'; bm.dir = -1;
+      renderBucketModal();
+      positionModalForEmbed(bucketModalEl, 'bucketModalPanel');
+      bucketModalEl.classList.remove('modal-closed'); bucketModalEl.classList.add('modal-open');
+      document.body.style.overflow = 'hidden'; setParentScrollLock(true);
+      bucketModalBody.scrollTop = 0;
+      setTimeout(() => document.getElementById('bucketModalClose')?.focus(), 50);
+    }
+    function closeBucketModal(restoreFocus = true) {
+      if (!bm.id) return;
+      bm.id = null;
+      bucketModalEl.classList.remove('modal-open'); bucketModalEl.classList.add('modal-closed');
+      document.body.style.overflow = ''; setParentScrollLock(false);
+      if (restoreFocus && bucketLastFocus?.focus) bucketLastFocus.focus();
+    }
+    bucketModalEl.addEventListener('click', e => {
+      if (e.target === bucketModalEl) return closeBucketModal();
+      const s = e.target.closest('[data-bm-sort]');
+      if (s) { const k = s.dataset.bmSort; if (bm.sort === k) bm.dir *= -1; else { bm.sort = k; bm.dir = (k === 'name') ? 1 : -1; } renderBucketModal(); return; }
+      const sw = e.target.closest('[data-bm-switch]');
+      if (sw) { bm.id = sw.dataset.bmSwitch; bm.sort = 'outcome'; bm.dir = -1; renderBucketModal(); bucketModalBody.scrollTop = 0; return; }
+      const pl = e.target.closest('[data-bm-player], [data-player-id]');
+      if (pl) { const pid = pl.dataset.bmPlayer || pl.dataset.playerId; closeBucketModal(false); openPlayerModal(pid, true); }
+    });
+    document.getElementById('bucketModalClose').addEventListener('click', () => closeBucketModal());
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && bm.id && !state.modalPlayerId) closeBucketModal(); });
 
     function openPlayerModal(playerId, resetSubTab = true) {
       const p = PLAYER_BY_ID.get(playerId);
@@ -2292,6 +2504,12 @@
           closeSearchDropdown();
           searchInput.value = '';
           openPlayerModal(pid, true);
+          return;
+        }
+
+        const bucketBtn = e.target.closest('[data-open-bucket]');
+        if (bucketBtn) {
+          openBucketModal(bucketBtn.dataset.openBucket);
           return;
         }
 
