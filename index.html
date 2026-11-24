@@ -283,7 +283,7 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div>
             <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">💡 Player Trade Idea Finder</h2>
-            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Pick any player to generate fair 1-for-1, player + pick, and 2-for-1 upgrade offers using live league rosters.</p>
+            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Pick any player to generate fair 1-for-1, player + pick, and 2-for-1 upgrade offers using live league rosters. When you're shopping your own player, partners whose needs fit yours rank higher. To go after a specific player, tap <strong>Offer</strong> next to him on the Rookie WRs tab or in a Profile Bucket.</p>
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
@@ -324,7 +324,7 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div>
             <h2 class="text-sm font-bold">League Power Rankings &amp; Trade Partner Matcher</h2>
-            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Auto-tagged by Contender/Rebuild status, weakest starting position, and next-draft 1st ownership. QB–TE columns rank each team's value at that position (green = top quarter, red = bottom quarter). Age is value-weighted (blue = youngest quarter, amber = oldest). Fit (0–100) scores how well a team's surpluses and needs complement yours; "you→WR" means you can send them WR value they lack. Click a column header to sort, or a row to expand.</p>
+            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Auto-tagged by Contender/Rebuild status, weakest starting position, and next-draft 1st ownership. QB–TE columns rank each team's value at that position (green = top quarter, red = bottom quarter). Age is value-weighted (blue = youngest quarter, amber = oldest). Fit (0–100) scores how well a team's surpluses and needs complement yours; "you→WR" means you can send them WR value they lack. Max PF is what each team's best possible lineup scored; it shows true strength better than record. Win Now ranks each team's best lineup by FantasyCalc redraft (this-season) value, so rosters stacked with future value don't look like contenders. Click a column header to sort, or a row to expand.</p>
           </div>
           <div id="leagueFilterBar" class="inline-flex flex-wrap rounded-lg border border-[#d6dbe3] dark:border-[#2e3540] overflow-hidden text-xs bg-[#f6f7f9] dark:bg-[#0f1216]">
             <button type="button" data-lfilter="ALL" class="lfilter-btn px-2.5 py-1.5 font-semibold cursor-pointer">All</button>
@@ -342,12 +342,14 @@
                 <th class="py-2 pr-2 cursor-pointer select-none hover:text-blue-600" data-lsort="team" title="Sort by team name">Team<span class="lsort-arrow"></span></th>
                 <th class="py-2 pr-2 cursor-pointer select-none hover:text-blue-600" data-lsort="profile" title="Group by Contender / Retool / Rebuild">Partner Profile &amp; Needs<span class="lsort-arrow"></span></th>
                 <th class="py-2 pr-2 cursor-pointer select-none hover:text-blue-600" data-lsort="record" title="Sort by win % (points for breaks ties)">Record<span class="lsort-arrow"></span></th>
+                <th class="py-2 px-1.5 text-right cursor-pointer select-none hover:text-blue-600" data-lsort="mpf" title="Max PF: points the best possible lineup would have scored. Shows true weekly strength better than record.">Max PF<span class="lsort-arrow"></span></th>
                 <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="posQB" title="Sort by QB rank (value of QBs on roster)">QB<span class="lsort-arrow"></span></th>
                 <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="posRB" title="Sort by RB rank (value of RBs on roster)">RB<span class="lsort-arrow"></span></th>
                 <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="posWR" title="Sort by WR rank (value of WRs on roster)">WR<span class="lsort-arrow"></span></th>
                 <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="posTE" title="Sort by TE rank (value of TEs on roster)">TE<span class="lsort-arrow"></span></th>
                 <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="age" title="Value-weighted roster age (players only)">Age<span class="lsort-arrow"></span></th>
                 <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="fit" title="How well this team's needs and surpluses complement yours (0-100)">Fit<span class="lsort-arrow"></span></th>
+                <th class="py-2 px-1.5 text-right cursor-pointer select-none hover:text-blue-600" data-lsort="now" title="Win-now: best starting lineup by FantasyCalc redraft (this-season) value. Separates real contenders from rosters full of future value.">Win Now<span class="lsort-arrow"></span></th>
                 <th class="py-2 pr-2 text-right cursor-pointer select-none hover:text-blue-600" data-lsort="start" title="Sort by starting lineup value">Start Value<span class="lsort-arrow"></span></th>
                 <th class="py-2 pr-2 text-right hidden sm:table-cell cursor-pointer select-none hover:text-blue-600" data-lsort="picks" title="Sort by draft pick value">Picks<span class="lsort-arrow"></span></th>
                 <th class="py-2 pr-2 text-right cursor-pointer select-none hover:text-blue-600" data-lsort="total" title="Sort by total value">Total Value<span class="lsort-arrow"></span></th>
@@ -875,7 +877,7 @@
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
     function normName(s) {
-      return String(s || '').toLowerCase()
+      return String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
         .replace(/['’.]/g, '')
         .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '')
         .replace(/[^a-z0-9]+/g, ' ')
@@ -944,6 +946,7 @@
 
     function onBucketsFrameLoad() {
       syncBucketsFrameTheme();
+      sendLeagueToFrames();
       const fr = document.getElementById('buckets-frame');
       try {
         const d = fr.contentDocument;
@@ -959,7 +962,7 @@
     function loadRookiesFrame() {
       const fr = document.getElementById('rookies-frame');
       if (!fr || fr.getAttribute('src')) return;
-      fr.addEventListener('load', syncRookiesFrameTheme);
+      fr.addEventListener('load', () => { syncRookiesFrameTheme(); sendLeagueToFrames(); });
       fr.src = fr.dataset.src;
     }
     function syncRookiesFrameTheme() {
@@ -973,6 +976,34 @@
       const fr = document.getElementById('rookies-frame');
       const n = Math.ceil(Number(h) || 0);
       if (fr && n > 200 && Math.abs(parseFloat(fr.style.height) - n) > 1) fr.style.height = `${n}px`;
+    }
+
+    // Embedded pages ask for league data ('dtc-ready') or a pre-loaded offer ('dtc-build-offer', name)
+    window.addEventListener('message', e => {
+      if (e.origin !== location.origin || !e.data) return;
+      if (e.data.type === 'dtc-ready') { sendLeagueToFrames(); return; }
+      if (e.data.type !== 'dtc-build-offer') return;
+      const key = normName(e.data.name);
+      const pid = Object.keys(OWN).find(id => P[id] && !P[id].pick && normName(P[id].name) === key);
+      if (pid === undefined) { toast(`${e.data.name} isn't on a roster in this league`); return; }
+      startAcquire(pid);
+    });
+
+    function startAcquire(pid) {
+      const o = OWN[pid];
+      if (o === undefined) { toast(`${P[pid].name} isn't on a roster in this league`); return; }
+      if (o === ME) { toast(`${P[pid].name} is already on your roster`); return; }
+      st.tA = T[ME] ? ME : (owners[0] || '');
+      st.tB = o;
+      st.acquire = Number(pid);
+      const best = acquireIdeas(pid)[0];
+      st.A = best ? best.send.map(x => ({ ...x })) : [];
+      st.B = [{ id: Number(pid) }];
+      populateDropdowns();
+      all();
+      switchTab('calc');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      toast(best ? `Best-fit offer for ${P[pid].name} loaded. More packages in the Trade Finder below.` : `Offer started for ${P[pid].name}. No fair package found; add assets yourself.`);
     }
 
     // Embedded pages may post { type: 'dtc-height', height }; the rookie tracker adds frame: 'rookies'
@@ -1277,14 +1308,15 @@
     // ============================================================================
     // 7. LINEUP SOLVER & TEAM ARCHETYPES
     // ============================================================================
-    function solveLineup(playerIds) {
+    function solveLineup(playerIds, valOf) {
+      const vf = valOf || (id => V[id] || 0);
       const slots = (activeLeague.slots && activeLeague.slots.length)
         ? activeLeague.slots
         : ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX'];
       const pool = (playerIds || [])
         .map(id => P[id])
         .filter(p => p && !p.pick)
-        .sort((a, b) => (V[b.id] || 0) - (V[a.id] || 0));
+        .sort((a, b) => vf(b.id) - vf(a.id));
 
       const used = new Set();
       const filled = [];
@@ -1304,7 +1336,7 @@
         const match = pool.find(p => !used.has(p.id) && canPlay(p.pos, slot));
         if (match) {
           used.add(match.id);
-          filled.push({ slot, id: match.id, val: V[match.id] || 0 });
+          filled.push({ slot, id: match.id, val: vf(match.id) });
         } else {
           filled.push({ slot, id: null, val: 0 });
         }
@@ -1334,6 +1366,58 @@
       return { archetype: 'retool', label: 'Retool', team: t };
     }
 
+    // FantasyCalc redraft (this-season) values are available only after a live FantasyCalc sync
+    function HAS_RDV() { return P.some(p => p && p.rdv > 0); }
+
+    // Fit with me: complementary surpluses/needs by position (value vs league average)
+    function computeFit(allRows) {
+      const FIT_POS = ['QB', 'RB', 'WR', 'TE'];
+      const fit = {};
+      try {
+        const avg = {};
+        FIT_POS.forEach(pos => { avg[pos] = allRows.reduce((a, x) => a + x.posTotals[pos], 0) / Math.max(1, allRows.length); });
+        const dev = x => Object.fromEntries(FIT_POS.map(pos => [pos, avg[pos] ? (x.posTotals[pos] - avg[pos]) / avg[pos] : 0]));
+        const meRow = allRows.find(x => x.o === ME);
+        if (meRow) {
+          const md = dev(meRow);
+          const raw = {};
+          allRows.forEach(x => {
+            if (x.o === ME) return;
+            const xd = dev(x);
+            const give = {}, get = {};
+            FIT_POS.forEach(pos => {
+              give[pos] = Math.max(0, md[pos]) * Math.max(0, -xd[pos]);   // my surplus fills their hole
+              get[pos] = Math.max(0, xd[pos]) * Math.max(0, -md[pos]);    // their surplus fills my hole
+            });
+            const G = Object.values(give).reduce((a, b) => a + b, 0), R = Object.values(get).reduce((a, b) => a + b, 0);
+            const best = o => { const e = Object.entries(o).sort((a, b) => b[1] - a[1])[0]; return e && e[1] > 0 ? e[0] : null; };
+            raw[x.o] = { v: G + R + Math.min(G, R), send: best(give), recv: best(get) };   // two-way deals get a bonus
+          });
+          const mx = Math.max(...Object.values(raw).map(z => z.v), 1e-9);
+          Object.entries(raw).forEach(([o, z]) => { fit[o] = { score: Math.round(100 * z.v / mx), send: z.send, recv: z.recv }; });
+        }
+      } catch (e) { /* fit unavailable */ }
+      return fit;
+    }
+
+    // Share league ownership with the embedded Rookie WR + Profile Buckets pages
+    function sendLeagueToFrames() {
+      try {
+        if (!owners.length) return;
+        const { rows } = getLeaguePartnerProfiles();
+        const fit = computeFit(rows);
+        const teams = {};
+        rows.forEach(r => { teams[r.o] = { n: r.t.n, me: r.o === ME, arch: r.arch.label, fit: fit[r.o] ? fit[r.o].score : null, send: fit[r.o]?.send || null, recv: fit[r.o]?.recv || null }; });
+        const players = {};
+        Object.entries(OWN).forEach(([pid, o]) => { const p = P[pid]; if (p && !p.pick) players[normName(p.name)] = o; });
+        const msg = { type: 'dtc-league', league: activeLeague.name || '', teams, players };
+        ['rookies-frame', 'buckets-frame'].forEach(id => {
+          const fr = document.getElementById(id);
+          if (fr && fr.getAttribute('src') && fr.contentWindow) fr.contentWindow.postMessage(msg, location.origin);
+        });
+      } catch (e) { /* frames not ready */ }
+    }
+
     function getLeaguePartnerProfiles() {
       const rows = owners.map(o => {
         const t = T[o];
@@ -1357,7 +1441,8 @@
           if (p && !p.pick && a > 0 && v > 0) { ageW += a * v; ageV += v; }
         });
         const age = ageV ? ageW / ageV : null;
-        return { o, t, startVal, posTotals, totalVal, count27First, arch, age };
+        const winNow = HAS_RDV() ? solveLineup(t.ids || [], id => (P[id] && P[id].rdv) || 0).total : null;
+        return { o, t, startVal, posTotals, totalVal, count27First, arch, age, winNow };
       }).sort((a, b) => b.totalVal - a.totalVal);
 
       const posRanks = { QB: {}, RB: {}, WR: {}, TE: {}, PICK: {} };
@@ -1584,6 +1669,7 @@
             sleeperId: pl.sleeperId ? String(pl.sleeperId) : '',
             fRaw: Number(row.value) || 0,
             fcTrend30: Number(row.trend30Day) || 0,
+            rdv: Number(row.redraftValue) || 0,
             k: 0,
             pick: false
           });
@@ -1693,6 +1779,7 @@
           const w = r.settings?.wins || 0;
           const l = r.settings?.losses || 0;
           const pf = Math.round((r.settings?.fpts || 0) + (r.settings?.fpts_decimal || 0) / 100);
+          const mpf = Math.round((r.settings?.ppts || 0) + (r.settings?.ppts_decimal || 0) / 100);
 
           newT[key] = {
             n: teamName,
@@ -1700,6 +1787,7 @@
             rid: r.roster_id,
             r: `${w}-${l}`,
             pf,
+            mpf,
             slot: slotByRosterId[r.roster_id] || 1,
             ids,
             pk: []
@@ -1919,7 +2007,7 @@
       const ser = histSeries(p, days);
       const posLbl = p.pick ? 'Pick' : p.pos;
       document.getElementById('pmHeader').innerHTML = `
-        <div class="flex items-center gap-2 flex-wrap">${posTag(p.pos)}<h3 class="text-base sm:text-lg font-extrabold">${esc(p.name)}</h3>${p.pick ? '' : bucketBadge(p)}</div>
+        <div class="flex items-center gap-2 flex-wrap">${posTag(p.pos)}<h3 class="text-base sm:text-lg font-extrabold">${esc(p.name)}</h3>${p.pick ? '' : bucketBadge(p)}${!p.pick && OWN[p.id] !== undefined && OWN[p.id] !== ME && T[ME] ? `<button type="button" data-findpkg="${p.id}" class="ml-auto px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Find offers for him →</button>` : ''}</div>
         <div class="text-xs text-[#5d6672] dark:text-[#98a2ae] mt-0.5">${p.pick ? `Projected ${esc(p.tier || 'mid')} pick · KTC history uses its “${esc((p.ktcKey || '').split('|')[0])}” value` : `${esc(p.team || 'FA')}${p.age ? ` · Age ${Number(p.age).toFixed(1)}` : ''}`} · ${esc(ownTxt(p.id))}</div>`;
       const t7 = trendWindow(p, 7), t30 = trendWindow(p, 30);
       const chg = (t, lbl) => {
@@ -2462,12 +2550,14 @@
     function teamStrength(ids, pickIds) {
       // Position strength = value of the players who actually start at that position in the
       // optimal lineup (so a TE or QB filling a FLEX / SUPER_FLEX spot counts for his position).
+      // Same basis as the League tab's QB/RB/WR/TE columns: total value at each position
       const lu = solveLineup(ids);
       const out = { QB: 0, RB: 0, WR: 0, TE: 0 };
-      lu.filled.forEach(f => { if (f.id != null && P[f.id] && out[P[f.id].pos] !== undefined) out[P[f.id].pos] += f.val; });
+      ids.forEach(id => { const p = P[id]; if (p && !p.pick && out[p.pos] !== undefined) out[p.pos] += V[id] || 0; });
       out.PICK = pickIds.reduce((s, id) => s + (V[id] || 0), 0);
       out.START = lu.total;
       out.TOTAL = ids.reduce((s, id) => s + (V[id] || 0), 0) + out.PICK;
+      out.NOW = solveLineup(ids, id => (P[id] && P[id].rdv) || 0).total;
       return out;
     }
     function tradeRankImpact() {
@@ -2491,13 +2581,14 @@
         const ra = rosterAfter(o);
         after[o] = teamStrength(ra.ids, ra.pks);
       });
-      const cats = [['QB', 'QB'], ['RB', 'RB'], ['WR', 'WR'], ['TE', 'TE'], ['START', 'Starting lineup'], ['PICK', 'Draft capital'], ['TOTAL', 'Total value']];
+      const cats = [['QB', 'QB'], ['RB', 'RB'], ['WR', 'WR'], ['TE', 'TE'], ['START', 'Starting lineup'], ...(HAS_RDV() ? [['NOW', 'Win now']] : []), ['PICK', 'Draft capital'], ['TOTAL', 'Total value']];
       const rankOf = (map, key, cat) => 1 + owners.filter(o => (map[o][cat] || 0) > (map[key][cat] || 0)).length;
       const n = owners.length;
       const cell = (key, cat) => {
         const r0 = rankOf(before, key, cat), r1 = rankOf(after, key, cat);
         const cls = r1 < r0 ? 'text-emerald-600 dark:text-emerald-400' : r1 > r0 ? 'text-rose-600 dark:text-rose-400' : 'text-[#5d6672] dark:text-[#98a2ae]';
-        return `<td class="py-1 px-1.5 text-center whitespace-nowrap ${cls}">${r0 === r1 ? `#${r0}` : `#${r0} → <strong>#${r1}</strong>`}</td>`;
+        const arrow = r1 < r0 ? '▲' : '▼';
+        return `<td class="py-1 px-1.5 text-center whitespace-nowrap ${cls}">${r0 === r1 ? `#${r0}` : `#${r0} → <strong>${arrow} #${r1}</strong>`}</td>`;
       };
       const row = key => `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1 pr-2 font-semibold whitespace-nowrap">${esc(T[key].n)}${key === ME ? ' <span class="text-[10px] px-1 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td>${cats.map(([c]) => cell(key, c)).join('')}</tr>`;
       return `<div class="pt-1">
@@ -2506,7 +2597,7 @@
           <thead><tr class="text-[10px] uppercase tracking-wider text-[#5d6672] dark:text-[#98a2ae]"><th class="text-left py-1 pr-2">Team</th>${cats.map(([, l]) => `<th class="py-1 px-1.5 text-center font-semibold">${l}</th>`).join('')}</tr></thead>
           <tbody>${row(st.tA)}${row(st.tB)}</tbody>
         </table></div>
-        <div class="text-[10px] mt-1 text-[#5d6672] dark:text-[#98a2ae]">Position ranks use the value of the players who would start at that position in each team’s best lineup (a TE or QB starting at FLEX / SUPER_FLEX counts for his position), so bench depth doesn’t inflate a position.</div>
+        <div class="text-[10px] mt-1 text-[#5d6672] dark:text-[#98a2ae]">Position ranks match the League tab (total value at each position). Starting lineup ranks each team's best lineup by dynasty value${HAS_RDV() ? '; Win now uses FantasyCalc redraft (this-season) value' : ''}. Screenshot this to pitch the deal.</div>
       </div>`;
     }
 
@@ -2605,8 +2696,89 @@
     // ============================================================================
     // 10B. PLAYER TRADE IDEA FINDER
     // ============================================================================
+    // Trade Finder (acquire mode): packages from my roster for one target player, ranked by value
+    // fit and by whether what I send fills the partner's weak positions without opening holes on my side.
+    function acquireIdeas(targetId) {
+      const o = OWN[targetId];
+      if (o === undefined || o === ME || !T[ME] || !T[o]) return [];
+      const tV = V[targetId] || 0;
+      if (tV <= 0) return [];
+      const { rows } = getLeaguePartnerProfiles();
+      const FIT_POS = ['QB', 'RB', 'WR', 'TE'];
+      const avg = {};
+      FIT_POS.forEach(pos => { avg[pos] = rows.reduce((a, x) => a + x.posTotals[pos], 0) / Math.max(1, rows.length); });
+      const devOf = key => { const r = rows.find(x => x.o === key); return Object.fromEntries(FIT_POS.map(pos => [pos, r && avg[pos] ? (r.posTotals[pos] - avg[pos]) / avg[pos] : 0])); };
+      const md = devOf(ME), td = devOf(o);
+      const tPos = P[targetId].pos;
+      const posBonus = id => {
+        const p = P[id];
+        if (!p) return 0;
+        if (p.pick) return 2;                                             // picks are neutral-positive
+        let b = 0;
+        if (td[p.pos] < 0) b += 10 * Math.min(1, -td[p.pos] * 2);         // fills their hole
+        if (md[p.pos] < 0) b -= 10 * Math.min(1, -md[p.pos] * 2);         // opens a hole for me
+        if (p.pos === tPos) b -= 3;                                       // sending the same position back is a weaker pitch
+        return b;
+      };
+      const mine = [
+        ...(T[ME].ids || []).filter(id => P[id] && (V[id] || 0) > 0).map(id => ({ id, via: '' })),
+        ...(T[ME].pk || []).filter(([id]) => P[id] && (V[id] || 0) > 0).map(([id, via]) => ({ id, via }))
+      ].filter(a => (V[a.id] || 0) <= tV * 1.35 && (V[a.id] || 0) >= tV * 0.12)
+        .sort((a, b) => (V[b.id] || 0) - (V[a.id] || 0))
+        .slice(0, 28);
+      const recv = [{ id: Number(targetId) }];
+      const tol = Math.max(6, st.fair * 2.2);
+      const ideas = [];
+      const push = (send, type) => {
+        const ev = evalTrade(send, recv);
+        const gap = ((ev.effB - ev.effA) / Math.max(ev.effA, ev.effB, 1)) * 100;   // + means I receive more
+        if (Math.abs(gap) > tol) return;
+        const score = 60 - Math.abs(gap) * 2 + send.reduce((a, x) => a + posBonus(x.id), 0) - (send.length - 1) * 3;
+        ideas.push({ partner: o, type, send, recv, gapPct: gap, score });
+      };
+      mine.forEach(a => push([{ ...a }], '1-for-1'));
+      for (let i = 0; i < mine.length; i++) for (let j = i + 1; j < mine.length; j++) {
+        if ((V[mine[i].id] || 0) + (V[mine[j].id] || 0) < tV * 0.8) continue;
+        push([{ ...mine[i] }, { ...mine[j] }], '2-for-1');
+      }
+      ideas.sort((a, b) => b.score - a.score);
+      const seen = new Set(), top = [];
+      for (const x of ideas) {
+        const k = x.send.map(y => y.id).sort().join('_');
+        if (seen.has(k)) continue;
+        seen.add(k); top.push(x);
+        if (top.length >= 6) break;
+      }
+      return top;
+    }
+
     function renderTradeIdeas() {
       const listEl = document.getElementById('ideaList');
+      if (listEl && st.acquire != null && P[st.acquire] && OWN[st.acquire] !== undefined && OWN[st.acquire] !== ME) {
+        const tp = P[st.acquire], o = OWN[st.acquire];
+        const top = acquireIdeas(st.acquire);
+        listEl._ideas = { tKey: ME, top };
+        const head = `<div class="col-span-full flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/25 text-xs">
+          <span><strong>Trade Finder:</strong> packages from your roster for <strong>${esc(tp.name)}</strong> (${esc(T[o].n)}). Ranked by value match, then by whether you send positions they're short on without weakening your own thin spots.</span>
+          <button type="button" data-clearacquire="1" class="px-2 py-1 rounded-md font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-500/15 cursor-pointer">✕ Back to idea finder</button>
+        </div>`;
+        listEl.innerHTML = head + (top.length ? top.map((idea, idx) => {
+          const g = idea.gapPct;
+          const gCls = Math.abs(g) <= st.fair ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400';
+          return `<div class="p-3 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] flex flex-col justify-between gap-2">
+            <div class="space-y-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">${esc(idea.type)} · ${esc(T[o].n)}</span>
+                <span class="text-[11px] font-bold ${gCls}" title="+ means you receive more value">${g >= 0 ? '+' : ''}${g.toFixed(1)}%</span>
+              </div>
+              <div class="text-xs"><strong>Send:</strong> ${esc(idea.send.map(x => `${P[x.id].name}${x.via && x.via !== 'own' ? ` (${x.via})` : ''}`).join(' + '))}</div>
+              <div class="text-xs"><strong>Get:</strong> ${esc(tp.name)}</div>
+            </div>
+            <button type="button" data-loadidea="${idx}" class="w-full py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Load in calculator →</button>
+          </div>`;
+        }).join('') : `<div class="col-span-full text-xs text-[#5d6672] dark:text-[#98a2ae] py-3">No fair 1-for-1 or 2-for-1 packages from your roster for ${esc(tp.name)}. Try adding a pick in the calculator.</div>`);
+        return;
+      }
       const tKey = document.getElementById('ideaTeamSel')?.value;
       const pId = Number(document.getElementById('ideaPlayerSel')?.value);
       const goal = document.getElementById('ideaGoalSel')?.value || 'repeater';
@@ -2719,6 +2891,10 @@
         });
       });
 
+      if (tKey === ME) {
+        const fitMap = computeFit(getLeaguePartnerProfiles().rows);
+        ideas.forEach(x => { x.score += (fitMap[x.partner]?.score || 0) * 0.15; });   // favor partners whose needs fit yours
+      }
       ideas.sort((a, b) => b.score - a.score);
       // Deduplicate by partner + primary target
       const seen = new Set();
@@ -2796,33 +2972,11 @@
         return r.arch.archetype === st.leagueFilter;
       });
 
-      // ---- Fit with me: complementary surpluses/needs by position (value vs league average) ----
-      const FIT_POS = ['QB', 'RB', 'WR', 'TE'];
-      const fit = {};
-      try {
-        const avg = {};
-        FIT_POS.forEach(pos => { avg[pos] = allRows.reduce((a, x) => a + x.posTotals[pos], 0) / Math.max(1, allRows.length); });
-        const dev = x => Object.fromEntries(FIT_POS.map(pos => [pos, avg[pos] ? (x.posTotals[pos] - avg[pos]) / avg[pos] : 0]));
-        const meRow = allRows.find(x => x.o === ME);
-        if (meRow) {
-          const md = dev(meRow);
-          const raw = {};
-          allRows.forEach(x => {
-            if (x.o === ME) return;
-            const xd = dev(x);
-            const give = {}, get = {};
-            FIT_POS.forEach(pos => {
-              give[pos] = Math.max(0, md[pos]) * Math.max(0, -xd[pos]);   // my surplus fills their hole
-              get[pos] = Math.max(0, xd[pos]) * Math.max(0, -md[pos]);    // their surplus fills my hole
-            });
-            const G = Object.values(give).reduce((a, b) => a + b, 0), R = Object.values(get).reduce((a, b) => a + b, 0);
-            const best = o => { const e = Object.entries(o).sort((a, b) => b[1] - a[1])[0]; return e && e[1] > 0 ? e[0] : null; };
-            raw[x.o] = { v: G + R + Math.min(G, R), send: best(give), recv: best(get) };   // two-way deals get a bonus
-          });
-          const mx = Math.max(...Object.values(raw).map(z => z.v), 1e-9);
-          Object.entries(raw).forEach(([o, z]) => { fit[o] = { score: Math.round(100 * z.v / mx), send: z.send, recv: z.recv }; });
-        }
-      } catch (e) { /* fit unavailable */ }
+      const fit = computeFit(allRows);
+      const hasRdv = allRows.some(x => x.winNow > 0);
+      const mpfRank = {}, nowRank = {};
+      allRows.slice().sort((a, b) => (b.t.mpf || 0) - (a.t.mpf || 0)).forEach((x, i) => { mpfRank[x.o] = i + 1; });
+      allRows.slice().sort((a, b) => (b.winNow || 0) - (a.winNow || 0)).forEach((x, i) => { nowRank[x.o] = i + 1; });
       const ages = allRows.map(x => x.age).filter(a => a != null).sort((a, b) => a - b);
       const youngCut = ages[Math.max(0, Math.ceil(ages.length * 0.25) - 1)];
       const oldCut = ages[Math.min(ages.length - 1, Math.floor(ages.length * 0.75))];
@@ -2849,7 +3003,9 @@
           posWR: r => posRanks.WR[r.o] ?? 99,
           posTE: r => posRanks.TE[r.o] ?? 99,
           age: r => r.age ?? 99,
-          fit: r => (fit[r.o] ? fit[r.o].score : -1)
+          fit: r => (fit[r.o] ? fit[r.o].score : -1),
+          mpf: r => r.t.mpf || 0,
+          now: r => r.winNow || 0
         }[ls.k];
         if (keyFn && ls.k !== 'rank') {
           rows.sort((a, b) => {
@@ -2882,7 +3038,7 @@
 
       const tbody = document.getElementById('leagueBody');
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="14" class="py-6 text-center text-xs text-[#5d6672] dark:text-[#98a2ae]">No teams match this filter.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="16" class="py-6 text-center text-xs text-[#5d6672] dark:text-[#98a2ae]">No teams match this filter.</td></tr>`;
         return;
       }
 
@@ -2908,7 +3064,7 @@
           }).join('');
 
           detail = `<tr class="bg-[#f6f7f9]/80 dark:bg-[#0f1216]/70">
-            <td colspan="14" class="p-3 space-y-3">
+            <td colspan="16" class="p-3 space-y-3">
               <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">${posCards}</div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                 <div>
@@ -2944,6 +3100,7 @@
             </div>
           </td>
           <td class="py-2.5 pr-2 text-xs text-[#5d6672] dark:text-[#98a2ae] whitespace-nowrap">${esc(r.t.r || '0-0')}</td>
+          <td class="py-2.5 px-1.5 text-right text-xs tabular-nums whitespace-nowrap" title="Max PF ${fmt(r.t.mpf || 0)} (best possible lineup every week) · actual PF ${fmt(r.t.pf || 0)}${r.t.mpf ? ` · ${Math.round(100 * (r.t.pf || 0) / r.t.mpf)}% of max` : ''}">${r.t.mpf ? `<span class="font-semibold ${mpfRank[r.o] <= topQ ? 'text-emerald-600 dark:text-emerald-400' : mpfRank[r.o] >= botQ ? 'text-rose-600 dark:text-rose-400' : ''}">${fmt(r.t.mpf)}</span><div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">#${mpfRank[r.o]}</div>` : '—'}</td>
           ${['QB', 'RB', 'WR', 'TE'].map(pos => {
             const rk = posRanks[pos][r.o];
             const c = rk <= topQ ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : rk >= botQ ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : 'text-[#5d6672] dark:text-[#98a2ae]';
@@ -2951,6 +3108,7 @@
           }).join('')}
           <td class="py-2.5 px-1.5 text-center text-xs tabular-nums ${r.age == null ? '' : r.age <= youngCut ? 'text-sky-600 dark:text-sky-400 font-bold' : r.age >= oldCut ? 'text-amber-600 dark:text-amber-400 font-bold' : ''}" title="Value-weighted roster age${r.age <= youngCut ? ' · one of the youngest rosters' : r.age >= oldCut ? ' · one of the oldest rosters' : ''}">${r.age == null ? '—' : r.age.toFixed(1)}</td>
           <td class="py-2.5 px-1.5 text-center">${r.o === ME ? '<span class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">you</span>' : fit[r.o] ? `<div class="inline-block min-w-[2.2rem] px-1.5 py-0.5 rounded-md text-xs font-extrabold tabular-nums ${fit[r.o].score >= 70 ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300' : fit[r.o].score >= 40 ? 'text-blue-700 dark:text-blue-300' : 'text-[#5d6672] dark:text-[#98a2ae]'}" title="Fit with your roster (0-100, best partner = 100)">${fit[r.o].score}</div><div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae] whitespace-nowrap mt-0.5">${fit[r.o].send ? `you→${fit[r.o].send}` : ''}${fit[r.o].send && fit[r.o].recv ? ' · ' : ''}${fit[r.o].recv ? `${fit[r.o].recv}→you` : ''}</div>` : '—'}</td>
+          <td class="py-2.5 px-1.5 text-right text-xs tabular-nums whitespace-nowrap" title="Best lineup by FantasyCalc redraft (this-season) value">${hasRdv && r.winNow != null ? `<span class="font-semibold ${nowRank[r.o] <= topQ ? 'text-emerald-600 dark:text-emerald-400' : nowRank[r.o] >= botQ ? 'text-rose-600 dark:text-rose-400' : ''}">${fmt(r.winNow)}</span><div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">#${nowRank[r.o]}</div>` : '—'}</td>
           <td class="py-2.5 pr-2 text-right font-semibold">${fmt(r.startVal)}</td>
           <td class="py-2.5 pr-2 text-right hidden sm:table-cell text-[#5d6672] dark:text-[#98a2ae]">${fmt(r.posTotals.PICK)}</td>
           <td class="py-2.5 pr-2 text-right font-extrabold">${fmt(r.totalVal)}</td>
@@ -3221,6 +3379,7 @@
       renderCalc();
       renderTradeIdeas();
       renderLeague();
+      sendLeagueToFrames();
       renderScout();
       renderMovers();
       renderTradeHistory();
@@ -3320,7 +3479,11 @@
       document.querySelectorAll('.movers-btn').forEach(b => b.addEventListener('click', () => { st.moversDays = Number(b.dataset.movers); renderMovers(); }));
       const playerModal = document.getElementById('playerModal');
       document.getElementById('btnClosePlayer')?.addEventListener('click', () => playerModal.classList.add('hidden'));
-      playerModal?.addEventListener('click', e => { if (e.target === playerModal) playerModal.classList.add('hidden'); });
+      playerModal?.addEventListener('click', e => {
+        if (e.target === playerModal) { playerModal.classList.add('hidden'); return; }
+        const fb = e.target.closest('[data-findpkg]');
+        if (fb) { playerModal.classList.add('hidden'); startAcquire(Number(fb.dataset.findpkg)); }
+      });
       document.addEventListener('keydown', e => { if (e.key === 'Escape') playerModal?.classList.add('hidden'); });
       document.querySelectorAll('[data-pmrange]').forEach(b => b.addEventListener('click', () => { if (st.pm) { st.pm.range = b.dataset.pmrange === 'all' ? 'all' : Number(b.dataset.pmrange); renderPlayerModal(); } }));
 
@@ -3369,10 +3532,8 @@
         copyText(`${activeLeague.name} Trade Summary\n${nA} sends: ${fmtSide(st.A)}\n${nB} sends: ${fmtSide(st.B)}\nVerdict: ${headline}${cons ? `\nConsensus: ${cons}` : ''}`);
       });
 
-      document.getElementById('ideaTeamSel')?.addEventListener('change', () => { populateIdeaSelectors(); renderTradeIdeas(); });
-      document.getElementById('ideaPlayerSel')?.addEventListener('change', renderTradeIdeas);
-      document.getElementById('ideaGoalSel')?.addEventListener('change', renderTradeIdeas);
-      document.getElementById('ideaPosSel')?.addEventListener('change', renderTradeIdeas);
+      document.getElementById('ideaTeamSel')?.addEventListener('change', () => { st.acquire = null; populateIdeaSelectors(); renderTradeIdeas(); });
+      ['ideaPlayerSel', 'ideaGoalSel', 'ideaPosSel'].forEach(id => document.getElementById(id)?.addEventListener('change', () => { st.acquire = null; renderTradeIdeas(); }));
 
       document.getElementById('leagueSel')?.addEventListener('change', e => {
         const found = savedLeagues.find(l => l.id === e.target.value);
@@ -3500,6 +3661,7 @@
           addAssetToSide(fixBtn.dataset.fix, Number(fixBtn.dataset.id));
           return;
         }
+        if (e.target.closest('[data-clearacquire]')) { st.acquire = null; renderTradeIdeas(); return; }
         const loadIdeaBtn = e.target.closest('[data-loadidea]');
         if (loadIdeaBtn) {
           const listEl = document.getElementById('ideaList');

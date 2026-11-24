@@ -157,12 +157,12 @@
 
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-amber-100 dark:bg-amber-500/20 text-amber-950 dark:text-amber-200 border border-amber-300 dark:border-amber-500/40">
           <span class="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400" aria-hidden="true"></span>
-          <span><strong>Near Hit:</strong> QB 16+ · RB/WR 12+ PPG (TE: hit or bust only)</span>
+          <span><strong>Starter:</strong> QB 16+ · RB/WR 12+ PPG (TE: hit or bust only)</span>
         </span>
 
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-rose-100 dark:bg-rose-500/20 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-500/40">
           <span class="w-2 h-2 rounded-full bg-rose-600 dark:bg-rose-400" aria-hidden="true"></span>
-          <span><strong>Bust:</strong> 0 Near-Hit seasons (TE: 0 seasons at 12+) (2006–2025)</span>
+          <span><strong>Bust:</strong> 0 Starter seasons (TE: 0 seasons at 12+) (2006–2025)</span>
         </span>
 
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-sky-100 dark:bg-sky-500/20 text-sky-900 dark:text-sky-200 border border-sky-300 dark:border-sky-500/40">
@@ -242,7 +242,7 @@
           </button>
           <button type="button" data-outcome="near"
             class="outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer">
-            Near Hits Only
+            Starters Only
           </button>
           <button type="button" data-outcome="bust"
             class="outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer">
@@ -352,7 +352,7 @@
             <div id="modalOutcomeTabs" class="inline-flex flex-wrap gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700/80">
               <button type="button" data-mtab="all" class="modal-subtab px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">All</button>
               <button type="button" data-mtab="hit" class="modal-subtab px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">Hits</button>
-              <button type="button" data-mtab="near" class="modal-subtab px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">Near Hits</button>
+              <button type="button" data-mtab="near" class="modal-subtab px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">Starters</button>
               <button type="button" data-mtab="bust" class="modal-subtab px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">Busts</button>
               <button type="button" data-mtab="rookie" class="modal-subtab px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer">2026 Comps</button>
             </div>
@@ -1545,7 +1545,7 @@
           };
         case 'near':
           return {
-            label: 'Near Hit',
+            label: 'Starter',
             chipCls: 'bg-amber-100/90 hover:bg-amber-200/90 dark:bg-amber-500/18 dark:hover:bg-amber-500/30 text-amber-950 dark:text-amber-100 border-amber-300 dark:border-amber-500/45',
             badgeCls: 'bg-amber-500 text-slate-950 dark:bg-amber-400 dark:text-slate-950',
             pillBadge: 'bg-amber-700/15 dark:bg-amber-400/20 text-amber-950 dark:text-amber-200'
@@ -1675,7 +1675,7 @@
         </div>
         <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
           Hit: <span class="text-emerald-600 dark:text-emerald-400">${esc(pm.hitLbl)}</span> ·
-          ${pm.nearLbl ? `Near: <span class="text-amber-400 dark:text-amber-400">${esc(pm.nearLbl)}</span> ·` : 'No near tier ·'}
+          ${pm.nearLbl ? `Starter: <span class="text-amber-400 dark:text-amber-400">${esc(pm.nearLbl)}</span> ·` : 'No near tier ·'}
           Elite: <span class="text-sky-600 dark:text-sky-400">${esc(pm.eliteLbl)}</span>
         </div>`;
 
@@ -1824,14 +1824,14 @@
             <!-- Horizontal Stacked Color-Coded Outcome Bar -->
             <div class="space-y-1.5">
               <div class="w-full h-3.5 rounded-full overflow-hidden flex bg-slate-200 dark:bg-slate-800"
-                role="img" aria-label="Outcome breakdown: ${hitW.toFixed(1)}% Hits${b.noNear ? '' : `, ${nearW.toFixed(1)}% Near Hits Only`}, ${bustW.toFixed(1)}% Busts">
+                role="img" aria-label="Outcome breakdown: ${hitW.toFixed(1)}% Hits${b.noNear ? '' : `, ${nearW.toFixed(1)}% Starters Only`}, ${bustW.toFixed(1)}% Busts">
                 ${hitW > 0 ? `<div class="bg-emerald-500 dark:bg-emerald-500 h-full transition-all duration-300" style="width:${hitW}%"></div>` : ''}
                 ${nearW > 0 ? `<div class="bg-amber-400 dark:bg-amber-400 h-full transition-all duration-300" style="width:${nearW}%"></div>` : ''}
                 ${bustW > 0 ? `<div class="bg-rose-500 dark:bg-rose-500 h-full transition-all duration-300" style="width:${bustW}%"></div>` : ''}
               </div>
               <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold">
                 <span class="text-emerald-700 dark:text-emerald-400">Hit ${hitW.toFixed(1)}%</span>
-                ${b.noNear ? '' : `<span class="text-amber-400 dark:text-amber-400">Near Hit Only ${nearW.toFixed(1)}%</span>`}
+                ${b.noNear ? '' : `<span class="text-amber-400 dark:text-amber-400">Starter Only ${nearW.toFixed(1)}%</span>`}
                 <span class="text-rose-700 dark:text-rose-400">Bust ${bustW.toFixed(1)}%</span>
               </div>
             </div>
@@ -1999,8 +1999,8 @@
       // --- Stat tiles vs position average ---
       const tiles = [
         ['Hit', 'hitPct', `${pm.hitLbl}`, 'text-emerald-700 dark:text-emerald-400'],
-        ...(b.noNear ? [] : [['Near hit only', 'nearOnlyPct', pm.nearLbl, 'text-amber-400 dark:text-amber-400']]),
-        ['Bust', 'bustPct', 'never reached near/hit', 'text-rose-700 dark:text-rose-400'],
+        ...(b.noNear ? [] : [['Starter only', 'nearOnlyPct', pm.nearLbl, 'text-amber-400 dark:text-amber-400']]),
+        ['Bust', 'bustPct', 'never reached starter level', 'text-rose-700 dark:text-rose-400'],
         ['Elite', 'elitePct', pm.eliteLbl, 'text-sky-700 dark:text-sky-400'],
         ['2+ seasons', 'twoPlusPct', `hit ${hitLbl} twice+`, 'text-indigo-700 dark:text-indigo-400'],
         ['Repeater', 'repPct', 'of hitters, % who hit again', 'text-violet-700 dark:text-violet-400'],
@@ -2034,7 +2034,7 @@
         const h = g.filter(p => p.status === 'hit').length, nr = g.filter(p => p.status === 'near').length;
         return `<div class="rounded-xl border border-slate-200 dark:border-slate-800 p-3 space-y-1.5">
           <div class="flex items-baseline justify-between"><span class="text-xs font-bold">${lbl}</span><span class="text-[11px] text-slate-500 dark:text-slate-400">${g.length} named</span></div>
-          ${g.length ? bmTierBar([{ v: h, cls: 'bg-emerald-500', label: 'Hit' }, { v: nr, cls: 'bg-amber-400', label: 'Near' }, { v: g.length - h - nr, cls: 'bg-rose-500', label: 'Bust' }]) : '<div class="text-[11px] text-slate-400">No named players</div>'}
+          ${g.length ? bmTierBar([{ v: h, cls: 'bg-emerald-500', label: 'Hit' }, { v: nr, cls: 'bg-amber-400', label: 'Starter' }, { v: g.length - h - nr, cls: 'bg-rose-500', label: 'Bust' }]) : '<div class="text-[11px] text-slate-400">No named players</div>'}
           ${g.length ? `<div class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">${h} hit (${bmPct(h, g.length)}%)</div>` : ''}
         </div>`;
       }).join('');
@@ -2044,7 +2044,7 @@
         <button type="button" data-bm-switch="${esc(x.id)}" class="w-full flex items-center gap-2 text-left text-xs px-2 py-1 rounded-lg cursor-pointer ${x.id === b.id ? 'bg-sky-100 dark:bg-sky-500/20 font-bold' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}">
           <span class="w-5 text-slate-400 tabular-nums">${i + 1}</span>
           <span class="flex-1 truncate">${esc(x.name)}</span>
-          <span class="w-24 sm:w-32 h-2.5 rounded bg-slate-200 dark:bg-slate-800 overflow-hidden flex" title="Hit ${x.hitPct.toFixed(1)}%${x.noNear ? '' : ` · Near ${x.nearOnlyPct.toFixed(1)}%`} · Bust ${x.bustPct.toFixed(1)}%"><span class="block h-full bg-emerald-500" style="width:${x.hitPct}%"></span><span class="block h-full bg-amber-400" style="width:${x.noNear ? 0 : x.nearOnlyPct}%"></span><span class="block h-full bg-rose-500" style="width:${x.bustPct}%"></span></span>
+          <span class="w-24 sm:w-32 h-2.5 rounded bg-slate-200 dark:bg-slate-800 overflow-hidden flex" title="Hit ${x.hitPct.toFixed(1)}%${x.noNear ? '' : ` · Starter ${x.nearOnlyPct.toFixed(1)}%`} · Bust ${x.bustPct.toFixed(1)}%"><span class="block h-full bg-emerald-500" style="width:${x.hitPct}%"></span><span class="block h-full bg-amber-400" style="width:${x.noNear ? 0 : x.nearOnlyPct}%"></span><span class="block h-full bg-rose-500" style="width:${x.bustPct}%"></span></span>
           <span class="w-12 text-right tabular-nums">${x.hitPct.toFixed(0)}%</span>
           <span class="w-12 text-right text-slate-400 tabular-nums">n=${x.n}</span>
         </button>`).join('');
@@ -2067,7 +2067,7 @@
       const th = cols.map(([k, l, a]) => `<th class="bm-sort py-2 px-2 ${a} ${bm.sort === k ? 'text-sky-600 dark:text-sky-400' : ''}" data-bm-sort="${k}">${esc(l)} ${bm.sort === k ? (bm.dir === 1 ? '▲' : '▼') : ''}</th>`).join('');
       const tr = players.map(p => `
         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer" data-bm-player="${esc(p.id)}">
-          <td class="py-1.5 px-2 font-semibold">${esc(p.name)}</td>
+          <td class="py-1.5 px-2 font-semibold whitespace-nowrap">${esc(p.name)}${ownerBadge(p)}</td>
           <td class="py-1.5 px-2 text-right tabular-nums">${p.year}</td>
           <td class="py-1.5 px-2"><span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${sm(p.status).badgeCls}">${esc(sm(p.status).label)}</span></td>
           ${b.noNear ? '' : `<td class="py-1.5 px-2 text-right tabular-nums">${p.isRookie ? '–' : p.near}</td>`}
@@ -2078,7 +2078,7 @@
 
       bucketModalBody.innerHTML = `
         <section class="space-y-2">
-          ${bmTierBar([{ v: b.hitPct, cls: 'bg-emerald-500', label: 'Hit %' }, { v: b.nearOnlyPct, cls: 'bg-amber-400', label: 'Near only %' }, { v: b.bustPct, cls: 'bg-rose-500', label: 'Bust %' }])}
+          ${bmTierBar([{ v: b.hitPct, cls: 'bg-emerald-500', label: 'Hit %' }, { v: b.nearOnlyPct, cls: 'bg-amber-400', label: 'Starter only %' }, { v: b.bustPct, cls: 'bg-rose-500', label: 'Bust %' }])}
           <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-${b.noNear ? 5 : 6} gap-2.5">${tiles}</div>
           <p class="text-[11px] text-slate-500 dark:text-slate-400">Rates use the full sample (n = ${b.n}). Comparisons are against the sample-weighted average of all ${esc(b.pos)} buckets.</p>
         </section>
@@ -2098,7 +2098,7 @@
 
         ${rookies.length ? `<section class="space-y-2">
           <h3 class="text-sm font-extrabold">2026 class in this bucket</h3>
-          <div class="flex flex-wrap gap-1.5">${rookies.map(renderPlayerChip).join('')}</div>
+          <div class="flex flex-wrap gap-1.5">${rookies.map(r => `<span class="inline-flex items-center">${renderPlayerChip(r)}${ownerBadge(r)}</span>`).join('')}</div>
         </section>` : ''}
 
         <section class="space-y-2">
@@ -2112,7 +2112,7 @@
         </section>
 
         <section class="space-y-1.5">
-          <h3 class="text-sm font-extrabold">Every ${esc(b.pos)} bucket by hit rate <span class="font-normal text-[11px] text-slate-500 dark:text-slate-400"><span class="text-emerald-500">■</span> hit${b.noNear ? '' : ' <span class="text-amber-400">■</span> near hit'} <span class="text-rose-500">■</span> bust</span></h3>
+          <h3 class="text-sm font-extrabold">Every ${esc(b.pos)} bucket by hit rate <span class="font-normal text-[11px] text-slate-500 dark:text-slate-400"><span class="text-emerald-500">■</span> hit${b.noNear ? '' : ' <span class="text-amber-400">■</span> starter'} <span class="text-rose-500">■</span> bust</span></h3>
           <div class="space-y-0.5">${rankRows}</div>
         </section>`;
     }
@@ -2136,8 +2136,29 @@
       document.body.style.overflow = ''; setParentScrollLock(false);
       if (restoreFocus && bucketLastFocus?.focus) bucketLastFocus.focus();
     }
+    // ---- League overlay (sent by index.html): who rosters each player + one-tap offer ----
+    let LEAGUE = null;
+    const leagueKey = {};
+    const lkey = s => String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/['’.]/g, '').replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '').replace(/[^a-z]/g, '');
+    function setLeague(msg) {
+      LEAGUE = msg && msg.teams && msg.players ? msg : null;
+      Object.keys(leagueKey).forEach(k => delete leagueKey[k]);
+      if (LEAGUE) Object.entries(LEAGUE.players).forEach(([n, o]) => { leagueKey[n.replace(/[^a-z]/g, '')] = o; });
+      if (bm.id) renderBucketModal();
+    }
+    function ownerBadge(p) {
+      if (!LEAGUE) return '';
+      const o = leagueKey[lkey(p.name)];
+      if (!o) return (p.isRookie || p.year >= 2025) ? '<span class="ml-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400" title="Not on a roster in your league">FA</span>' : '';
+      const t = LEAGUE.teams[o] || { n: o };
+      if (t.me) return '<span class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>';
+      return `<span class="ml-1 inline-flex items-center gap-1 align-middle"><span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 max-w-[6rem] truncate" title="${esc(t.n)}${t.fit != null ? ` · Fit ${t.fit}` : ''}">${esc(t.n)}</span><button type="button" data-bm-offer="${esc(p.name)}" class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer" title="Open the trade calculator with the best-fitting package">Offer</button></span>`;
+    }
+
     bucketModalEl.addEventListener('click', e => {
       if (e.target === bucketModalEl) return closeBucketModal();
+      const of = e.target.closest('[data-bm-offer]');
+      if (of) { e.stopPropagation(); try { window.parent.postMessage({ type: 'dtc-build-offer', name: of.dataset.bmOffer }, location.origin); } catch (err) {} return; }
       const s = e.target.closest('[data-bm-sort]');
       if (s) { const k = s.dataset.bmSort; if (bm.sort === k) bm.dir *= -1; else { bm.sort = k; bm.dir = (k === 'name') ? 1 : -1; } renderBucketModal(); return; }
       const sw = e.target.closest('[data-bm-switch]');
@@ -2245,7 +2266,7 @@
 
       document.getElementById('modalProbLegend').innerHTML = `
         <span class="text-emerald-700 dark:text-emerald-400">● Hit Odds: ${b.hitPct.toFixed(1)}%</span>
-        ${b.noNear ? '' : `<span class="text-amber-400 dark:text-amber-400">● Near Hit Only: ${b.nearOnlyPct.toFixed(1)}%</span>`}
+        ${b.noNear ? '' : `<span class="text-amber-400 dark:text-amber-400">● Starter Only: ${b.nearOnlyPct.toFixed(1)}%</span>`}
         <span class="text-rose-700 dark:text-rose-400">● Bust Odds: ${b.bustPct.toFixed(1)}%</span>
       `;
 
@@ -2255,7 +2276,7 @@
       const nearKpi = b.noNear ? '' : `
         <div class="rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 p-2.5 text-center">
           <div class="text-base sm:text-lg font-extrabold text-amber-400 dark:text-amber-400">${b.nearOnlyPct.toFixed(1)}%</div>
-          <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Near Hit Only</div>
+          <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Starter Only</div>
         </div>`;
       document.getElementById('modalKpiGrid').innerHTML = `
         <div class="rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-500/30 p-2.5 text-center">
@@ -2351,12 +2372,12 @@
           <div class="rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/30 p-3.5 space-y-2.5">
             <div class="flex items-center justify-between gap-2">
               <h4 class="text-xs font-extrabold uppercase tracking-wider text-amber-400 dark:text-amber-400">
-                Near Hits / Flex Starters (${nears.length})
+                Starters (${nears.length})
               </h4>
               <span class="text-[10px] font-bold text-amber-400 dark:text-amber-400">${esc(pm.nearLbl)} only</span>
             </div>
             <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-              ${nears.length ? nears.map(x => compRow(x, 'text-amber-400 dark:text-amber-400')).join('') : '<p class="text-xs italic text-slate-500 dark:text-slate-400">No near-hit-only players in this bucket.</p>'}
+              ${nears.length ? nears.map(x => compRow(x, 'text-amber-400 dark:text-amber-400')).join('') : '<p class="text-xs italic text-slate-500 dark:text-slate-400">No starter-only players in this bucket.</p>'}
             </div>
           </div>`);
       }
@@ -2563,11 +2584,13 @@
       // Theme is owned by index.html's toggle
       window.addEventListener('message', e => {
         if (e.origin !== location.origin) return;
+        if (e.data && e.data.type === 'dtc-league') { setLeague(e.data); return; }
         if (e.data && e.data.type === 'dtc-theme' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
           state.theme = e.data.theme;
           applyTheme();
         }
       });
+      try { window.parent.postMessage({ type: 'dtc-ready' }, location.origin); } catch (e) {}
       // Report content height so the parent frame grows/shrinks with filters, expanded busts, etc.
       const post = () => {
         try { window.parent.postMessage({ type: 'dtc-height', height: document.body.offsetHeight }, location.origin); } catch (e) {}

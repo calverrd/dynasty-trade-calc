@@ -22,6 +22,12 @@
     @media (max-width: 640px) { th:not(.sorted) .arrow { display: none; } }
     th.sorted .arrow { opacity: 1; color: #0ea5e9; }
     html.mode4 .w8col { display: none; }
+    .owncol, .ownctl { display: none; }
+    html.hasleague .owncol { display: table-cell; }
+    html.hasleague .ownctl { display: block; }
+    .btn-offer { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; }
+    .btn-offer:hover { background: #1d4ed8; }
+    .btn-offer.buy { box-shadow: 0 0 0 2px #7dd3fc; }
     .mode-btn[aria-pressed="true"] { background: #0ea5e9; color: #fff; border-color: #0ea5e9; }
     td.sticky-col, th.sticky-col { position: sticky; left: 0; z-index: 1; }
     .tag-sb { display: inline-block; font-size: 9px; font-weight: 800; letter-spacing: .04em; padding: 1px 4px; border-radius: 4px; vertical-align: middle; background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; margin-left: 4px; }
@@ -149,6 +155,12 @@
         <option value="buy">BUY only</option>
         <option value="missed">MISSED TIME only</option>
       </select>
+      <select id="ownf" class="ownctl px-3 py-2 rounded-lg text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700">
+        <option value="">All owners</option>
+        <option value="other">On other teams (tradeable)</option>
+        <option value="me">On my roster</option>
+        <option value="fa">Free agents</option>
+      </select>
       <label class="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 px-1">
         <input id="hideEmpty" type="checkbox" checked class="accent-sky-500" /> Hide players with no Weeks 1–4 snaps
       </label>
@@ -177,6 +189,7 @@
             <th class="sortable text-right py-2.5 px-2 sm:px-3" data-k="tot"><span class="hidden sm:inline">Total</span><span class="sm:hidden">Tot</span> <span class="arrow"></span></th>
             <th class="sortable text-right py-2.5 px-2 sm:px-3" data-k="u" title="Usage score: 2.2×TPG + 1.0×RPG + 0.12×YPG + 0.5×TDPG, Weeks 1–4, per game played">Usage <span class="arrow"></span></th>
             <th class="sortable text-right py-2.5 px-2 sm:px-3" data-k="ktc" title="Live KeepTradeCut superflex value (from ktc.json)">KTC <span class="arrow"></span></th>
+            <th class="owncol sortable text-left py-2.5 px-2 sm:px-3" data-k="own" title="Who rosters him in your league. Sorts by that team's Fit with you.">Owner <span class="arrow"></span></th>
           </tr>
         </thead>
         <tbody id="rows" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
@@ -184,7 +197,7 @@
     </div>
 
     <p class="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-      Tiers: <strong>green</strong> = a 14+ PPR PPG season at any point in his career · <strong>yellow</strong> = best season 12–13.9 PPG ·
+      Tiers: <strong>green</strong> = a 14+ PPR PPG season at any point in his career · <strong>yellow</strong> = Starter (best season 12–13.9 PPG) ·
       <strong>red</strong> = never reached 12 PPG · <strong>gray</strong> = 2025–26 rookie who hasn't hit yet (too early to call).
       Tiers come from the Profile Buckets data, plus completed nflverse seasons of 8+ games for players missing there. The season in progress never counts until it's finished.
       DNP = team played but he logged no snap; BYE = team bye; TBD = not played yet; "2g" next to Usage = games played; SB = Senior Bowl attendee (attendance hasn't proven predictive once draft slot and usage are known; use it as context only); one-game scores are dimmed and sort below everyone with 2+ games. Tap a score for targets–catches–yards–TDs.
@@ -200,7 +213,7 @@
 
     const TIERS = {
       green:  { label: '14+ PPG season', pill: 'bg-emerald-100 text-emerald-900 border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-200 dark:border-emerald-500/40' },
-      yellow: { label: '12+ PPG season', pill: 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-400/20 dark:text-amber-200 dark:border-amber-400/40' },
+      yellow: { label: 'Starter: best season 12–13.9 PPG', pill: 'bg-amber-100 text-amber-900 border-amber-300 dark:bg-amber-400/20 dark:text-amber-200 dark:border-amber-400/40' },
       red:    { label: 'Never 12+ PPG',  pill: 'bg-rose-100 text-rose-900 border-rose-300 dark:bg-rose-500/20 dark:text-rose-200 dark:border-rose-500/40' },
       tbd:    { label: 'Too early (2025–26)', pill: 'bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-700/40 dark:text-slate-200 dark:border-slate-600' }
     };
@@ -298,6 +311,7 @@
       if (k === 'tot') return p.tot;
       if (k === 'u') return p.tot === null ? null : p.u;
       if (k === 'ktc') return p.ktc ?? null;
+      if (k === 'own') { const o = ownerOf(p); return o && !LEAGUE.teams[o]?.me ? (LEAGUE.teams[o]?.fit ?? 0) : null; }
       return p.pts[+k.slice(1)];
     }
     function cmp(a, b) {
@@ -382,7 +396,7 @@
       }).join('');
     }
 
-    const NCOLS = () => (st.mode === 8 ? 14 : 10);
+    const NCOLS = () => (st.mode === 8 ? 14 : 10) + (LEAGUE ? 1 : 0);
     DATA.forEach((p, i) => { p.i = i; });
 
     // ---- KTC (live from ./ktc.json, same file the calculator uses) ----
@@ -430,6 +444,41 @@
       const i = +b.dataset.open; st.open.has(i) ? st.open.delete(i) : st.open.add(i); render();
     });
 
+    // ---- League overlay (sent by index.html): who rosters each rookie, and a one-tap offer ----
+    let LEAGUE = null;
+    const leagueKey = {};
+    function setLeague(msg) {
+      LEAGUE = msg && msg.teams && msg.players ? msg : null;
+      Object.keys(leagueKey).forEach(k => delete leagueKey[k]);
+      if (LEAGUE) Object.entries(LEAGUE.players).forEach(([n, o]) => { leagueKey[n.replace(/[^a-z]/g, '')] = o; });
+      document.documentElement.classList.toggle('hasleague', !!LEAGUE);
+      render();
+    }
+    function ownerOf(p) { return LEAGUE ? (leagueKey[normName(p.n)] || null) : null; }
+    function ownOk(p) {
+      if (!LEAGUE || !st.own) return true;
+      const o = ownerOf(p);
+      if (st.own === 'me') return !!o && !!LEAGUE.teams[o]?.me;
+      if (st.own === 'other') return !!o && !LEAGUE.teams[o]?.me;
+      if (st.own === 'fa') return !o && p.yr >= CUR - 1;
+      return true;
+    }
+    function ownerCell(p) {
+      const o = ownerOf(p);
+      if (!o) return p.yr >= CUR - 1 ? '<span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400" title="Not on a roster in your league">FA</span>' : '<span class="text-[11px] text-slate-400">—</span>';
+      const t = LEAGUE.teams[o] || { n: o };
+      if (t.me) return '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>';
+      const fitTxt = t.fit != null ? `Fit ${t.fit}` : '';
+      return `<div class="flex items-center gap-1.5"><span class="max-w-[7rem] truncate text-[11px] font-semibold" title="${esc(t.n)}">${esc(t.n)}</span><button type="button" class="btn-offer${p.tags.includes('buy') ? ' buy' : ''}" data-offer="${esc(p.n)}" title="Open the trade calculator with the best-fitting package for ${esc(p.n)}">Offer</button></div>
+        <div class="text-[10px] text-slate-500 dark:text-slate-400">${esc(t.arch || '')}${t.arch && fitTxt ? ' · ' : ''}${fitTxt}</div>`;
+    }
+    document.getElementById('ownf').addEventListener('change', e => { st.own = e.target.value; render(); });
+    document.getElementById('rows').addEventListener('click', e => {
+      const b = e.target.closest('[data-offer]'); if (!b) return;
+      e.stopPropagation();
+      try { window.parent.postMessage({ type: 'dtc-build-offer', name: b.dataset.offer }, location.origin); } catch (err) {}
+    });
+
     function render() {
       const rows = DATA.filter(p =>
         st.tiers.has(p.tier) &&
@@ -440,7 +489,8 @@
         (!st.tag || p.tags.includes(st.tag)) &&
         (!st.usage || (st.usage === 'hi' ? p.u >= 15 : st.usage === 'mid' ? (p.u >= 8 && p.u < 15) : p.u < 8)) &&
         (!st.hideEmpty || p.tot !== null) &&
-        (!st.q || p.key.includes(st.q))
+        (!st.q || p.key.includes(st.q)) &&
+        ownOk(p)
       ).sort(cmp);
 
       document.getElementById('count').textContent = `${rows.length} of ${DATA.length} rookie WRs`;
@@ -469,6 +519,7 @@
           <td class="text-right py-2 px-2 sm:px-3 tabular-nums font-bold">${p.tot === null ? '—' : p.tot.toFixed(1)}</td>
           <td class="text-right py-2 px-2 sm:px-3">${usageCell(p)}</td>
           <td class="text-right py-2 px-2 sm:px-3 tabular-nums">${ktcCell(p)}</td>
+          ${LEAGUE ? `<td class="owncol py-2 px-2 sm:px-3 whitespace-nowrap">${ownerCell(p)}</td>` : ''}
         </tr>${st.open.has(p.i) ? detailRow(p) : ''}`;
       }).join('') || `<tr><td colspan="${NCOLS()}" class="py-6 text-center text-sm text-slate-500">No players match these filters.</td></tr>`;
     }
@@ -482,9 +533,12 @@
     if (EMBEDDED) {
       document.documentElement.classList.add('embedded');
       window.addEventListener('message', e => {
-        if (e.origin !== location.origin || !e.data || e.data.type !== 'dtc-theme') return;
+        if (e.origin !== location.origin || !e.data) return;
+        if (e.data.type === 'dtc-league') { setLeague(e.data); return; }
+        if (e.data.type !== 'dtc-theme') return;
         document.documentElement.classList.toggle('dark', e.data.theme === 'dark');
       });
+      try { window.parent.postMessage({ type: 'dtc-ready' }, location.origin); } catch (e) {}
       const post = () => { try { window.parent.postMessage({ type: 'dtc-height', frame: 'rookies', height: document.body.offsetHeight }, location.origin); } catch (e) {} };
       if ('ResizeObserver' in window) new ResizeObserver(post).observe(document.body);
       window.addEventListener('load', post);
