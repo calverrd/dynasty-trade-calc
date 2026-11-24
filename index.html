@@ -337,14 +337,14 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs sm:text-sm">
             <thead>
-              <tr class="border-b border-[#e3e6eb] dark:border-[#2a3039] text-[11px] uppercase tracking-wider text-[#5d6672] dark:text-[#98a2ae]">
-                <th class="py-2 pr-2">#</th>
-                <th class="py-2 pr-2">Team</th>
-                <th class="py-2 pr-2">Partner Profile &amp; Needs</th>
-                <th class="py-2 pr-2">Record</th>
-                <th class="py-2 pr-2 text-right">Start Value</th>
-                <th class="py-2 pr-2 text-right hidden sm:table-cell">Picks</th>
-                <th class="py-2 pr-2 text-right">Total Value</th>
+              <tr id="leagueHead" class="border-b border-[#e3e6eb] dark:border-[#2a3039] text-[11px] uppercase tracking-wider text-[#5d6672] dark:text-[#98a2ae]">
+                <th class="py-2 pr-2 cursor-pointer select-none hover:text-blue-600" data-lsort="rank" title="Sort by power rank">#<span class="lsort-arrow"></span></th>
+                <th class="py-2 pr-2 cursor-pointer select-none hover:text-blue-600" data-lsort="team" title="Sort by team name">Team<span class="lsort-arrow"></span></th>
+                <th class="py-2 pr-2 cursor-pointer select-none hover:text-blue-600" data-lsort="profile" title="Group by Contender / Retool / Rebuild">Partner Profile &amp; Needs<span class="lsort-arrow"></span></th>
+                <th class="py-2 pr-2 cursor-pointer select-none hover:text-blue-600" data-lsort="record" title="Sort by win % (points for breaks ties)">Record<span class="lsort-arrow"></span></th>
+                <th class="py-2 pr-2 text-right cursor-pointer select-none hover:text-blue-600" data-lsort="start" title="Sort by starting lineup value">Start Value<span class="lsort-arrow"></span></th>
+                <th class="py-2 pr-2 text-right hidden sm:table-cell cursor-pointer select-none hover:text-blue-600" data-lsort="picks" title="Sort by draft pick value">Picks<span class="lsort-arrow"></span></th>
+                <th class="py-2 pr-2 text-right cursor-pointer select-none hover:text-blue-600" data-lsort="total" title="Sort by total value">Total Value<span class="lsort-arrow"></span></th>
                 <th class="py-2 pl-2 text-right">Action</th>
               </tr>
             </thead>
@@ -2783,6 +2783,43 @@
         return r.arch.archetype === st.leagueFilter;
       });
 
+      // Column sorting (click a header). Any failure falls back to the default power-rank order.
+      try {
+        const ls = st.leagueSort || { k: 'rank', dir: 1 };
+        const rec = r => {
+          const [w, l, t] = String(r.t.r || '0-0').split('-').map(x => Number(x) || 0);
+          const g = w + l + t;
+          return g ? (w + 0.5 * t) / g : 0;
+        };
+        const archOrder = { contender: 0, retool: 1, rebuild: 2, neutral: 3 };
+        const keyFn = {
+          rank: r => allRows.indexOf(r),
+          team: r => String(r.t.n || '').toLowerCase(),
+          profile: r => archOrder[r.arch.archetype] ?? 9,
+          record: r => rec(r),
+          start: r => r.startVal || 0,
+          picks: r => (r.posTotals && r.posTotals.PICK) || 0,
+          total: r => r.totalVal || 0
+        }[ls.k];
+        if (keyFn && ls.k !== 'rank') {
+          rows.sort((a, b) => {
+            const x = keyFn(a), y = keyFn(b);
+            if (x < y) return -1 * ls.dir;
+            if (x > y) return 1 * ls.dir;
+            if (ls.k === 'record') return ((b.t.pf || 0) - (a.t.pf || 0));      // PF breaks record ties
+            return (b.totalVal || 0) - (a.totalVal || 0);                       // then total value
+          });
+        } else if (ls.k === 'rank' && ls.dir === -1) {
+          rows.reverse();
+        }
+        document.querySelectorAll('#leagueHead [data-lsort]').forEach(th => {
+          const on = th.dataset.lsort === ls.k;
+          th.classList.toggle('text-blue-600', on);
+          th.classList.toggle('dark:text-blue-400', on);
+          th.querySelector('.lsort-arrow').textContent = on ? (ls.dir === 1 ? ' ▲' : ' ▼') : '';
+        });
+      } catch (e) { /* keep default order */ }
+
       const topQ = Math.max(1, Math.ceil(nTeams * 0.25));
       const botQ = Math.floor(nTeams * 0.75) + 1;
 
@@ -3241,6 +3278,15 @@
       });
 
       document.getElementById('radarTeamSel')?.addEventListener('change', e => { st.radarTeam = e.target.value; renderScout(); });
+      document.getElementById('leagueHead')?.addEventListener('click', e => {
+        const th = e.target.closest('[data-lsort]');
+        if (!th) return;
+        const k = th.dataset.lsort;
+        const cur = st.leagueSort || { k: 'rank', dir: 1 };
+        // Numbers start high-to-low; rank and team start A-Z / 1-up. Click again to flip.
+        st.leagueSort = cur.k === k ? { k, dir: -cur.dir } : { k, dir: (k === 'rank' || k === 'team' || k === 'profile') ? 1 : -1 };
+        renderLeague();
+      });
       document.getElementById('waiverSearch')?.addEventListener('input', e => { st.waiverQ = e.target.value; renderScout(); });
       document.querySelectorAll('.wpos-btn').forEach(btn => {
         btn.addEventListener('click', () => { st.waiverPos = btn.dataset.wpos; syncControls(); renderScout(); });
