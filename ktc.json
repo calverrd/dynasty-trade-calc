@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-11-24T18:59:07.386Z",
+  "updatedAt": "2026-11-24T19:04:59.332Z",
   "count": 500,
   "players": [
     {
@@ -7,15 +7,15 @@
       "position": "RB",
       "team": "DET",
       "superflexValues": {
-        "value": 9998,
+        "value": 9999,
         "tep": {
-          "value": 9998
+          "value": 9999
         },
         "tepp": {
-          "value": 9998
+          "value": 9999
         },
         "teppp": {
-          "value": 9998
+          "value": 9999
         }
       },
       "oneQBValues": {
@@ -38,27 +38,27 @@
       "position": "WR",
       "team": "SEA",
       "superflexValues": {
-        "value": 9997,
+        "value": 9999,
         "tep": {
-          "value": 9997
+          "value": 9999
         },
         "tepp": {
-          "value": 9997
+          "value": 9999
         },
         "teppp": {
-          "value": 9997
+          "value": 9999
         }
       },
       "oneQBValues": {
-        "value": 9997,
+        "value": 9996,
         "tep": {
-          "value": 9997
+          "value": 9996
         },
         "tepp": {
-          "value": 9997
+          "value": 9996
         },
         "teppp": {
-          "value": 9997
+          "value": 9996
         }
       },
       "age": 24.8,
@@ -69,15 +69,15 @@
       "position": "QB",
       "team": "BUF",
       "superflexValues": {
-        "value": 9921,
+        "value": 9913,
         "tep": {
-          "value": 9921
+          "value": 9913
         },
         "tepp": {
-          "value": 9921
+          "value": 9913
         },
         "teppp": {
-          "value": 9921
+          "value": 9913
         }
       },
       "oneQBValues": {
@@ -100,15 +100,15 @@
       "position": "WR",
       "team": "CIN",
       "superflexValues": {
-        "value": 9194,
+        "value": 9195,
         "tep": {
-          "value": 9194
+          "value": 9195
         },
         "tepp": {
-          "value": 9194
+          "value": 9195
         },
         "teppp": {
-          "value": 9194
+          "value": 9195
         }
       },
       "oneQBValues": {
@@ -131,27 +131,27 @@
       "position": "RB",
       "team": "ATL",
       "superflexValues": {
-        "value": 9181,
+        "value": 9188,
         "tep": {
-          "value": 9181
+          "value": 9188
         },
         "tepp": {
-          "value": 9181
+          "value": 9188
         },
         "teppp": {
-          "value": 9181
+          "value": 9188
         }
       },
       "oneQBValues": {
-        "value": 9371,
+        "value": 9378,
         "tep": {
-          "value": 9371
+          "value": 9378
         },
         "tepp": {
-          "value": 9371
+          "value": 9378
         },
         "teppp": {
-          "value": 9371
+          "value": 9378
         }
       },
       "age": 24.8,
@@ -162,15 +162,15 @@
       "position": "QB",
       "team": "CHI",
       "superflexValues": {
-        "value": 8188,
+        "value": 8189,
         "tep": {
-          "value": 8188
+          "value": 8189
         },
         "tepp": {
-          "value": 8188
+          "value": 8189
         },
         "teppp": {
-          "value": 8188
+          "value": 8189
         }
       },
       "oneQBValues": {
@@ -193,15 +193,15 @@
       "position": "QB",
       "team": "CIN",
       "superflexValues": {
-        "value": 8167,
+        "value": 8168,
         "tep": {
-          "value": 8167
+          "value": 8168
         },
         "tepp": {
-          "value": 8167
+          "value": 8168
         },
         "teppp": {
-          "value": 8167
+          "value": 8168
         }
       },
       "oneQBValues": {
@@ -224,24 +224,24 @@
       "position": "TE",
       "team": "LVR",
       "superflexValues": {
-        "value": 7963,
+        "value": 7962,
         "tep": {
-          "value": 8813
+          "value": 8812
         },
         "tepp": {
-          "value": 9631
+          "value": 9630
         },
         "teppp": {
           "value": 9999
         }
       },
       "oneQBValues": {
-        "value": 8183,
+        "value": 8181,
         "tep": {
-          "value": 9054
+          "value": 9052
         },
         "tepp": {
-          "value": 9893
+          "value": 9891
         },
         "teppp": {
           "value": 9999
@@ -255,27 +255,27 @@
       "position": "WR",
       "team": "DET",
       "superflexValues": {
-        "value": 7652,
+        "value": 7655,
         "tep": {
-          "value": 7652
+          "value": 7655
         },
         "tepp": {
-          "value": 7652
+          "value": 7655
         },
         "teppp": {
-          "value": 7652
+          "value": 7655
         }
       },
       "oneQBValues": {
-        "value": 7818,
+        "value": 7819,
         "tep": {
-          "value": 7818
+          "value": 7819
         },
         "tepp": {
-          "value": 7818
+          "value": 7819
         },
         "teppp": {
-          "value": 7818
+          "value": 7819
         }
       },
       "age": 27.1,
@@ -286,15 +286,15 @@
       "position": "QB",
       "team": "SFO",
       "superflexValues": {
-        "value": 7368,
+        "value": 7371,
         "tep": {
-          "value": 7368
+          "value": 7371
         },
         "tepp": {
-          "value": 7368
+          "value": 7371
         },
         "teppp": {
-          "value": 7368
+          "value": 7371
         }
       },
       "oneQBValues": {
@@ -329,15 +329,15 @@
         }
       },
       "oneQBValues": {
-        "value": 7527,
+        "value": 7525,
         "tep": {
-          "value": 7527
+          "value": 7525
         },
         "tepp": {
-          "value": 7527
+          "value": 7525
         },
         "teppp": {
-          "value": 7527
+          "value": 7525
         }
       },
       "age": 27.6,
@@ -348,15 +348,15 @@
       "position": "WR",
       "team": "NYG",
       "superflexValues": {
-        "value": 7251,
+        "value": 7250,
         "tep": {
-          "value": 7251
+          "value": 7250
         },
         "tepp": {
-          "value": 7251
+          "value": 7250
         },
         "teppp": {
-          "value": 7251
+          "value": 7250
         }
       },
       "oneQBValues": {
@@ -379,27 +379,27 @@
       "position": "WR",
       "team": "LAR",
       "superflexValues": {
-        "value": 7182,
+        "value": 7186,
         "tep": {
-          "value": 7182
+          "value": 7186
         },
         "tepp": {
-          "value": 7182
+          "value": 7186
         },
         "teppp": {
-          "value": 7182
+          "value": 7186
         }
       },
       "oneQBValues": {
-        "value": 7480,
+        "value": 7482,
         "tep": {
-          "value": 7480
+          "value": 7482
         },
         "tepp": {
-          "value": 7480
+          "value": 7482
         },
         "teppp": {
-          "value": 7480
+          "value": 7482
         }
       },
       "age": 25.5,
@@ -410,27 +410,27 @@
       "position": "QB",
       "team": "NEP",
       "superflexValues": {
-        "value": 7136,
+        "value": 7142,
         "tep": {
-          "value": 7136
+          "value": 7142
         },
         "tepp": {
-          "value": 7136
+          "value": 7142
         },
         "teppp": {
-          "value": 7136
+          "value": 7142
         }
       },
       "oneQBValues": {
-        "value": 5836,
+        "value": 5839,
         "tep": {
-          "value": 5836
+          "value": 5839
         },
         "tepp": {
-          "value": 5836
+          "value": 5839
         },
         "teppp": {
-          "value": 5836
+          "value": 5839
         }
       },
       "age": 24.2,
@@ -441,27 +441,27 @@
       "position": "QB",
       "team": "JAC",
       "superflexValues": {
-        "value": 7117,
+        "value": 7114,
         "tep": {
-          "value": 7117
+          "value": 7114
         },
         "tepp": {
-          "value": 7117
+          "value": 7114
         },
         "teppp": {
-          "value": 7117
+          "value": 7114
         }
       },
       "oneQBValues": {
-        "value": 5595,
+        "value": 5596,
         "tep": {
-          "value": 5595
+          "value": 5596
         },
         "tepp": {
-          "value": 5595
+          "value": 5596
         },
         "teppp": {
-          "value": 5595
+          "value": 5596
         }
       },
       "age": 27.1,
@@ -472,27 +472,27 @@
       "position": "RB",
       "team": "KCC",
       "superflexValues": {
-        "value": 7096,
+        "value": 7101,
         "tep": {
-          "value": 7096
+          "value": 7101
         },
         "tepp": {
-          "value": 7096
+          "value": 7101
         },
         "teppp": {
-          "value": 7096
+          "value": 7101
         }
       },
       "oneQBValues": {
-        "value": 7514,
+        "value": 7516,
         "tep": {
-          "value": 7514
+          "value": 7516
         },
         "tepp": {
-          "value": 7514
+          "value": 7516
         },
         "teppp": {
-          "value": 7514
+          "value": 7516
         }
       },
       "age": 26.1,
@@ -503,27 +503,27 @@
       "position": "TE",
       "team": "ARI",
       "superflexValues": {
-        "value": 7090,
+        "value": 7087,
         "tep": {
-          "value": 7858
+          "value": 7854
         },
         "tepp": {
-          "value": 8590
+          "value": 8586
         },
         "teppp": {
-          "value": 9322
+          "value": 9318
         }
       },
       "oneQBValues": {
-        "value": 7272,
+        "value": 7273,
         "tep": {
-          "value": 8055
+          "value": 8056
         },
         "tepp": {
-          "value": 8805
+          "value": 8806
         },
         "teppp": {
-          "value": 9554
+          "value": 9556
         }
       },
       "age": 27,
@@ -534,27 +534,27 @@
       "position": "WR",
       "team": "MIN",
       "superflexValues": {
-        "value": 6927,
+        "value": 6928,
         "tep": {
-          "value": 6927
+          "value": 6928
         },
         "tepp": {
-          "value": 6927
+          "value": 6928
         },
         "teppp": {
-          "value": 6927
+          "value": 6928
         }
       },
       "oneQBValues": {
-        "value": 6973,
+        "value": 6976,
         "tep": {
-          "value": 6973
+          "value": 6976
         },
         "tepp": {
-          "value": 6973
+          "value": 6976
         },
         "teppp": {
-          "value": 6973
+          "value": 6976
         }
       },
       "age": 27.4,
@@ -565,15 +565,15 @@
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 6557,
+        "value": 6558,
         "tep": {
-          "value": 6557
+          "value": 6558
         },
         "tepp": {
-          "value": 6557
+          "value": 6558
         },
         "teppp": {
-          "value": 6557
+          "value": 6558
         }
       },
       "oneQBValues": {
@@ -594,15 +594,15 @@
       "position": "WR",
       "team": "GBP",
       "superflexValues": {
-        "value": 6540,
+        "value": 6535,
         "tep": {
-          "value": 6540
+          "value": 6535
         },
         "tepp": {
-          "value": 6540
+          "value": 6535
         },
         "teppp": {
-          "value": 6540
+          "value": 6535
         }
       },
       "oneQBValues": {
@@ -625,15 +625,15 @@
       "position": "QB",
       "team": "WAS",
       "superflexValues": {
-        "value": 6407,
+        "value": 6408,
         "tep": {
-          "value": 6407
+          "value": 6408
         },
         "tepp": {
-          "value": 6407
+          "value": 6408
         },
         "teppp": {
-          "value": 6407
+          "value": 6408
         }
       },
       "oneQBValues": {
@@ -656,15 +656,15 @@
       "position": "QB",
       "team": "GBP",
       "superflexValues": {
-        "value": 6378,
+        "value": 6377,
         "tep": {
-          "value": 6378
+          "value": 6377
         },
         "tepp": {
-          "value": 6378
+          "value": 6377
         },
         "teppp": {
-          "value": 6378
+          "value": 6377
         }
       },
       "oneQBValues": {
@@ -718,15 +718,15 @@
       "position": "RB",
       "team": "BUF",
       "superflexValues": {
-        "value": 6302,
+        "value": 6296,
         "tep": {
-          "value": 6302
+          "value": 6296
         },
         "tepp": {
-          "value": 6302
+          "value": 6296
         },
         "teppp": {
-          "value": 6302
+          "value": 6296
         }
       },
       "oneQBValues": {
@@ -749,15 +749,15 @@
       "position": "WR",
       "team": "ATL",
       "superflexValues": {
-        "value": 6271,
+        "value": 6275,
         "tep": {
-          "value": 6271
+          "value": 6275
         },
         "tepp": {
-          "value": 6271
+          "value": 6275
         },
         "teppp": {
-          "value": 6271
+          "value": 6275
         }
       },
       "oneQBValues": {
@@ -780,27 +780,27 @@
       "position": "WR",
       "team": "JAC",
       "superflexValues": {
-        "value": 6251,
+        "value": 6249,
         "tep": {
-          "value": 6251
+          "value": 6249
         },
         "tepp": {
-          "value": 6251
+          "value": 6249
         },
         "teppp": {
-          "value": 6251
+          "value": 6249
         }
       },
       "oneQBValues": {
-        "value": 6533,
+        "value": 6531,
         "tep": {
-          "value": 6533
+          "value": 6531
         },
         "tepp": {
-          "value": 6533
+          "value": 6531
         },
         "teppp": {
-          "value": 6533
+          "value": 6531
         }
       },
       "age": 24.7,
@@ -811,27 +811,27 @@
       "position": "WR",
       "team": "CHI",
       "superflexValues": {
-        "value": 6229,
+        "value": 6224,
         "tep": {
-          "value": 6229
+          "value": 6224
         },
         "tepp": {
-          "value": 6229
+          "value": 6224
         },
         "teppp": {
-          "value": 6229
+          "value": 6224
         }
       },
       "oneQBValues": {
-        "value": 6694,
+        "value": 6688,
         "tep": {
-          "value": 6694
+          "value": 6688
         },
         "tepp": {
-          "value": 6694
+          "value": 6688
         },
         "teppp": {
-          "value": 6694
+          "value": 6688
         }
       },
       "age": 23,
@@ -842,15 +842,15 @@
       "position": "QB",
       "team": "BAL",
       "superflexValues": {
-        "value": 6110,
+        "value": 6113,
         "tep": {
-          "value": 6110
+          "value": 6113
         },
         "tepp": {
-          "value": 6110
+          "value": 6113
         },
         "teppp": {
-          "value": 6110
+          "value": 6113
         }
       },
       "oneQBValues": {
@@ -885,15 +885,15 @@
         }
       },
       "oneQBValues": {
-        "value": 6501,
+        "value": 6502,
         "tep": {
-          "value": 6501
+          "value": 6502
         },
         "tepp": {
-          "value": 6501
+          "value": 6502
         },
         "teppp": {
-          "value": 6501
+          "value": 6502
         }
       },
       "age": 21.5,
@@ -904,27 +904,27 @@
       "position": "QB",
       "team": "HOU",
       "superflexValues": {
-        "value": 6001,
+        "value": 5998,
         "tep": {
-          "value": 6001
+          "value": 5998
         },
         "tepp": {
-          "value": 6001
+          "value": 5998
         },
         "teppp": {
-          "value": 6001
+          "value": 5998
         }
       },
       "oneQBValues": {
-        "value": 4624,
+        "value": 4627,
         "tep": {
-          "value": 4624
+          "value": 4627
         },
         "tepp": {
-          "value": 4624
+          "value": 4627
         },
         "teppp": {
-          "value": 4624
+          "value": 4627
         }
       },
       "age": 25.1,
@@ -978,15 +978,15 @@
         }
       },
       "oneQBValues": {
-        "value": 6232,
+        "value": 6226,
         "tep": {
-          "value": 6232
+          "value": 6226
         },
         "tepp": {
-          "value": 6232
+          "value": 6226
         },
         "teppp": {
-          "value": 6232
+          "value": 6226
         }
       },
       "age": 23.6,
@@ -997,15 +997,15 @@
       "position": "RB",
       "team": "TBB",
       "superflexValues": {
-        "value": 5913,
+        "value": 5914,
         "tep": {
-          "value": 5913
+          "value": 5914
         },
         "tepp": {
-          "value": 5913
+          "value": 5914
         },
         "teppp": {
-          "value": 5913
+          "value": 5914
         }
       },
       "oneQBValues": {
@@ -1028,27 +1028,27 @@
       "position": "WR",
       "team": "NOS",
       "superflexValues": {
-        "value": 5897,
+        "value": 5895,
         "tep": {
-          "value": 5897
+          "value": 5895
         },
         "tepp": {
-          "value": 5897
+          "value": 5895
         },
         "teppp": {
-          "value": 5897
+          "value": 5895
         }
       },
       "oneQBValues": {
-        "value": 6308,
+        "value": 6303,
         "tep": {
-          "value": 6308
+          "value": 6303
         },
         "tepp": {
-          "value": 6308
+          "value": 6303
         },
         "teppp": {
-          "value": 6308
+          "value": 6303
         }
       },
       "age": 26.4,
@@ -1059,27 +1059,27 @@
       "position": "WR",
       "team": "CIN",
       "superflexValues": {
-        "value": 5884,
+        "value": 5887,
         "tep": {
-          "value": 5884
+          "value": 5887
         },
         "tepp": {
-          "value": 5884
+          "value": 5887
         },
         "teppp": {
-          "value": 5884
+          "value": 5887
         }
       },
       "oneQBValues": {
-        "value": 6289,
+        "value": 6293,
         "tep": {
-          "value": 6289
+          "value": 6293
         },
         "tepp": {
-          "value": 6289
+          "value": 6293
         },
         "teppp": {
-          "value": 6289
+          "value": 6293
         }
       },
       "age": 27.8,
@@ -1090,15 +1090,15 @@
       "position": "WR",
       "team": "BAL",
       "superflexValues": {
-        "value": 5879,
+        "value": 5876,
         "tep": {
-          "value": 5879
+          "value": 5876
         },
         "tepp": {
-          "value": 5879
+          "value": 5876
         },
         "teppp": {
-          "value": 5879
+          "value": 5876
         }
       },
       "oneQBValues": {
@@ -1121,15 +1121,15 @@
       "position": "QB",
       "team": "LVR",
       "superflexValues": {
-        "value": 5830,
+        "value": 5833,
         "tep": {
-          "value": 5830
+          "value": 5833
         },
         "tepp": {
-          "value": 5830
+          "value": 5833
         },
         "teppp": {
-          "value": 5830
+          "value": 5833
         }
       },
       "oneQBValues": {
@@ -1152,15 +1152,15 @@
       "position": "RB",
       "team": "LVR",
       "superflexValues": {
-        "value": 5819,
+        "value": 5822,
         "tep": {
-          "value": 5819
+          "value": 5822
         },
         "tepp": {
-          "value": 5819
+          "value": 5822
         },
         "teppp": {
-          "value": 5819
+          "value": 5822
         }
       },
       "oneQBValues": {
@@ -1195,15 +1195,15 @@
         }
       },
       "oneQBValues": {
-        "value": 6238,
+        "value": 6240,
         "tep": {
-          "value": 6238
+          "value": 6240
         },
         "tepp": {
-          "value": 6238
+          "value": 6240
         },
         "teppp": {
-          "value": 6238
+          "value": 6240
         }
       },
       "age": 23.8,
@@ -1214,27 +1214,27 @@
       "position": "WR",
       "team": "DAL",
       "superflexValues": {
-        "value": 5727,
+        "value": 5725,
         "tep": {
-          "value": 5727
+          "value": 5725
         },
         "tepp": {
-          "value": 5727
+          "value": 5725
         },
         "teppp": {
-          "value": 5727
+          "value": 5725
         }
       },
       "oneQBValues": {
-        "value": 6177,
+        "value": 6181,
         "tep": {
-          "value": 6177
+          "value": 6181
         },
         "tepp": {
-          "value": 6177
+          "value": 6181
         },
         "teppp": {
-          "value": 6177
+          "value": 6181
         }
       },
       "age": 25.7,
@@ -1245,27 +1245,27 @@
       "position": "WR",
       "team": "HOU",
       "superflexValues": {
-        "value": 5675,
+        "value": 5678,
         "tep": {
-          "value": 5675
+          "value": 5678
         },
         "tepp": {
-          "value": 5675
+          "value": 5678
         },
         "teppp": {
-          "value": 5675
+          "value": 5678
         }
       },
       "oneQBValues": {
-        "value": 6123,
+        "value": 6126,
         "tep": {
-          "value": 6123
+          "value": 6126
         },
         "tepp": {
-          "value": 6123
+          "value": 6126
         },
         "teppp": {
-          "value": 6123
+          "value": 6126
         }
       },
       "age": 27.7,
@@ -1276,27 +1276,27 @@
       "position": "TE",
       "team": "CHI",
       "superflexValues": {
-        "value": 5675,
+        "value": 5672,
         "tep": {
-          "value": 6314
+          "value": 6310
         },
         "tepp": {
-          "value": 6909
+          "value": 6906
         },
         "teppp": {
-          "value": 7505
+          "value": 7501
         }
       },
       "oneQBValues": {
-        "value": 5957,
+        "value": 5960,
         "tep": {
-          "value": 6622
+          "value": 6625
         },
         "tepp": {
-          "value": 7245
+          "value": 7249
         },
         "teppp": {
-          "value": 7868
+          "value": 7872
         }
       },
       "age": 22.6,
@@ -1307,27 +1307,27 @@
       "position": "RB",
       "team": "SFO",
       "superflexValues": {
-        "value": 5659,
+        "value": 5655,
         "tep": {
-          "value": 5659
+          "value": 5655
         },
         "tepp": {
-          "value": 5659
+          "value": 5655
         },
         "teppp": {
-          "value": 5659
+          "value": 5655
         }
       },
       "oneQBValues": {
-        "value": 6104,
+        "value": 6101,
         "tep": {
-          "value": 6104
+          "value": 6101
         },
         "tepp": {
-          "value": 6104
+          "value": 6101
         },
         "teppp": {
-          "value": 6104
+          "value": 6101
         }
       },
       "age": 30.5,
@@ -1369,27 +1369,27 @@
       "position": "RB",
       "team": "MIA",
       "superflexValues": {
-        "value": 5616,
+        "value": 5612,
         "tep": {
-          "value": 5616
+          "value": 5612
         },
         "tepp": {
-          "value": 5616
+          "value": 5612
         },
         "teppp": {
-          "value": 5616
+          "value": 5612
         }
       },
       "oneQBValues": {
-        "value": 5990,
+        "value": 5993,
         "tep": {
-          "value": 5990
+          "value": 5993
         },
         "tepp": {
-          "value": 5990
+          "value": 5993
         },
         "teppp": {
-          "value": 5990
+          "value": 5993
         }
       },
       "age": 25.1,
@@ -1443,15 +1443,15 @@
         }
       },
       "oneQBValues": {
-        "value": 5957,
+        "value": 5950,
         "tep": {
-          "value": 5957
+          "value": 5950
         },
         "tepp": {
-          "value": 5957
+          "value": 5950
         },
         "teppp": {
-          "value": 5957
+          "value": 5950
         }
       }
     },
@@ -1460,31 +1460,60 @@
       "position": "WR",
       "team": "NOS",
       "superflexValues": {
-        "value": 5508,
+        "value": 5505,
         "tep": {
-          "value": 5508
+          "value": 5505
         },
         "tepp": {
-          "value": 5508
+          "value": 5505
         },
         "teppp": {
-          "value": 5508
+          "value": 5505
         }
       },
       "oneQBValues": {
-        "value": 6011,
+        "value": 6008,
         "tep": {
-          "value": 6011
+          "value": 6008
         },
         "tepp": {
-          "value": 6011
+          "value": 6008
         },
         "teppp": {
-          "value": 6011
+          "value": 6008
         }
       },
       "age": 22.3,
       "sleeperId": "13281"
+    },
+    {
+      "playerName": "2027 Mid 1st",
+      "position": "RDP",
+      "team": "FA",
+      "superflexValues": {
+        "value": 5482,
+        "tep": {
+          "value": 5482
+        },
+        "tepp": {
+          "value": 5482
+        },
+        "teppp": {
+          "value": 5482
+        }
+      },
+      "oneQBValues": {
+        "value": 5930,
+        "tep": {
+          "value": 5930
+        },
+        "tepp": {
+          "value": 5930
+        },
+        "teppp": {
+          "value": 5930
+        }
+      }
     },
     {
       "playerName": "Jaxson Dart",
@@ -1518,35 +1547,6 @@
       "sleeperId": "12508"
     },
     {
-      "playerName": "2027 Mid 1st",
-      "position": "RDP",
-      "team": "FA",
-      "superflexValues": {
-        "value": 5476,
-        "tep": {
-          "value": 5476
-        },
-        "tepp": {
-          "value": 5476
-        },
-        "teppp": {
-          "value": 5476
-        }
-      },
-      "oneQBValues": {
-        "value": 5930,
-        "tep": {
-          "value": 5930
-        },
-        "tepp": {
-          "value": 5930
-        },
-        "teppp": {
-          "value": 5930
-        }
-      }
-    },
-    {
       "playerName": "Jonathan Taylor",
       "position": "RB",
       "team": "IND",
@@ -1563,15 +1563,15 @@
         }
       },
       "oneQBValues": {
-        "value": 5902,
+        "value": 5905,
         "tep": {
-          "value": 5902
+          "value": 5905
         },
         "tepp": {
-          "value": 5902
+          "value": 5905
         },
         "teppp": {
-          "value": 5902
+          "value": 5905
         }
       },
       "age": 27.8,
@@ -1582,15 +1582,15 @@
       "position": "RB",
       "team": "DEN",
       "superflexValues": {
-        "value": 5341,
+        "value": 5340,
         "tep": {
-          "value": 5341
+          "value": 5340
         },
         "tepp": {
-          "value": 5341
+          "value": 5340
         },
         "teppp": {
-          "value": 5341
+          "value": 5340
         }
       },
       "oneQBValues": {
@@ -1625,15 +1625,15 @@
         }
       },
       "oneQBValues": {
-        "value": 5553,
+        "value": 5556,
         "tep": {
-          "value": 6183
+          "value": 6187
         },
         "tepp": {
-          "value": 6769
+          "value": 6772
         },
         "teppp": {
-          "value": 7354
+          "value": 7358
         }
       },
       "age": 26.6,
@@ -1644,15 +1644,15 @@
       "position": "QB",
       "team": "DAL",
       "superflexValues": {
-        "value": 5054,
+        "value": 5055,
         "tep": {
-          "value": 5054
+          "value": 5055
         },
         "tepp": {
-          "value": 5054
+          "value": 5055
         },
         "teppp": {
-          "value": 5054
+          "value": 5055
         }
       },
       "oneQBValues": {
@@ -1675,15 +1675,15 @@
       "position": "RB",
       "team": "NYJ",
       "superflexValues": {
-        "value": 5042,
+        "value": 5036,
         "tep": {
-          "value": 5042
+          "value": 5036
         },
         "tepp": {
-          "value": 5042
+          "value": 5036
         },
         "teppp": {
-          "value": 5042
+          "value": 5036
         }
       },
       "oneQBValues": {
@@ -1706,15 +1706,15 @@
       "position": "RB",
       "team": "CAR",
       "superflexValues": {
-        "value": 4989,
+        "value": 4985,
         "tep": {
-          "value": 4989
+          "value": 4985
         },
         "tepp": {
-          "value": 4989
+          "value": 4985
         },
         "teppp": {
-          "value": 4989
+          "value": 4985
         }
       },
       "oneQBValues": {
@@ -1737,93 +1737,93 @@
       "position": "TE",
       "team": "CLE",
       "superflexValues": {
-        "value": 4975,
+        "value": 4981,
         "tep": {
-          "value": 5551
+          "value": 5558
         },
         "tepp": {
-          "value": 6080
+          "value": 6087
         },
         "teppp": {
-          "value": 6609
+          "value": 6617
         }
       },
       "oneQBValues": {
-        "value": 5466,
+        "value": 5473,
         "tep": {
-          "value": 6090
+          "value": 6098
         },
         "tepp": {
-          "value": 6668
+          "value": 6676
         },
         "teppp": {
-          "value": 7245
+          "value": 7254
         }
       },
       "age": 22.4,
       "sleeperId": "12506"
     },
     {
-      "playerName": "Javonte Williams",
-      "position": "RB",
-      "team": "DAL",
-      "superflexValues": {
-        "value": 4954,
-        "tep": {
-          "value": 4954
-        },
-        "tepp": {
-          "value": 4954
-        },
-        "teppp": {
-          "value": 4954
-        }
-      },
-      "oneQBValues": {
-        "value": 5619,
-        "tep": {
-          "value": 5619
-        },
-        "tepp": {
-          "value": 5619
-        },
-        "teppp": {
-          "value": 5619
-        }
-      },
-      "age": 26.6,
-      "sleeperId": "7588"
-    },
-    {
       "playerName": "Jared Goff",
       "position": "QB",
       "team": "DET",
       "superflexValues": {
-        "value": 4950,
+        "value": 4951,
         "tep": {
-          "value": 4950
+          "value": 4951
         },
         "tepp": {
-          "value": 4950
+          "value": 4951
         },
         "teppp": {
-          "value": 4950
+          "value": 4951
         }
       },
       "oneQBValues": {
-        "value": 4185,
+        "value": 4183,
         "tep": {
-          "value": 4185
+          "value": 4183
         },
         "tepp": {
-          "value": 4185
+          "value": 4183
         },
         "teppp": {
-          "value": 4185
+          "value": 4183
         }
       },
       "age": 32.1,
       "sleeperId": "3163"
+    },
+    {
+      "playerName": "Javonte Williams",
+      "position": "RB",
+      "team": "DAL",
+      "superflexValues": {
+        "value": 4947,
+        "tep": {
+          "value": 4947
+        },
+        "tepp": {
+          "value": 4947
+        },
+        "teppp": {
+          "value": 4947
+        }
+      },
+      "oneQBValues": {
+        "value": 5616,
+        "tep": {
+          "value": 5616
+        },
+        "tepp": {
+          "value": 5616
+        },
+        "teppp": {
+          "value": 5616
+        }
+      },
+      "age": 26.6,
+      "sleeperId": "7588"
     },
     {
       "playerName": "KC Concepcion",
@@ -1842,15 +1842,15 @@
         }
       },
       "oneQBValues": {
-        "value": 5512,
+        "value": 5506,
         "tep": {
-          "value": 5512
+          "value": 5506
         },
         "tepp": {
-          "value": 5512
+          "value": 5506
         },
         "teppp": {
-          "value": 5512
+          "value": 5506
         }
       },
       "age": 22.2,
@@ -1861,15 +1861,15 @@
       "position": "QB",
       "team": "DEN",
       "superflexValues": {
-        "value": 4936,
+        "value": 4942,
         "tep": {
-          "value": 4936
+          "value": 4942
         },
         "tepp": {
-          "value": 4936
+          "value": 4942
         },
         "teppp": {
-          "value": 4936
+          "value": 4942
         }
       },
       "oneQBValues": {
@@ -1892,27 +1892,27 @@
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 4920,
+        "value": 4922,
         "tep": {
-          "value": 4920
+          "value": 4922
         },
         "tepp": {
-          "value": 4920
+          "value": 4922
         },
         "teppp": {
-          "value": 4920
+          "value": 4922
         }
       },
       "oneQBValues": {
-        "value": 5424,
+        "value": 5427,
         "tep": {
-          "value": 5424
+          "value": 5427
         },
         "tepp": {
-          "value": 5424
+          "value": 5427
         },
         "teppp": {
-          "value": 5424
+          "value": 5427
         }
       }
     },
@@ -1921,15 +1921,15 @@
       "position": "QB",
       "team": "CAR",
       "superflexValues": {
-        "value": 4909,
+        "value": 4912,
         "tep": {
-          "value": 4909
+          "value": 4912
         },
         "tepp": {
-          "value": 4909
+          "value": 4912
         },
         "teppp": {
-          "value": 4909
+          "value": 4912
         }
       },
       "oneQBValues": {
@@ -1983,15 +1983,15 @@
       "position": "QB",
       "team": "LAC",
       "superflexValues": {
-        "value": 4853,
+        "value": 4846,
         "tep": {
-          "value": 4853
+          "value": 4846
         },
         "tepp": {
-          "value": 4853
+          "value": 4846
         },
         "teppp": {
-          "value": 4853
+          "value": 4846
         }
       },
       "oneQBValues": {
@@ -2014,27 +2014,27 @@
       "position": "TE",
       "team": "IND",
       "superflexValues": {
-        "value": 4847,
+        "value": 4843,
         "tep": {
-          "value": 5415
+          "value": 5410
         },
         "tepp": {
-          "value": 5933
+          "value": 5928
         },
         "teppp": {
-          "value": 6450
+          "value": 6445
         }
       },
       "oneQBValues": {
-        "value": 5362,
+        "value": 5360,
         "tep": {
-          "value": 5981
+          "value": 5978
         },
         "tepp": {
-          "value": 6550
+          "value": 6548
         },
         "teppp": {
-          "value": 7119
+          "value": 7116
         }
       },
       "age": 24.5,
@@ -2057,15 +2057,15 @@
         }
       },
       "oneQBValues": {
-        "value": 5401,
+        "value": 5398,
         "tep": {
-          "value": 5401
+          "value": 5398
         },
         "tepp": {
-          "value": 5401
+          "value": 5398
         },
         "teppp": {
-          "value": 5401
+          "value": 5398
         }
       }
     },
@@ -2074,15 +2074,15 @@
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 4821,
+        "value": 4818,
         "tep": {
-          "value": 4821
+          "value": 4818
         },
         "tepp": {
-          "value": 4821
+          "value": 4818
         },
         "teppp": {
-          "value": 4821
+          "value": 4818
         }
       },
       "oneQBValues": {
@@ -2196,27 +2196,27 @@
       "position": "RB",
       "team": "LAC",
       "superflexValues": {
-        "value": 4759,
+        "value": 4762,
         "tep": {
-          "value": 4759
+          "value": 4762
         },
         "tepp": {
-          "value": 4759
+          "value": 4762
         },
         "teppp": {
-          "value": 4759
+          "value": 4762
         }
       },
       "oneQBValues": {
-        "value": 5481,
+        "value": 5484,
         "tep": {
-          "value": 5481
+          "value": 5484
         },
         "tepp": {
-          "value": 5481
+          "value": 5484
         },
         "teppp": {
-          "value": 5481
+          "value": 5484
         }
       },
       "age": 23.7,
@@ -2258,15 +2258,15 @@
       "position": "RB",
       "team": "CLE",
       "superflexValues": {
-        "value": 4741,
+        "value": 4744,
         "tep": {
-          "value": 4741
+          "value": 4744
         },
         "tepp": {
-          "value": 4741
+          "value": 4744
         },
         "teppp": {
-          "value": 4741
+          "value": 4744
         }
       },
       "oneQBValues": {
@@ -2320,27 +2320,27 @@
       "position": "WR",
       "team": "DET",
       "superflexValues": {
-        "value": 4712,
+        "value": 4709,
         "tep": {
-          "value": 4712
+          "value": 4709
         },
         "tepp": {
-          "value": 4712
+          "value": 4709
         },
         "teppp": {
-          "value": 4712
+          "value": 4709
         }
       },
       "oneQBValues": {
-        "value": 5404,
+        "value": 5398,
         "tep": {
-          "value": 5404
+          "value": 5398
         },
         "tepp": {
-          "value": 5404
+          "value": 5398
         },
         "teppp": {
-          "value": 5404
+          "value": 5398
         }
       },
       "age": 25.7,
@@ -2351,15 +2351,15 @@
       "position": "WR",
       "team": "CHI",
       "superflexValues": {
-        "value": 4701,
+        "value": 4704,
         "tep": {
-          "value": 4701
+          "value": 4704
         },
         "tepp": {
-          "value": 4701
+          "value": 4704
         },
         "teppp": {
-          "value": 4701
+          "value": 4704
         }
       },
       "oneQBValues": {
@@ -2413,15 +2413,15 @@
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 4541,
+        "value": 4538,
         "tep": {
-          "value": 4541
+          "value": 4538
         },
         "tepp": {
-          "value": 4541
+          "value": 4538
         },
         "teppp": {
-          "value": 4541
+          "value": 4538
         }
       },
       "oneQBValues": {
@@ -2442,15 +2442,15 @@
       "position": "RB",
       "team": "KCC",
       "superflexValues": {
-        "value": 4523,
+        "value": 4527,
         "tep": {
-          "value": 4523
+          "value": 4527
         },
         "tepp": {
-          "value": 4523
+          "value": 4527
         },
         "teppp": {
-          "value": 4523
+          "value": 4527
         }
       },
       "oneQBValues": {
@@ -2473,93 +2473,93 @@
       "position": "RB",
       "team": "NYG",
       "superflexValues": {
-        "value": 4513,
+        "value": 4510,
         "tep": {
-          "value": 4513
+          "value": 4510
         },
         "tepp": {
-          "value": 4513
+          "value": 4510
         },
         "teppp": {
-          "value": 4513
+          "value": 4510
         }
       },
       "oneQBValues": {
-        "value": 5180,
+        "value": 5178,
         "tep": {
-          "value": 5180
+          "value": 5178
         },
         "tepp": {
-          "value": 5180
+          "value": 5178
         },
         "teppp": {
-          "value": 5180
+          "value": 5178
         }
       },
       "age": 24.8,
       "sleeperId": "12481"
     },
     {
-      "playerName": "Jalen Hurts",
-      "position": "QB",
-      "team": "PHI",
-      "superflexValues": {
-        "value": 4469,
-        "tep": {
-          "value": 4469
-        },
-        "tepp": {
-          "value": 4469
-        },
-        "teppp": {
-          "value": 4469
-        }
-      },
-      "oneQBValues": {
-        "value": 3987,
-        "tep": {
-          "value": 3987
-        },
-        "tepp": {
-          "value": 3987
-        },
-        "teppp": {
-          "value": 3987
-        }
-      },
-      "age": 28.3,
-      "sleeperId": "6904"
-    },
-    {
       "playerName": "Omar Cooper Jr.",
       "position": "WR",
       "team": "NYJ",
       "superflexValues": {
-        "value": 4469,
+        "value": 4475,
         "tep": {
-          "value": 4469
+          "value": 4475
         },
         "tepp": {
-          "value": 4469
+          "value": 4475
         },
         "teppp": {
-          "value": 4469
+          "value": 4475
         }
       },
       "oneQBValues": {
-        "value": 5109,
+        "value": 5115,
         "tep": {
-          "value": 5109
+          "value": 5115
         },
         "tepp": {
-          "value": 5109
+          "value": 5115
         },
         "teppp": {
-          "value": 5109
+          "value": 5115
         }
       },
       "age": 22.9,
       "sleeperId": "13276"
+    },
+    {
+      "playerName": "Jalen Hurts",
+      "position": "QB",
+      "team": "PHI",
+      "superflexValues": {
+        "value": 4467,
+        "tep": {
+          "value": 4467
+        },
+        "tepp": {
+          "value": 4467
+        },
+        "teppp": {
+          "value": 4467
+        }
+      },
+      "oneQBValues": {
+        "value": 3990,
+        "tep": {
+          "value": 3990
+        },
+        "tepp": {
+          "value": 3990
+        },
+        "teppp": {
+          "value": 3990
+        }
+      },
+      "age": 28.3,
+      "sleeperId": "6904"
     },
     {
       "playerName": "Blake Corum",
@@ -2578,15 +2578,15 @@
         }
       },
       "oneQBValues": {
-        "value": 5225,
+        "value": 5222,
         "tep": {
-          "value": 5225
+          "value": 5222
         },
         "tepp": {
-          "value": 5225
+          "value": 5222
         },
         "teppp": {
-          "value": 5225
+          "value": 5222
         }
       },
       "age": 26,
@@ -2597,15 +2597,15 @@
       "position": "RB",
       "team": "SEA",
       "superflexValues": {
-        "value": 4450,
+        "value": 4453,
         "tep": {
-          "value": 4450
+          "value": 4453
         },
         "tepp": {
-          "value": 4450
+          "value": 4453
         },
         "teppp": {
-          "value": 4450
+          "value": 4453
         }
       },
       "oneQBValues": {
@@ -2640,15 +2640,15 @@
         }
       },
       "oneQBValues": {
-        "value": 5120,
+        "value": 5117,
         "tep": {
-          "value": 5120
+          "value": 5117
         },
         "tepp": {
-          "value": 5120
+          "value": 5117
         },
         "teppp": {
-          "value": 5120
+          "value": 5117
         }
       },
       "age": 22.5,
@@ -2659,27 +2659,27 @@
       "position": "RB",
       "team": "PIT",
       "superflexValues": {
-        "value": 4365,
+        "value": 4361,
         "tep": {
-          "value": 4365
+          "value": 4361
         },
         "tepp": {
-          "value": 4365
+          "value": 4361
         },
         "teppp": {
-          "value": 4365
+          "value": 4361
         }
       },
       "oneQBValues": {
-        "value": 5176,
+        "value": 5175,
         "tep": {
-          "value": 5176
+          "value": 5175
         },
         "tepp": {
-          "value": 5176
+          "value": 5175
         },
         "teppp": {
-          "value": 5176
+          "value": 5175
         }
       },
       "age": 28.1,
@@ -2702,15 +2702,15 @@
         }
       },
       "oneQBValues": {
-        "value": 4981,
+        "value": 4984,
         "tep": {
-          "value": 5569
+          "value": 5571
         },
         "tepp": {
-          "value": 6102
+          "value": 6105
         },
         "teppp": {
-          "value": 6636
+          "value": 6639
         }
       },
       "age": 25.9,
@@ -2781,27 +2781,27 @@
       "position": "WR",
       "team": "KCC",
       "superflexValues": {
-        "value": 4291,
+        "value": 4293,
         "tep": {
-          "value": 4291
+          "value": 4293
         },
         "tepp": {
-          "value": 4291
+          "value": 4293
         },
         "teppp": {
-          "value": 4291
+          "value": 4293
         }
       },
       "oneQBValues": {
-        "value": 4953,
+        "value": 4956,
         "tep": {
-          "value": 4953
+          "value": 4956
         },
         "tepp": {
-          "value": 4953
+          "value": 4956
         },
         "teppp": {
-          "value": 4953
+          "value": 4956
         }
       },
       "age": 26.6,
@@ -2874,27 +2874,27 @@
       "position": "TE",
       "team": "SFO",
       "superflexValues": {
-        "value": 4106,
+        "value": 4104,
         "tep": {
-          "value": 4614
+          "value": 4611
         },
         "tepp": {
-          "value": 5063
+          "value": 5061
         },
         "teppp": {
-          "value": 5512
+          "value": 5510
         }
       },
       "oneQBValues": {
-        "value": 4754,
+        "value": 4752,
         "tep": {
-          "value": 5321
+          "value": 5319
         },
         "tepp": {
-          "value": 5833
+          "value": 5830
         },
         "teppp": {
-          "value": 6345
+          "value": 6342
         }
       },
       "age": 33.1,
@@ -2961,19 +2961,50 @@
       }
     },
     {
+      "playerName": "Michael Wilson",
+      "position": "WR",
+      "team": "ARI",
+      "superflexValues": {
+        "value": 3938,
+        "tep": {
+          "value": 3938
+        },
+        "tepp": {
+          "value": 3938
+        },
+        "teppp": {
+          "value": 3938
+        }
+      },
+      "oneQBValues": {
+        "value": 4654,
+        "tep": {
+          "value": 4654
+        },
+        "tepp": {
+          "value": 4654
+        },
+        "teppp": {
+          "value": 4654
+        }
+      },
+      "age": 26.8,
+      "sleeperId": "10232"
+    },
+    {
       "playerName": "2027 Early 2nd",
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 3937,
+        "value": 3935,
         "tep": {
-          "value": 3937
+          "value": 3935
         },
         "tepp": {
-          "value": 3937
+          "value": 3935
         },
         "teppp": {
-          "value": 3937
+          "value": 3935
         }
       },
       "oneQBValues": {
@@ -2988,37 +3019,6 @@
           "value": 4553
         }
       }
-    },
-    {
-      "playerName": "Michael Wilson",
-      "position": "WR",
-      "team": "ARI",
-      "superflexValues": {
-        "value": 3935,
-        "tep": {
-          "value": 3935
-        },
-        "tepp": {
-          "value": 3935
-        },
-        "teppp": {
-          "value": 3935
-        }
-      },
-      "oneQBValues": {
-        "value": 4651,
-        "tep": {
-          "value": 4651
-        },
-        "tepp": {
-          "value": 4651
-        },
-        "teppp": {
-          "value": 4651
-        }
-      },
-      "age": 26.8,
-      "sleeperId": "10232"
     },
     {
       "playerName": "Saquon Barkley",
@@ -3087,36 +3087,36 @@
       "position": "RB",
       "team": "NYJ",
       "superflexValues": {
-        "value": 3818,
+        "value": 3815,
         "tep": {
-          "value": 3818
+          "value": 3815
         },
         "tepp": {
-          "value": 3818
+          "value": 3815
         },
         "teppp": {
-          "value": 3818
+          "value": 3815
         }
       },
       "oneQBValues": {
-        "value": 4538,
+        "value": 4536,
         "tep": {
-          "value": 4538
+          "value": 4536
         },
         "tepp": {
-          "value": 4538
+          "value": 4536
         },
         "teppp": {
-          "value": 4538
+          "value": 4536
         }
       },
       "age": 22.8,
       "sleeperId": "11576"
     },
     {
-      "playerName": "Jalen Coker",
+      "playerName": "Antonio Williams",
       "position": "WR",
-      "team": "CAR",
+      "team": "WAS",
       "superflexValues": {
         "value": 3778,
         "tep": {
@@ -3130,50 +3130,50 @@
         }
       },
       "oneQBValues": {
-        "value": 4414,
+        "value": 4494,
         "tep": {
-          "value": 4414
+          "value": 4494
         },
         "tepp": {
-          "value": 4414
+          "value": 4494
         },
         "teppp": {
-          "value": 4414
-        }
-      },
-      "age": 25.1,
-      "sleeperId": "11646"
-    },
-    {
-      "playerName": "Antonio Williams",
-      "position": "WR",
-      "team": "WAS",
-      "superflexValues": {
-        "value": 3775,
-        "tep": {
-          "value": 3775
-        },
-        "tepp": {
-          "value": 3775
-        },
-        "teppp": {
-          "value": 3775
-        }
-      },
-      "oneQBValues": {
-        "value": 4491,
-        "tep": {
-          "value": 4491
-        },
-        "tepp": {
-          "value": 4491
-        },
-        "teppp": {
-          "value": 4491
+          "value": 4494
         }
       },
       "age": 22.4,
       "sleeperId": "13301"
+    },
+    {
+      "playerName": "Jalen Coker",
+      "position": "WR",
+      "team": "CAR",
+      "superflexValues": {
+        "value": 3772,
+        "tep": {
+          "value": 3772
+        },
+        "tepp": {
+          "value": 3772
+        },
+        "teppp": {
+          "value": 3772
+        }
+      },
+      "oneQBValues": {
+        "value": 4409,
+        "tep": {
+          "value": 4409
+        },
+        "tepp": {
+          "value": 4409
+        },
+        "teppp": {
+          "value": 4409
+        }
+      },
+      "age": 25.1,
+      "sleeperId": "11646"
     },
     {
       "playerName": "Ollie Gordon II",
@@ -3211,27 +3211,27 @@
       "position": "RB",
       "team": "BAL",
       "superflexValues": {
-        "value": 3700,
+        "value": 3703,
         "tep": {
-          "value": 3700
+          "value": 3703
         },
         "tepp": {
-          "value": 3700
+          "value": 3703
         },
         "teppp": {
-          "value": 3700
+          "value": 3703
         }
       },
       "oneQBValues": {
-        "value": 4404,
+        "value": 4407,
         "tep": {
-          "value": 4404
+          "value": 4407
         },
         "tepp": {
-          "value": 4404
+          "value": 4407
         },
         "teppp": {
-          "value": 4404
+          "value": 4407
         }
       },
       "age": 32.9,
@@ -3254,15 +3254,15 @@
         }
       },
       "oneQBValues": {
-        "value": 4314,
+        "value": 4318,
         "tep": {
-          "value": 4314
+          "value": 4318
         },
         "tepp": {
-          "value": 4314
+          "value": 4318
         },
         "teppp": {
-          "value": 4314
+          "value": 4318
         }
       },
       "age": 23,
@@ -3285,15 +3285,15 @@
         }
       },
       "oneQBValues": {
-        "value": 4412,
+        "value": 4415,
         "tep": {
-          "value": 4412
+          "value": 4415
         },
         "tepp": {
-          "value": 4412
+          "value": 4415
         },
         "teppp": {
-          "value": 4412
+          "value": 4415
         }
       },
       "age": 24.5,
@@ -3316,65 +3316,34 @@
         }
       },
       "oneQBValues": {
-        "value": 4317,
+        "value": 4320,
         "tep": {
-          "value": 4317
+          "value": 4320
         },
         "tepp": {
-          "value": 4317
+          "value": 4320
         },
         "teppp": {
-          "value": 4317
+          "value": 4320
         }
       },
       "age": 25.9,
       "sleeperId": "9753"
     },
     {
-      "playerName": "D.J. Moore",
-      "position": "WR",
-      "team": "BUF",
-      "superflexValues": {
-        "value": 3604,
-        "tep": {
-          "value": 3604
-        },
-        "tepp": {
-          "value": 3604
-        },
-        "teppp": {
-          "value": 3604
-        }
-      },
-      "oneQBValues": {
-        "value": 4334,
-        "tep": {
-          "value": 4334
-        },
-        "tepp": {
-          "value": 4334
-        },
-        "teppp": {
-          "value": 4334
-        }
-      },
-      "age": 29.6,
-      "sleeperId": "4983"
-    },
-    {
       "playerName": "Caleb Douglas",
       "position": "WR",
       "team": "MIA",
       "superflexValues": {
-        "value": 3603,
+        "value": 3606,
         "tep": {
-          "value": 3603
+          "value": 3606
         },
         "tepp": {
-          "value": 3603
+          "value": 3606
         },
         "teppp": {
-          "value": 3603
+          "value": 3606
         }
       },
       "oneQBValues": {
@@ -3393,6 +3362,37 @@
       "sleeperId": "13296"
     },
     {
+      "playerName": "D.J. Moore",
+      "position": "WR",
+      "team": "BUF",
+      "superflexValues": {
+        "value": 3604,
+        "tep": {
+          "value": 3604
+        },
+        "tepp": {
+          "value": 3604
+        },
+        "teppp": {
+          "value": 3604
+        }
+      },
+      "oneQBValues": {
+        "value": 4331,
+        "tep": {
+          "value": 4331
+        },
+        "tepp": {
+          "value": 4331
+        },
+        "teppp": {
+          "value": 4331
+        }
+      },
+      "age": 29.6,
+      "sleeperId": "4983"
+    },
+    {
       "playerName": "De'Zhaun Stribling",
       "position": "WR",
       "team": "SFO",
@@ -3409,15 +3409,15 @@
         }
       },
       "oneQBValues": {
-        "value": 4223,
+        "value": 4226,
         "tep": {
-          "value": 4223
+          "value": 4226
         },
         "tepp": {
-          "value": 4223
+          "value": 4226
         },
         "teppp": {
-          "value": 4223
+          "value": 4226
         }
       },
       "age": 23.9,
@@ -3428,15 +3428,15 @@
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 3479,
+        "value": 3476,
         "tep": {
-          "value": 3479
+          "value": 3476
         },
         "tepp": {
-          "value": 3479
+          "value": 3476
         },
         "teppp": {
-          "value": 3479
+          "value": 3476
         }
       },
       "oneQBValues": {
@@ -3457,27 +3457,27 @@
       "position": "QB",
       "team": "SEA",
       "superflexValues": {
-        "value": 3461,
+        "value": 3464,
         "tep": {
-          "value": 3461
+          "value": 3464
         },
         "tepp": {
-          "value": 3461
+          "value": 3464
         },
         "teppp": {
-          "value": 3461
+          "value": 3464
         }
       },
       "oneQBValues": {
-        "value": 3416,
+        "value": 3419,
         "tep": {
-          "value": 3416
+          "value": 3419
         },
         "tepp": {
-          "value": 3416
+          "value": 3419
         },
         "teppp": {
-          "value": 3416
+          "value": 3419
         }
       },
       "age": 29.5,
@@ -3500,15 +3500,15 @@
         }
       },
       "oneQBValues": {
-        "value": 4133,
+        "value": 4131,
         "tep": {
-          "value": 4133
+          "value": 4131
         },
         "tepp": {
-          "value": 4133
+          "value": 4131
         },
         "teppp": {
-          "value": 4133
+          "value": 4131
         }
       }
     },
@@ -3517,15 +3517,15 @@
       "position": "QB",
       "team": "NYG",
       "superflexValues": {
-        "value": 3445,
+        "value": 3449,
         "tep": {
-          "value": 3445
+          "value": 3449
         },
         "tepp": {
-          "value": 3445
+          "value": 3449
         },
         "teppp": {
-          "value": 3445
+          "value": 3449
         }
       },
       "oneQBValues": {
@@ -3560,15 +3560,15 @@
         }
       },
       "oneQBValues": {
-        "value": 4163,
+        "value": 4160,
         "tep": {
-          "value": 4163
+          "value": 4160
         },
         "tepp": {
-          "value": 4163
+          "value": 4160
         },
         "teppp": {
-          "value": 4163
+          "value": 4160
         }
       },
       "age": 25.1,
@@ -3610,15 +3610,15 @@
       "position": "RB",
       "team": "TEN",
       "superflexValues": {
-        "value": 3380,
+        "value": 3374,
         "tep": {
-          "value": 3380
+          "value": 3374
         },
         "tepp": {
-          "value": 3380
+          "value": 3374
         },
         "teppp": {
-          "value": 3380
+          "value": 3374
         }
       },
       "oneQBValues": {
@@ -3641,15 +3641,15 @@
       "position": "QB",
       "team": "LAR",
       "superflexValues": {
-        "value": 3365,
+        "value": 3371,
         "tep": {
-          "value": 3365
+          "value": 3371
         },
         "tepp": {
-          "value": 3365
+          "value": 3371
         },
         "teppp": {
-          "value": 3365
+          "value": 3371
         }
       },
       "oneQBValues": {
@@ -3672,15 +3672,15 @@
       "position": "WR",
       "team": "DEN",
       "superflexValues": {
-        "value": 3322,
+        "value": 3325,
         "tep": {
-          "value": 3322
+          "value": 3325
         },
         "tepp": {
-          "value": 3322
+          "value": 3325
         },
         "teppp": {
-          "value": 3322
+          "value": 3325
         }
       },
       "oneQBValues": {
@@ -3703,15 +3703,15 @@
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 3300,
+        "value": 3303,
         "tep": {
-          "value": 3300
+          "value": 3303
         },
         "tepp": {
-          "value": 3300
+          "value": 3303
         },
         "teppp": {
-          "value": 3300
+          "value": 3303
         }
       },
       "oneQBValues": {
@@ -3732,15 +3732,15 @@
       "position": "RB",
       "team": "NEP",
       "superflexValues": {
-        "value": 3296,
+        "value": 3293,
         "tep": {
-          "value": 3296
+          "value": 3293
         },
         "tepp": {
-          "value": 3296
+          "value": 3293
         },
         "teppp": {
-          "value": 3296
+          "value": 3293
         }
       },
       "oneQBValues": {
@@ -3775,15 +3775,15 @@
         }
       },
       "oneQBValues": {
-        "value": 3456,
+        "value": 3461,
         "tep": {
-          "value": 3456
+          "value": 3461
         },
         "tepp": {
-          "value": 3456
+          "value": 3461
         },
         "teppp": {
-          "value": 3456
+          "value": 3461
         }
       },
       "age": 38.8,
@@ -3845,7 +3845,7 @@
           "value": 5000
         },
         "teppp": {
-          "value": 5448
+          "value": 5447
         }
       },
       "age": 27.1,
@@ -3856,62 +3856,31 @@
       "position": "WR",
       "team": "LAR",
       "superflexValues": {
-        "value": 3263,
+        "value": 3260,
         "tep": {
-          "value": 3263
+          "value": 3260
         },
         "tepp": {
-          "value": 3263
+          "value": 3260
         },
         "teppp": {
-          "value": 3263
+          "value": 3260
         }
       },
       "oneQBValues": {
-        "value": 4000,
+        "value": 3997,
         "tep": {
-          "value": 4000
+          "value": 3997
         },
         "tepp": {
-          "value": 4000
+          "value": 3997
         },
         "teppp": {
-          "value": 4000
+          "value": 3997
         }
       },
       "age": 33.9,
       "sleeperId": "2133"
-    },
-    {
-      "playerName": "Michael Penix Jr.",
-      "position": "QB",
-      "team": "ATL",
-      "superflexValues": {
-        "value": 3261,
-        "tep": {
-          "value": 3261
-        },
-        "tepp": {
-          "value": 3261
-        },
-        "teppp": {
-          "value": 3261
-        }
-      },
-      "oneQBValues": {
-        "value": 3246,
-        "tep": {
-          "value": 3246
-        },
-        "tepp": {
-          "value": 3246
-        },
-        "teppp": {
-          "value": 3246
-        }
-      },
-      "age": 26.6,
-      "sleeperId": "11559"
     },
     {
       "playerName": "Mike Evans",
@@ -3930,50 +3899,112 @@
         }
       },
       "oneQBValues": {
-        "value": 4044,
+        "value": 4038,
         "tep": {
-          "value": 4044
+          "value": 4038
         },
         "tepp": {
-          "value": 4044
+          "value": 4038
         },
         "teppp": {
-          "value": 4044
+          "value": 4038
         }
       },
       "age": 33.3,
       "sleeperId": "2216"
     },
     {
+      "playerName": "Michael Penix Jr.",
+      "position": "QB",
+      "team": "ATL",
+      "superflexValues": {
+        "value": 3258,
+        "tep": {
+          "value": 3258
+        },
+        "tepp": {
+          "value": 3258
+        },
+        "teppp": {
+          "value": 3258
+        }
+      },
+      "oneQBValues": {
+        "value": 3243,
+        "tep": {
+          "value": 3243
+        },
+        "tepp": {
+          "value": 3243
+        },
+        "teppp": {
+          "value": 3243
+        }
+      },
+      "age": 26.6,
+      "sleeperId": "11559"
+    },
+    {
       "playerName": "Travis Etienne",
       "position": "RB",
       "team": "NOS",
       "superflexValues": {
-        "value": 3203,
+        "value": 3200,
         "tep": {
-          "value": 3203
+          "value": 3200
         },
         "tepp": {
-          "value": 3203
+          "value": 3200
         },
         "teppp": {
-          "value": 3203
+          "value": 3200
         }
       },
       "oneQBValues": {
-        "value": 4059,
+        "value": 4056,
         "tep": {
-          "value": 4059
+          "value": 4056
         },
         "tepp": {
-          "value": 4059
+          "value": 4056
         },
         "teppp": {
-          "value": 4059
+          "value": 4056
         }
       },
       "age": 27.8,
       "sleeperId": "7543"
+    },
+    {
+      "playerName": "Adonai Mitchell",
+      "position": "WR",
+      "team": "NYJ",
+      "superflexValues": {
+        "value": 3187,
+        "tep": {
+          "value": 3187
+        },
+        "tepp": {
+          "value": 3187
+        },
+        "teppp": {
+          "value": 3187
+        }
+      },
+      "oneQBValues": {
+        "value": 3921,
+        "tep": {
+          "value": 3921
+        },
+        "tepp": {
+          "value": 3921
+        },
+        "teppp": {
+          "value": 3921
+        }
+      },
+      "age": 24.1,
+      "sleeperId": "11625"
     },
     {
       "playerName": "2028 Mid 2nd",
@@ -4009,87 +4040,56 @@
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 3185,
+        "value": 3182,
         "tep": {
-          "value": 3185
+          "value": 3182
         },
         "tepp": {
-          "value": 3185
+          "value": 3182
         },
         "teppp": {
-          "value": 3185
+          "value": 3182
         }
       },
       "oneQBValues": {
-        "value": 3796,
+        "value": 3793,
         "tep": {
-          "value": 3796
+          "value": 3793
         },
         "tepp": {
-          "value": 3796
+          "value": 3793
         },
         "teppp": {
-          "value": 3796
+          "value": 3793
         }
       }
-    },
-    {
-      "playerName": "Adonai Mitchell",
-      "position": "WR",
-      "team": "NYJ",
-      "superflexValues": {
-        "value": 3184,
-        "tep": {
-          "value": 3184
-        },
-        "tepp": {
-          "value": 3184
-        },
-        "teppp": {
-          "value": 3184
-        }
-      },
-      "oneQBValues": {
-        "value": 3924,
-        "tep": {
-          "value": 3924
-        },
-        "tepp": {
-          "value": 3924
-        },
-        "teppp": {
-          "value": 3924
-        }
-      },
-      "age": 24.1,
-      "sleeperId": "11625"
     },
     {
       "playerName": "Kyle Pitts",
       "position": "TE",
       "team": "ATL",
       "superflexValues": {
-        "value": 3169,
+        "value": 3172,
         "tep": {
-          "value": 3602
+          "value": 3606
         },
         "tepp": {
-          "value": 3966
+          "value": 3970
         },
         "teppp": {
-          "value": 4329
+          "value": 4333
         }
       },
       "oneQBValues": {
-        "value": 3877,
+        "value": 3880,
         "tep": {
-          "value": 4381
+          "value": 4384
         },
         "tepp": {
-          "value": 4816
+          "value": 4819
         },
         "teppp": {
-          "value": 5250
+          "value": 5254
         }
       },
       "age": 26.1,
@@ -4100,27 +4100,27 @@
       "position": "WR",
       "team": "BAL",
       "superflexValues": {
-        "value": 3164,
+        "value": 3167,
         "tep": {
-          "value": 3164
+          "value": 3167
         },
         "tepp": {
-          "value": 3164
+          "value": 3167
         },
         "teppp": {
-          "value": 3164
+          "value": 3167
         }
       },
       "oneQBValues": {
-        "value": 3981,
+        "value": 3984,
         "tep": {
-          "value": 3981
+          "value": 3984
         },
         "tepp": {
-          "value": 3981
+          "value": 3984
         },
         "teppp": {
-          "value": 3981
+          "value": 3984
         }
       },
       "age": 22.3,
@@ -4143,15 +4143,15 @@
         }
       },
       "oneQBValues": {
-        "value": 3965,
+        "value": 3968,
         "tep": {
-          "value": 3965
+          "value": 3968
         },
         "tepp": {
-          "value": 3965
+          "value": 3968
         },
         "teppp": {
-          "value": 3965
+          "value": 3968
         }
       },
       "age": 28.8,
@@ -4162,27 +4162,27 @@
       "position": "RB",
       "team": "NEP",
       "superflexValues": {
-        "value": 3148,
+        "value": 3145,
         "tep": {
-          "value": 3148
+          "value": 3145
         },
         "tepp": {
-          "value": 3148
+          "value": 3145
         },
         "teppp": {
-          "value": 3148
+          "value": 3145
         }
       },
       "oneQBValues": {
-        "value": 3947,
+        "value": 3944,
         "tep": {
-          "value": 3947
+          "value": 3944
         },
         "tepp": {
-          "value": 3947
+          "value": 3944
         },
         "teppp": {
-          "value": 3947
+          "value": 3944
         }
       },
       "age": 28.8,
@@ -4317,27 +4317,27 @@
       "position": "WR",
       "team": "JAC",
       "superflexValues": {
-        "value": 3105,
+        "value": 3106,
         "tep": {
-          "value": 3105
+          "value": 3106
         },
         "tepp": {
-          "value": 3105
+          "value": 3106
         },
         "teppp": {
-          "value": 3105
+          "value": 3106
         }
       },
       "oneQBValues": {
-        "value": 3885,
+        "value": 3888,
         "tep": {
-          "value": 3885
+          "value": 3888
         },
         "tepp": {
-          "value": 3885
+          "value": 3888
         },
         "teppp": {
-          "value": 3885
+          "value": 3888
         }
       },
       "age": 24.1,
@@ -4348,27 +4348,27 @@
       "position": "RB",
       "team": "DEN",
       "superflexValues": {
-        "value": 3100,
+        "value": 3106,
         "tep": {
-          "value": 3100
+          "value": 3106
         },
         "tepp": {
-          "value": 3100
+          "value": 3106
         },
         "teppp": {
-          "value": 3100
+          "value": 3106
         }
       },
       "oneQBValues": {
-        "value": 3913,
+        "value": 3916,
         "tep": {
-          "value": 3913
+          "value": 3916
         },
         "tepp": {
-          "value": 3913
+          "value": 3916
         },
         "teppp": {
-          "value": 3913
+          "value": 3916
         }
       },
       "age": 25.8,
@@ -4379,27 +4379,27 @@
       "position": "WR",
       "team": "NYG",
       "superflexValues": {
-        "value": 3087,
+        "value": 3090,
         "tep": {
-          "value": 3087
+          "value": 3090
         },
         "tepp": {
-          "value": 3087
+          "value": 3090
         },
         "teppp": {
-          "value": 3087
+          "value": 3090
         }
       },
       "oneQBValues": {
-        "value": 3858,
+        "value": 3861,
         "tep": {
-          "value": 3858
+          "value": 3861
         },
         "tepp": {
-          "value": 3858
+          "value": 3861
         },
         "teppp": {
-          "value": 3858
+          "value": 3861
         }
       },
       "age": 23.2,
@@ -4439,27 +4439,27 @@
       "position": "WR",
       "team": "HOU",
       "superflexValues": {
-        "value": 3040,
+        "value": 3037,
         "tep": {
-          "value": 3040
+          "value": 3037
         },
         "tepp": {
-          "value": 3040
+          "value": 3037
         },
         "teppp": {
-          "value": 3040
+          "value": 3037
         }
       },
       "oneQBValues": {
-        "value": 3799,
+        "value": 3796,
         "tep": {
-          "value": 3799
+          "value": 3796
         },
         "tepp": {
-          "value": 3799
+          "value": 3796
         },
         "teppp": {
-          "value": 3799
+          "value": 3796
         }
       },
       "age": 24.3,
@@ -4470,27 +4470,27 @@
       "position": "TE",
       "team": "LAR",
       "superflexValues": {
-        "value": 3033,
+        "value": 3024,
         "tep": {
-          "value": 3459
+          "value": 3449
         },
         "tepp": {
-          "value": 3812
+          "value": 3801
         },
         "teppp": {
-          "value": 4164
+          "value": 4153
         }
       },
       "oneQBValues": {
-        "value": 3813,
+        "value": 3808,
         "tep": {
-          "value": 4312
+          "value": 4306
         },
         "tepp": {
-          "value": 4740
+          "value": 4734
         },
         "teppp": {
-          "value": 5168
+          "value": 5162
         }
       },
       "age": 23.7,
@@ -4513,15 +4513,15 @@
         }
       },
       "oneQBValues": {
-        "value": 3777,
+        "value": 3776,
         "tep": {
-          "value": 4274
+          "value": 4273
         },
         "tepp": {
-          "value": 4699
+          "value": 4698
         },
         "teppp": {
-          "value": 5124
+          "value": 5123
         }
       },
       "age": 25.9,
@@ -4604,15 +4604,15 @@
         }
       },
       "oneQBValues": {
-        "value": 2985,
+        "value": 2982,
         "tep": {
-          "value": 2985
+          "value": 2982
         },
         "tepp": {
-          "value": 2985
+          "value": 2982
         },
         "teppp": {
-          "value": 2985
+          "value": 2982
         }
       },
       "age": 27.5,
@@ -4623,27 +4623,27 @@
       "position": "WR",
       "team": "DEN",
       "superflexValues": {
-        "value": 2977,
+        "value": 2980,
         "tep": {
-          "value": 2977
+          "value": 2980
         },
         "tepp": {
-          "value": 2977
+          "value": 2980
         },
         "teppp": {
-          "value": 2977
+          "value": 2980
         }
       },
       "oneQBValues": {
-        "value": 3735,
+        "value": 3738,
         "tep": {
-          "value": 3735
+          "value": 3738
         },
         "tepp": {
-          "value": 3735
+          "value": 3738
         },
         "teppp": {
-          "value": 3735
+          "value": 3738
         }
       },
       "age": 24,
@@ -4685,15 +4685,15 @@
       "position": "RB",
       "team": "HOU",
       "superflexValues": {
-        "value": 2968,
+        "value": 2971,
         "tep": {
-          "value": 2968
+          "value": 2971
         },
         "tepp": {
-          "value": 2968
+          "value": 2971
         },
         "teppp": {
-          "value": 2968
+          "value": 2971
         }
       },
       "oneQBValues": {
@@ -4716,27 +4716,27 @@
       "position": "WR",
       "team": "HOU",
       "superflexValues": {
-        "value": 2948,
+        "value": 2951,
         "tep": {
-          "value": 2948
+          "value": 2951
         },
         "tepp": {
-          "value": 2948
+          "value": 2951
         },
         "teppp": {
-          "value": 2948
+          "value": 2951
         }
       },
       "oneQBValues": {
-        "value": 3605,
+        "value": 3608,
         "tep": {
-          "value": 3605
+          "value": 3608
         },
         "tepp": {
-          "value": 3605
+          "value": 3608
         },
         "teppp": {
-          "value": 3605
+          "value": 3608
         }
       },
       "age": 23.9,
@@ -4747,27 +4747,27 @@
       "position": "RB",
       "team": "CLE",
       "superflexValues": {
-        "value": 2938,
+        "value": 2935,
         "tep": {
-          "value": 2938
+          "value": 2935
         },
         "tepp": {
-          "value": 2938
+          "value": 2935
         },
         "teppp": {
-          "value": 2938
+          "value": 2935
         }
       },
       "oneQBValues": {
-        "value": 3616,
+        "value": 3613,
         "tep": {
-          "value": 3616
+          "value": 3613
         },
         "tepp": {
-          "value": 3616
+          "value": 3613
         },
         "teppp": {
-          "value": 3616
+          "value": 3613
         }
       },
       "age": 22.2,
@@ -4790,15 +4790,15 @@
         }
       },
       "oneQBValues": {
-        "value": 3692,
+        "value": 3695,
         "tep": {
-          "value": 3692
+          "value": 3695
         },
         "tepp": {
-          "value": 3692
+          "value": 3695
         },
         "teppp": {
-          "value": 3692
+          "value": 3695
         }
       },
       "age": 25.6,
@@ -4962,27 +4962,27 @@
       "position": "TE",
       "team": "MIN",
       "superflexValues": {
-        "value": 2854,
+        "value": 2851,
         "tep": {
-          "value": 3270
+          "value": 3267
         },
         "tepp": {
-          "value": 3608
+          "value": 3605
         },
         "teppp": {
-          "value": 3946
+          "value": 3942
         }
       },
       "oneQBValues": {
-        "value": 3548,
+        "value": 3545,
         "tep": {
-          "value": 4029
+          "value": 4026
         },
         "tepp": {
-          "value": 4434
+          "value": 4430
         },
         "teppp": {
-          "value": 4839
+          "value": 4835
         }
       },
       "age": 29.4,
@@ -5005,15 +5005,15 @@
         }
       },
       "oneQBValues": {
-        "value": 1810,
+        "value": 1811,
         "tep": {
-          "value": 1810
+          "value": 1811
         },
         "tepp": {
-          "value": 1810
+          "value": 1811
         },
         "teppp": {
-          "value": 1810
+          "value": 1811
         }
       },
       "age": 31.2,
@@ -5051,6 +5051,37 @@
       "sleeperId": "13424"
     },
     {
+      "playerName": "Michael Mayer",
+      "position": "TE",
+      "team": "LVR",
+      "superflexValues": {
+        "value": 2838,
+        "tep": {
+          "value": 3254
+        },
+        "tepp": {
+          "value": 3591
+        },
+        "teppp": {
+          "value": 3928
+        }
+      },
+      "oneQBValues": {
+        "value": 3494,
+        "tep": {
+          "value": 3972
+        },
+        "tepp": {
+          "value": 4373
+        },
+        "teppp": {
+          "value": 4774
+        }
+      },
+      "age": 25.4,
+      "sleeperId": "9482"
+    },
+    {
       "playerName": "Khalil Shakir",
       "position": "WR",
       "team": "BUF",
@@ -5080,37 +5111,6 @@
       },
       "age": 26.8,
       "sleeperId": "8134"
-    },
-    {
-      "playerName": "Michael Mayer",
-      "position": "TE",
-      "team": "LVR",
-      "superflexValues": {
-        "value": 2835,
-        "tep": {
-          "value": 3252
-        },
-        "tepp": {
-          "value": 3588
-        },
-        "teppp": {
-          "value": 3925
-        }
-      },
-      "oneQBValues": {
-        "value": 3491,
-        "tep": {
-          "value": 3969
-        },
-        "tepp": {
-          "value": 4370
-        },
-        "teppp": {
-          "value": 4770
-        }
-      },
-      "age": 25.4,
-      "sleeperId": "9482"
     },
     {
       "playerName": "Keon Coleman",
@@ -5148,15 +5148,15 @@
       "position": "WR",
       "team": "KCC",
       "superflexValues": {
-        "value": 2812,
+        "value": 2809,
         "tep": {
-          "value": 2812
+          "value": 2809
         },
         "tepp": {
-          "value": 2812
+          "value": 2809
         },
         "teppp": {
-          "value": 2812
+          "value": 2809
         }
       },
       "oneQBValues": {
@@ -5299,37 +5299,6 @@
       "sleeperId": "13349"
     },
     {
-      "playerName": "Deebo Samuel",
-      "position": "WR",
-      "team": "SFO",
-      "superflexValues": {
-        "value": 2778,
-        "tep": {
-          "value": 2778
-        },
-        "tepp": {
-          "value": 2778
-        },
-        "teppp": {
-          "value": 2778
-        }
-      },
-      "oneQBValues": {
-        "value": 3364,
-        "tep": {
-          "value": 3364
-        },
-        "tepp": {
-          "value": 3364
-        },
-        "teppp": {
-          "value": 3364
-        }
-      },
-      "age": 30.8,
-      "sleeperId": "5872"
-    },
-    {
       "playerName": "DK Metcalf",
       "position": "WR",
       "team": "PIT",
@@ -5361,19 +5330,50 @@
       "sleeperId": "5846"
     },
     {
+      "playerName": "Deebo Samuel",
+      "position": "WR",
+      "team": "SFO",
+      "superflexValues": {
+        "value": 2775,
+        "tep": {
+          "value": 2775
+        },
+        "tepp": {
+          "value": 2775
+        },
+        "teppp": {
+          "value": 2775
+        }
+      },
+      "oneQBValues": {
+        "value": 3361,
+        "tep": {
+          "value": 3361
+        },
+        "tepp": {
+          "value": 3361
+        },
+        "teppp": {
+          "value": 3361
+        }
+      },
+      "age": 30.8,
+      "sleeperId": "5872"
+    },
+    {
       "playerName": "Ryan Flournoy",
       "position": "WR",
       "team": "DAL",
       "superflexValues": {
-        "value": 2766,
+        "value": 2769,
         "tep": {
-          "value": 2766
+          "value": 2769
         },
         "tepp": {
-          "value": 2766
+          "value": 2769
         },
         "teppp": {
-          "value": 2766
+          "value": 2769
         }
       },
       "oneQBValues": {
@@ -5439,15 +5439,15 @@
         }
       },
       "oneQBValues": {
-        "value": 3458,
+        "value": 3452,
         "tep": {
-          "value": 3458
+          "value": 3452
         },
         "tepp": {
-          "value": 3458
+          "value": 3452
         },
         "teppp": {
-          "value": 3458
+          "value": 3452
         }
       },
       "age": 26.6,
@@ -5458,27 +5458,27 @@
       "position": "WR",
       "team": "SFO",
       "superflexValues": {
-        "value": 2714,
+        "value": 2711,
         "tep": {
-          "value": 2714
+          "value": 2711
         },
         "tepp": {
-          "value": 2714
+          "value": 2711
         },
         "teppp": {
-          "value": 2714
+          "value": 2711
         }
       },
       "oneQBValues": {
-        "value": 3306,
+        "value": 3303,
         "tep": {
-          "value": 3306
+          "value": 3303
         },
         "tepp": {
-          "value": 3306
+          "value": 3303
         },
         "teppp": {
-          "value": 3306
+          "value": 3303
         }
       },
       "age": 26.2,
@@ -5489,27 +5489,27 @@
       "position": "WR",
       "team": "LAC",
       "superflexValues": {
-        "value": 2701,
+        "value": 2704,
         "tep": {
-          "value": 2701
+          "value": 2704
         },
         "tepp": {
-          "value": 2701
+          "value": 2704
         },
         "teppp": {
-          "value": 2701
+          "value": 2704
         }
       },
       "oneQBValues": {
-        "value": 3326,
+        "value": 3329,
         "tep": {
-          "value": 3326
+          "value": 3329
         },
         "tepp": {
-          "value": 3326
+          "value": 3329
         },
         "teppp": {
-          "value": 3326
+          "value": 3329
         }
       },
       "age": 24.7,
@@ -5563,15 +5563,15 @@
         }
       },
       "oneQBValues": {
-        "value": 3389,
+        "value": 3386,
         "tep": {
-          "value": 3389
+          "value": 3386
         },
         "tepp": {
-          "value": 3389
+          "value": 3386
         },
         "teppp": {
-          "value": 3389
+          "value": 3386
         }
       },
       "age": 25.9,
@@ -5655,50 +5655,19 @@
         }
       },
       "oneQBValues": {
-        "value": 3254,
+        "value": 3257,
         "tep": {
-          "value": 3254
+          "value": 3257
         },
         "tepp": {
-          "value": 3254
+          "value": 3257
         },
         "teppp": {
-          "value": 3254
+          "value": 3257
         }
       },
       "age": 26.6,
       "sleeperId": "10222"
-    },
-    {
-      "playerName": "Anthony Richardson",
-      "position": "QB",
-      "team": "IND",
-      "superflexValues": {
-        "value": 2656,
-        "tep": {
-          "value": 2656
-        },
-        "tepp": {
-          "value": 2656
-        },
-        "teppp": {
-          "value": 2656
-        }
-      },
-      "oneQBValues": {
-        "value": 2349,
-        "tep": {
-          "value": 2349
-        },
-        "tepp": {
-          "value": 2349
-        },
-        "teppp": {
-          "value": 2349
-        }
-      },
-      "age": 24.5,
-      "sleeperId": "9229"
     },
     {
       "playerName": "2027 Early 3rd",
@@ -5728,6 +5697,37 @@
           "value": 3259
         }
       }
+    },
+    {
+      "playerName": "Anthony Richardson",
+      "position": "QB",
+      "team": "IND",
+      "superflexValues": {
+        "value": 2654,
+        "tep": {
+          "value": 2654
+        },
+        "tepp": {
+          "value": 2654
+        },
+        "teppp": {
+          "value": 2654
+        }
+      },
+      "oneQBValues": {
+        "value": 2349,
+        "tep": {
+          "value": 2349
+        },
+        "tepp": {
+          "value": 2349
+        },
+        "teppp": {
+          "value": 2349
+        }
+      },
+      "age": 24.5,
+      "sleeperId": "9229"
     },
     {
       "playerName": "Romeo Doubs",
@@ -5796,27 +5796,27 @@
       "position": "WR",
       "team": "PIT",
       "superflexValues": {
-        "value": 2633,
+        "value": 2630,
         "tep": {
-          "value": 2633
+          "value": 2630
         },
         "tepp": {
-          "value": 2633
+          "value": 2630
         },
         "teppp": {
-          "value": 2633
+          "value": 2630
         }
       },
       "oneQBValues": {
-        "value": 3274,
+        "value": 3271,
         "tep": {
-          "value": 3274
+          "value": 3271
         },
         "tepp": {
-          "value": 3274
+          "value": 3271
         },
         "teppp": {
-          "value": 3274
+          "value": 3271
         }
       },
       "age": 25.4,
@@ -5889,27 +5889,27 @@
       "position": "WR",
       "team": "TEN",
       "superflexValues": {
-        "value": 2596,
+        "value": 2602,
         "tep": {
-          "value": 2596
+          "value": 2602
         },
         "tepp": {
-          "value": 2596
+          "value": 2602
         },
         "teppp": {
-          "value": 2596
+          "value": 2602
         }
       },
       "oneQBValues": {
-        "value": 3240,
+        "value": 3246,
         "tep": {
-          "value": 3240
+          "value": 3246
         },
         "tepp": {
-          "value": 3240
+          "value": 3246
         },
         "teppp": {
-          "value": 3240
+          "value": 3246
         }
       },
       "age": 23.5,
@@ -5920,15 +5920,15 @@
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 2590,
+        "value": 2587,
         "tep": {
-          "value": 2590
+          "value": 2587
         },
         "tepp": {
-          "value": 2590
+          "value": 2587
         },
         "teppp": {
-          "value": 2590
+          "value": 2587
         }
       },
       "oneQBValues": {
@@ -5961,15 +5961,15 @@
         }
       },
       "oneQBValues": {
-        "value": 3389,
+        "value": 3392,
         "tep": {
-          "value": 3389
+          "value": 3392
         },
         "tepp": {
-          "value": 3389
+          "value": 3392
         },
         "teppp": {
-          "value": 3389
+          "value": 3392
         }
       },
       "age": 24.2,
@@ -6208,19 +6208,50 @@
         }
       },
       "oneQBValues": {
-        "value": 3122,
+        "value": 3116,
         "tep": {
-          "value": 3122
+          "value": 3116
         },
         "tepp": {
-          "value": 3122
+          "value": 3116
         },
         "teppp": {
-          "value": 3122
+          "value": 3116
         }
       },
       "age": 23.8,
       "sleeperId": "13413"
+    },
+    {
+      "playerName": "Terry McLaurin",
+      "position": "WR",
+      "team": "WAS",
+      "superflexValues": {
+        "value": 2548,
+        "tep": {
+          "value": 2548
+        },
+        "tepp": {
+          "value": 2548
+        },
+        "teppp": {
+          "value": 2548
+        }
+      },
+      "oneQBValues": {
+        "value": 3132,
+        "tep": {
+          "value": 3132
+        },
+        "tepp": {
+          "value": 3132
+        },
+        "teppp": {
+          "value": 3132
+        }
+      },
+      "age": 31.2,
+      "sleeperId": "5927"
     },
     {
       "playerName": "Pat Freiermuth",
@@ -6229,13 +6260,13 @@
       "superflexValues": {
         "value": 2546,
         "tep": {
-          "value": 2952
+          "value": 2953
         },
         "tepp": {
-          "value": 3267
+          "value": 3268
         },
         "teppp": {
-          "value": 3582
+          "value": 3583
         }
       },
       "oneQBValues": {
@@ -6254,9 +6285,9 @@
       "sleeperId": "7600"
     },
     {
-      "playerName": "Terry McLaurin",
-      "position": "WR",
-      "team": "WAS",
+      "playerName": "2028 Early 3rd",
+      "position": "RDP",
+      "team": "FA",
       "superflexValues": {
         "value": 2545,
         "tep": {
@@ -6267,37 +6298,6 @@
         },
         "teppp": {
           "value": 2545
-        }
-      },
-      "oneQBValues": {
-        "value": 3129,
-        "tep": {
-          "value": 3129
-        },
-        "tepp": {
-          "value": 3129
-        },
-        "teppp": {
-          "value": 3129
-        }
-      },
-      "age": 31.2,
-      "sleeperId": "5927"
-    },
-    {
-      "playerName": "2028 Early 3rd",
-      "position": "RDP",
-      "team": "FA",
-      "superflexValues": {
-        "value": 2542,
-        "tep": {
-          "value": 2542
-        },
-        "tepp": {
-          "value": 2542
-        },
-        "teppp": {
-          "value": 2542
         }
       },
       "oneQBValues": {
@@ -6318,27 +6318,27 @@
       "position": "WR",
       "team": "DET",
       "superflexValues": {
-        "value": 2536,
+        "value": 2539,
         "tep": {
-          "value": 2536
+          "value": 2539
         },
         "tepp": {
-          "value": 2536
+          "value": 2539
         },
         "teppp": {
-          "value": 2536
+          "value": 2539
         }
       },
       "oneQBValues": {
-        "value": 3146,
+        "value": 3149,
         "tep": {
-          "value": 3146
+          "value": 3149
         },
         "tepp": {
-          "value": 3146
+          "value": 3149
         },
         "teppp": {
-          "value": 3146
+          "value": 3149
         }
       },
       "age": 24.8,
@@ -6410,15 +6410,15 @@
       "position": "WR",
       "team": "PHI",
       "superflexValues": {
-        "value": 2525,
+        "value": 2522,
         "tep": {
-          "value": 2525
+          "value": 2522
         },
         "tepp": {
-          "value": 2525
+          "value": 2522
         },
         "teppp": {
-          "value": 2525
+          "value": 2522
         }
       },
       "oneQBValues": {
@@ -6563,15 +6563,15 @@
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 2472,
+        "value": 2469,
         "tep": {
-          "value": 2472
+          "value": 2469
         },
         "tepp": {
-          "value": 2472
+          "value": 2469
         },
         "teppp": {
-          "value": 2472
+          "value": 2469
         }
       },
       "oneQBValues": {
@@ -6592,15 +6592,15 @@
       "position": "TE",
       "team": "PHI",
       "superflexValues": {
-        "value": 2450,
+        "value": 2453,
         "tep": {
-          "value": 2852
+          "value": 2856
         },
         "tepp": {
-          "value": 3160
+          "value": 3164
         },
         "teppp": {
-          "value": 3468
+          "value": 3472
         }
       },
       "oneQBValues": {
@@ -6681,37 +6681,6 @@
       "sleeperId": "7002"
     },
     {
-      "playerName": "Drew Lock",
-      "position": "QB",
-      "team": "SEA",
-      "superflexValues": {
-        "value": 2430,
-        "tep": {
-          "value": 2430
-        },
-        "tepp": {
-          "value": 2430
-        },
-        "teppp": {
-          "value": 2430
-        }
-      },
-      "oneQBValues": {
-        "value": 1372,
-        "tep": {
-          "value": 1372
-        },
-        "tepp": {
-          "value": 1372
-        },
-        "teppp": {
-          "value": 1372
-        }
-      },
-      "age": 30,
-      "sleeperId": "5854"
-    },
-    {
       "playerName": "Aaron Jones",
       "position": "RB",
       "team": "MIN",
@@ -6741,6 +6710,37 @@
       },
       "age": 32,
       "sleeperId": "4199"
+    },
+    {
+      "playerName": "Drew Lock",
+      "position": "QB",
+      "team": "SEA",
+      "superflexValues": {
+        "value": 2423,
+        "tep": {
+          "value": 2423
+        },
+        "tepp": {
+          "value": 2423
+        },
+        "teppp": {
+          "value": 2423
+        }
+      },
+      "oneQBValues": {
+        "value": 1372,
+        "tep": {
+          "value": 1372
+        },
+        "tepp": {
+          "value": 1372
+        },
+        "teppp": {
+          "value": 1372
+        }
+      },
+      "age": 30,
+      "sleeperId": "5854"
     },
     {
       "playerName": "Geno Smith",
@@ -6790,15 +6790,15 @@
         }
       },
       "oneQBValues": {
-        "value": 2861,
+        "value": 2864,
         "tep": {
-          "value": 3308
+          "value": 3311
         },
         "tepp": {
-          "value": 3659
+          "value": 3662
         },
         "teppp": {
-          "value": 4009
+          "value": 4012
         }
       },
       "age": 25.3,
@@ -6821,15 +6821,15 @@
         }
       },
       "oneQBValues": {
-        "value": 1842,
+        "value": 1845,
         "tep": {
-          "value": 1842
+          "value": 1845
         },
         "tepp": {
-          "value": 1842
+          "value": 1845
         },
         "teppp": {
-          "value": 1842
+          "value": 1845
         }
       },
       "age": 28.2,
@@ -6840,27 +6840,27 @@
       "position": "RB",
       "team": "TEN",
       "superflexValues": {
-        "value": 2376,
+        "value": 2379,
         "tep": {
-          "value": 2376
+          "value": 2379
         },
         "tepp": {
-          "value": 2376
+          "value": 2379
         },
         "teppp": {
-          "value": 2376
+          "value": 2379
         }
       },
       "oneQBValues": {
-        "value": 3094,
+        "value": 3096,
         "tep": {
-          "value": 3094
+          "value": 3096
         },
         "tepp": {
-          "value": 3094
+          "value": 3096
         },
         "teppp": {
-          "value": 3094
+          "value": 3096
         }
       },
       "age": 22.9,
@@ -7026,15 +7026,15 @@
       "position": "QB",
       "team": "TBB",
       "superflexValues": {
-        "value": 2327,
+        "value": 2330,
         "tep": {
-          "value": 2327
+          "value": 2330
         },
         "tepp": {
-          "value": 2327
+          "value": 2330
         },
         "teppp": {
-          "value": 2327
+          "value": 2330
         }
       },
       "oneQBValues": {
@@ -7179,27 +7179,27 @@
       "position": "WR",
       "team": "PIT",
       "superflexValues": {
-        "value": 2293,
+        "value": 2290,
         "tep": {
-          "value": 2293
+          "value": 2290
         },
         "tepp": {
-          "value": 2293
+          "value": 2290
         },
         "teppp": {
-          "value": 2293
+          "value": 2290
         }
       },
       "oneQBValues": {
-        "value": 2861,
+        "value": 2858,
         "tep": {
-          "value": 2861
+          "value": 2858
         },
         "tepp": {
-          "value": 2861
+          "value": 2858
         },
         "teppp": {
-          "value": 2861
+          "value": 2858
         }
       },
       "age": 29.1,
@@ -7210,27 +7210,27 @@
       "position": "WR",
       "team": "DEN",
       "superflexValues": {
-        "value": 2272,
+        "value": 2269,
         "tep": {
-          "value": 2272
+          "value": 2269
         },
         "tepp": {
-          "value": 2272
+          "value": 2269
         },
         "teppp": {
-          "value": 2272
+          "value": 2269
         }
       },
       "oneQBValues": {
-        "value": 2827,
+        "value": 2825,
         "tep": {
-          "value": 2827
+          "value": 2825
         },
         "tepp": {
-          "value": 2827
+          "value": 2825
         },
         "teppp": {
-          "value": 2827
+          "value": 2825
         }
       },
       "age": 31.1,
@@ -7303,15 +7303,15 @@
       "position": "QB",
       "team": "PIT",
       "superflexValues": {
-        "value": 2230,
+        "value": 2233,
         "tep": {
-          "value": 2230
+          "value": 2233
         },
         "tepp": {
-          "value": 2230
+          "value": 2233
         },
         "teppp": {
-          "value": 2230
+          "value": 2233
         }
       },
       "oneQBValues": {
@@ -7365,15 +7365,15 @@
       "position": "RB",
       "team": "TEN",
       "superflexValues": {
-        "value": 2221,
+        "value": 2224,
         "tep": {
-          "value": 2221
+          "value": 2224
         },
         "tepp": {
-          "value": 2221
+          "value": 2224
         },
         "teppp": {
-          "value": 2221
+          "value": 2224
         }
       },
       "oneQBValues": {
@@ -7396,62 +7396,31 @@
       "position": "RB",
       "team": "PHI",
       "superflexValues": {
-        "value": 2198,
+        "value": 2204,
         "tep": {
-          "value": 2198
+          "value": 2204
         },
         "tepp": {
-          "value": 2198
+          "value": 2204
         },
         "teppp": {
-          "value": 2198
+          "value": 2204
         }
       },
       "oneQBValues": {
-        "value": 2753,
+        "value": 2756,
         "tep": {
-          "value": 2753
+          "value": 2756
         },
         "tepp": {
-          "value": 2753
+          "value": 2756
         },
         "teppp": {
-          "value": 2753
+          "value": 2756
         }
       },
       "age": 25.2,
       "sleeperId": "9225"
-    },
-    {
-      "playerName": "Kevin Coleman",
-      "position": "WR",
-      "team": "MIA",
-      "superflexValues": {
-        "value": 2197,
-        "tep": {
-          "value": 2197
-        },
-        "tepp": {
-          "value": 2197
-        },
-        "teppp": {
-          "value": 2197
-        }
-      },
-      "oneQBValues": {
-        "value": 2748,
-        "tep": {
-          "value": 2748
-        },
-        "tepp": {
-          "value": 2748
-        },
-        "teppp": {
-          "value": 2748
-        }
-      },
-      "age": 23.2,
-      "sleeperId": "13338"
     },
     {
       "playerName": "2028 Late 3rd",
@@ -7483,31 +7452,62 @@
       }
     },
     {
+      "playerName": "Kevin Coleman",
+      "position": "WR",
+      "team": "MIA",
+      "superflexValues": {
+        "value": 2191,
+        "tep": {
+          "value": 2191
+        },
+        "tepp": {
+          "value": 2191
+        },
+        "teppp": {
+          "value": 2191
+        }
+      },
+      "oneQBValues": {
+        "value": 2745,
+        "tep": {
+          "value": 2745
+        },
+        "tepp": {
+          "value": 2745
+        },
+        "teppp": {
+          "value": 2745
+        }
+      },
+      "age": 23.2,
+      "sleeperId": "13338"
+    },
+    {
       "playerName": "Gunnar Helm",
       "position": "TE",
       "team": "TEN",
       "superflexValues": {
-        "value": 2174,
+        "value": 2177,
         "tep": {
-          "value": 2563
+          "value": 2567
         },
         "tepp": {
-          "value": 2850
+          "value": 2853
         },
         "teppp": {
-          "value": 3136
+          "value": 3140
         }
       },
       "oneQBValues": {
-        "value": 2644,
+        "value": 2647,
         "tep": {
-          "value": 3077
+          "value": 3080
         },
         "tepp": {
-          "value": 3409
+          "value": 3412
         },
         "teppp": {
-          "value": 3740
+          "value": 3744
         }
       },
       "age": 24.2,
@@ -7857,15 +7857,15 @@
       "position": "QB",
       "team": "NYJ",
       "superflexValues": {
-        "value": 2068,
+        "value": 2065,
         "tep": {
-          "value": 2068
+          "value": 2065
         },
         "tepp": {
-          "value": 2068
+          "value": 2065
         },
         "teppp": {
-          "value": 2068
+          "value": 2065
         }
       },
       "oneQBValues": {
@@ -7919,27 +7919,27 @@
       "position": "WR",
       "team": "WAS",
       "superflexValues": {
-        "value": 2057,
+        "value": 2060,
         "tep": {
-          "value": 2057
+          "value": 2060
         },
         "tepp": {
-          "value": 2057
+          "value": 2060
         },
         "teppp": {
-          "value": 2057
+          "value": 2060
         }
       },
       "oneQBValues": {
-        "value": 2489,
+        "value": 2492,
         "tep": {
-          "value": 2489
+          "value": 2492
         },
         "tepp": {
-          "value": 2489
+          "value": 2492
         },
         "teppp": {
-          "value": 2489
+          "value": 2492
         }
       },
       "age": 26.7,
@@ -7950,15 +7950,15 @@
       "position": "TE",
       "team": "HOU",
       "superflexValues": {
-        "value": 2056,
+        "value": 2059,
         "tep": {
-          "value": 2441
+          "value": 2444
         },
         "tepp": {
-          "value": 2718
+          "value": 2722
         },
         "teppp": {
-          "value": 2996
+          "value": 3000
         }
       },
       "oneQBValues": {
@@ -7977,6 +7977,37 @@
       "sleeperId": "5001"
     },
     {
+      "playerName": "Aaron Rodgers",
+      "position": "QB",
+      "team": "PIT",
+      "superflexValues": {
+        "value": 2051,
+        "tep": {
+          "value": 2051
+        },
+        "tepp": {
+          "value": 2051
+        },
+        "teppp": {
+          "value": 2051
+        }
+      },
+      "oneQBValues": {
+        "value": 1760,
+        "tep": {
+          "value": 1760
+        },
+        "tepp": {
+          "value": 1760
+        },
+        "teppp": {
+          "value": 1760
+        }
+      },
+      "age": 43,
+      "sleeperId": "96"
+    },
+    {
       "playerName": "Zavion Thomas",
       "position": "WR",
       "team": "CHI",
@@ -7993,15 +8024,15 @@
         }
       },
       "oneQBValues": {
-        "value": 2472,
+        "value": 2475,
         "tep": {
-          "value": 2472
+          "value": 2475
         },
         "tepp": {
-          "value": 2472
+          "value": 2475
         },
         "teppp": {
-          "value": 2472
+          "value": 2475
         }
       },
       "age": 22.8,
@@ -8039,97 +8070,35 @@
       "sleeperId": "1479"
     },
     {
-      "playerName": "Aaron Rodgers",
-      "position": "QB",
-      "team": "PIT",
-      "superflexValues": {
-        "value": 2048,
-        "tep": {
-          "value": 2048
-        },
-        "tepp": {
-          "value": 2048
-        },
-        "teppp": {
-          "value": 2048
-        }
-      },
-      "oneQBValues": {
-        "value": 1760,
-        "tep": {
-          "value": 1760
-        },
-        "tepp": {
-          "value": 1760
-        },
-        "teppp": {
-          "value": 1760
-        }
-      },
-      "age": 43,
-      "sleeperId": "96"
-    },
-    {
       "playerName": "Justice Hill",
       "position": "RB",
       "team": "BAL",
       "superflexValues": {
-        "value": 2048,
+        "value": 2042,
         "tep": {
-          "value": 2048
+          "value": 2042
         },
         "tepp": {
-          "value": 2048
+          "value": 2042
         },
         "teppp": {
-          "value": 2048
+          "value": 2042
         }
       },
       "oneQBValues": {
-        "value": 2395,
+        "value": 2393,
         "tep": {
-          "value": 2395
+          "value": 2393
         },
         "tepp": {
-          "value": 2395
+          "value": 2393
         },
         "teppp": {
-          "value": 2395
+          "value": 2393
         }
       },
       "age": 29,
       "sleeperId": "5995"
-    },
-    {
-      "playerName": "Chris Brazzell II",
-      "position": "WR",
-      "team": "CAR",
-      "superflexValues": {
-        "value": 2041,
-        "tep": {
-          "value": 2041
-        },
-        "tepp": {
-          "value": 2041
-        },
-        "teppp": {
-          "value": 2041
-        }
-      },
-      "oneQBValues": {
-        "value": 2582,
-        "tep": {
-          "value": 2582
-        },
-        "tepp": {
-          "value": 2582
-        },
-        "teppp": {
-          "value": 2582
-        }
-      },
-      "age": 23.1,
-      "sleeperId": "13353"
     },
     {
       "playerName": "Troy Franklin",
@@ -8163,6 +8132,37 @@
       "sleeperId": "11627"
     },
     {
+      "playerName": "Chris Brazzell II",
+      "position": "WR",
+      "team": "CAR",
+      "superflexValues": {
+        "value": 2035,
+        "tep": {
+          "value": 2035
+        },
+        "tepp": {
+          "value": 2035
+        },
+        "teppp": {
+          "value": 2035
+        }
+      },
+      "oneQBValues": {
+        "value": 2582,
+        "tep": {
+          "value": 2582
+        },
+        "tepp": {
+          "value": 2582
+        },
+        "teppp": {
+          "value": 2582
+        }
+      },
+      "age": 23.1,
+      "sleeperId": "13353"
+    },
+    {
       "playerName": "Jordan Watkins",
       "position": "WR",
       "team": "SFO",
@@ -8179,50 +8179,19 @@
         }
       },
       "oneQBValues": {
-        "value": 2425,
+        "value": 2422,
         "tep": {
-          "value": 2425
+          "value": 2422
         },
         "tepp": {
-          "value": 2425
+          "value": 2422
         },
         "teppp": {
-          "value": 2425
+          "value": 2422
         }
       },
       "age": 24.8,
       "sleeperId": "12634"
-    },
-    {
-      "playerName": "Corey Kiner",
-      "position": "RB",
-      "team": "NEP",
-      "superflexValues": {
-        "value": 2023,
-        "tep": {
-          "value": 2023
-        },
-        "tepp": {
-          "value": 2023
-        },
-        "teppp": {
-          "value": 2023
-        }
-      },
-      "oneQBValues": {
-        "value": 2194,
-        "tep": {
-          "value": 2194
-        },
-        "tepp": {
-          "value": 2194
-        },
-        "teppp": {
-          "value": 2194
-        }
-      },
-      "age": 24.8,
-      "sleeperId": "12491"
     },
     {
       "playerName": "2029 Late 3rd",
@@ -8254,19 +8223,50 @@
       }
     },
     {
+      "playerName": "Corey Kiner",
+      "position": "RB",
+      "team": "NEP",
+      "superflexValues": {
+        "value": 2020,
+        "tep": {
+          "value": 2020
+        },
+        "tepp": {
+          "value": 2020
+        },
+        "teppp": {
+          "value": 2020
+        }
+      },
+      "oneQBValues": {
+        "value": 2191,
+        "tep": {
+          "value": 2191
+        },
+        "tepp": {
+          "value": 2191
+        },
+        "teppp": {
+          "value": 2191
+        }
+      },
+      "age": 24.8,
+      "sleeperId": "12491"
+    },
+    {
       "playerName": "2027 Early 4th",
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 2006,
+        "value": 2009,
         "tep": {
-          "value": 2006
+          "value": 2009
         },
         "tepp": {
-          "value": 2006
+          "value": 2009
         },
         "teppp": {
-          "value": 2006
+          "value": 2009
         }
       },
       "oneQBValues": {
@@ -8281,6 +8281,37 @@
           "value": 2391
         }
       }
+    },
+    {
+      "playerName": "Rashod Bateman",
+      "position": "WR",
+      "team": "BAL",
+      "superflexValues": {
+        "value": 2006,
+        "tep": {
+          "value": 2006
+        },
+        "tepp": {
+          "value": 2006
+        },
+        "teppp": {
+          "value": 2006
+        }
+      },
+      "oneQBValues": {
+        "value": 2530,
+        "tep": {
+          "value": 2530
+        },
+        "tepp": {
+          "value": 2530
+        },
+        "teppp": {
+          "value": 2530
+        }
+      },
+      "age": 27,
+      "sleeperId": "7571"
     },
     {
       "playerName": "Jalen Milroe",
@@ -8312,37 +8343,6 @@
       },
       "age": 24,
       "sleeperId": "12510"
-    },
-    {
-      "playerName": "Rashod Bateman",
-      "position": "WR",
-      "team": "BAL",
-      "superflexValues": {
-        "value": 2003,
-        "tep": {
-          "value": 2003
-        },
-        "tepp": {
-          "value": 2003
-        },
-        "teppp": {
-          "value": 2003
-        }
-      },
-      "oneQBValues": {
-        "value": 2527,
-        "tep": {
-          "value": 2527
-        },
-        "tepp": {
-          "value": 2527
-        },
-        "teppp": {
-          "value": 2527
-        }
-      },
-      "age": 27,
-      "sleeperId": "7571"
     },
     {
       "playerName": "Jaylen Wright",
@@ -8442,27 +8442,27 @@
       "position": "RB",
       "team": "NOS",
       "superflexValues": {
-        "value": 1986,
+        "value": 1983,
         "tep": {
-          "value": 1986
+          "value": 1983
         },
         "tepp": {
-          "value": 1986
+          "value": 1983
         },
         "teppp": {
-          "value": 1986
+          "value": 1983
         }
       },
       "oneQBValues": {
-        "value": 2468,
+        "value": 2465,
         "tep": {
-          "value": 2468
+          "value": 2465
         },
         "tepp": {
-          "value": 2468
+          "value": 2465
         },
         "teppp": {
-          "value": 2468
+          "value": 2465
         }
       },
       "age": 31.3,
@@ -8547,15 +8547,15 @@
         }
       },
       "oneQBValues": {
-        "value": 2431,
+        "value": 2434,
         "tep": {
-          "value": 2431
+          "value": 2434
         },
         "tepp": {
-          "value": 2431
+          "value": 2434
         },
         "teppp": {
-          "value": 2431
+          "value": 2434
         }
       },
       "age": 25.1,
@@ -8655,37 +8655,6 @@
       "sleeperId": "11579"
     },
     {
-      "playerName": "Cade Otton",
-      "position": "TE",
-      "team": "TBB",
-      "superflexValues": {
-        "value": 1959,
-        "tep": {
-          "value": 2346
-        },
-        "tepp": {
-          "value": 2618
-        },
-        "teppp": {
-          "value": 2890
-        }
-      },
-      "oneQBValues": {
-        "value": 2383,
-        "tep": {
-          "value": 2805
-        },
-        "tepp": {
-          "value": 3117
-        },
-        "teppp": {
-          "value": 3429
-        }
-      },
-      "age": 27.6,
-      "sleeperId": "8111"
-    },
-    {
       "playerName": "Darius Cooper",
       "position": "WR",
       "team": "PHI",
@@ -8717,31 +8686,62 @@
       "sleeperId": "13150"
     },
     {
+      "playerName": "Cade Otton",
+      "position": "TE",
+      "team": "TBB",
+      "superflexValues": {
+        "value": 1956,
+        "tep": {
+          "value": 2343
+        },
+        "tepp": {
+          "value": 2615
+        },
+        "teppp": {
+          "value": 2888
+        }
+      },
+      "oneQBValues": {
+        "value": 2379,
+        "tep": {
+          "value": 2801
+        },
+        "tepp": {
+          "value": 3112
+        },
+        "teppp": {
+          "value": 3424
+        }
+      },
+      "age": 27.6,
+      "sleeperId": "8111"
+    },
+    {
       "playerName": "Tyquan Thornton",
       "position": "WR",
       "team": "KCC",
       "superflexValues": {
-        "value": 1955,
+        "value": 1952,
         "tep": {
-          "value": 1955
+          "value": 1952
         },
         "tepp": {
-          "value": 1955
+          "value": 1952
         },
         "teppp": {
-          "value": 1955
+          "value": 1952
         }
       },
       "oneQBValues": {
-        "value": 2374,
+        "value": 2372,
         "tep": {
-          "value": 2374
+          "value": 2372
         },
         "tepp": {
-          "value": 2374
+          "value": 2372
         },
         "teppp": {
-          "value": 2374
+          "value": 2372
         }
       },
       "age": 26.3,
@@ -8752,15 +8752,15 @@
       "position": "QB",
       "team": "MIA",
       "superflexValues": {
-        "value": 1950,
+        "value": 1944,
         "tep": {
-          "value": 1950
+          "value": 1944
         },
         "tepp": {
-          "value": 1950
+          "value": 1944
         },
         "teppp": {
-          "value": 1950
+          "value": 1944
         }
       },
       "oneQBValues": {
@@ -8783,15 +8783,15 @@
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 1934,
+        "value": 1937,
         "tep": {
-          "value": 1934
+          "value": 1937
         },
         "tepp": {
-          "value": 1934
+          "value": 1937
         },
         "teppp": {
-          "value": 1934
+          "value": 1937
         }
       },
       "oneQBValues": {
@@ -8843,27 +8843,27 @@
       "position": "WR",
       "team": "MIN",
       "superflexValues": {
-        "value": 1913,
+        "value": 1919,
         "tep": {
-          "value": 1913
+          "value": 1919
         },
         "tepp": {
-          "value": 1913
+          "value": 1919
         },
         "teppp": {
-          "value": 1913
+          "value": 1919
         }
       },
       "oneQBValues": {
-        "value": 2357,
+        "value": 2360,
         "tep": {
-          "value": 2357
+          "value": 2360
         },
         "tepp": {
-          "value": 2357
+          "value": 2360
         },
         "teppp": {
-          "value": 2357
+          "value": 2360
         }
       },
       "age": 24.9,
@@ -8905,27 +8905,27 @@
       "position": "RB",
       "team": "DET",
       "superflexValues": {
-        "value": 1861,
+        "value": 1864,
         "tep": {
-          "value": 1861
+          "value": 1864
         },
         "tepp": {
-          "value": 1861
+          "value": 1864
         },
         "teppp": {
-          "value": 1861
+          "value": 1864
         }
       },
       "oneQBValues": {
-        "value": 2223,
+        "value": 2227,
         "tep": {
-          "value": 2223
+          "value": 2227
         },
         "tepp": {
-          "value": 2223
+          "value": 2227
         },
         "teppp": {
-          "value": 2223
+          "value": 2227
         }
       },
       "age": 25.3,
@@ -9059,27 +9059,27 @@
       "position": "WR",
       "team": "CLE",
       "superflexValues": {
-        "value": 1820,
+        "value": 1823,
         "tep": {
-          "value": 1820
+          "value": 1823
         },
         "tepp": {
-          "value": 1820
+          "value": 1823
         },
         "teppp": {
-          "value": 1820
+          "value": 1823
         }
       },
       "oneQBValues": {
-        "value": 2350,
+        "value": 2353,
         "tep": {
-          "value": 2350
+          "value": 2353
         },
         "tepp": {
-          "value": 2350
+          "value": 2353
         },
         "teppp": {
-          "value": 2350
+          "value": 2353
         }
       },
       "age": 27.6,
@@ -9102,15 +9102,15 @@
         }
       },
       "oneQBValues": {
-        "value": 2047,
+        "value": 2048,
         "tep": {
-          "value": 2458
+          "value": 2459
         },
         "tepp": {
-          "value": 2745
+          "value": 2746
         },
         "teppp": {
-          "value": 3032
+          "value": 3033
         }
       },
       "age": 26.5,
@@ -9164,15 +9164,15 @@
         }
       },
       "oneQBValues": {
-        "value": 2216,
+        "value": 2213,
         "tep": {
-          "value": 2632
+          "value": 2628
         },
         "tepp": {
-          "value": 2931
+          "value": 2927
         },
         "teppp": {
-          "value": 3230
+          "value": 3226
         }
       },
       "age": 33.9,
@@ -9195,15 +9195,15 @@
         }
       },
       "oneQBValues": {
-        "value": 2091,
+        "value": 2094,
         "tep": {
-          "value": 2091
+          "value": 2094
         },
         "tepp": {
-          "value": 2091
+          "value": 2094
         },
         "teppp": {
-          "value": 2091
+          "value": 2094
         }
       }
     },
@@ -9255,50 +9255,19 @@
         }
       },
       "oneQBValues": {
-        "value": 2141,
+        "value": 2138,
         "tep": {
-          "value": 2141
+          "value": 2138
         },
         "tepp": {
-          "value": 2141
+          "value": 2138
         },
         "teppp": {
-          "value": 2141
+          "value": 2138
         }
       },
       "age": 26.4,
       "sleeperId": "13264"
-    },
-    {
-      "playerName": "Sean Tucker",
-      "position": "RB",
-      "team": "TBB",
-      "superflexValues": {
-        "value": 1799,
-        "tep": {
-          "value": 1799
-        },
-        "tepp": {
-          "value": 1799
-        },
-        "teppp": {
-          "value": 1799
-        }
-      },
-      "oneQBValues": {
-        "value": 2278,
-        "tep": {
-          "value": 2278
-        },
-        "tepp": {
-          "value": 2278
-        },
-        "teppp": {
-          "value": 2278
-        }
-      },
-      "age": 25.1,
-      "sleeperId": "9506"
     },
     {
       "playerName": "Darren Waller",
@@ -9313,23 +9282,54 @@
           "value": 2438
         },
         "teppp": {
-          "value": 2699
+          "value": 2698
         }
       },
       "oneQBValues": {
-        "value": 2111,
+        "value": 2114,
         "tep": {
-          "value": 2524
+          "value": 2526
         },
         "tepp": {
-          "value": 2816
+          "value": 2818
         },
         "teppp": {
-          "value": 3108
+          "value": 3109
         }
       },
       "age": 34.2,
       "sleeperId": "2505"
+    },
+    {
+      "playerName": "Sean Tucker",
+      "position": "RB",
+      "team": "TBB",
+      "superflexValues": {
+        "value": 1796,
+        "tep": {
+          "value": 1796
+        },
+        "tepp": {
+          "value": 1796
+        },
+        "teppp": {
+          "value": 1796
+        }
+      },
+      "oneQBValues": {
+        "value": 2275,
+        "tep": {
+          "value": 2275
+        },
+        "tepp": {
+          "value": 2275
+        },
+        "teppp": {
+          "value": 2275
+        }
+      },
+      "age": 25.1,
+      "sleeperId": "9506"
     },
     {
       "playerName": "Jalen Nailor",
@@ -9394,50 +9394,19 @@
       "sleeperId": "13347"
     },
     {
-      "playerName": "Marvin Mims",
-      "position": "WR",
-      "team": "DEN",
-      "superflexValues": {
-        "value": 1776,
-        "tep": {
-          "value": 1776
-        },
-        "tepp": {
-          "value": 1776
-        },
-        "teppp": {
-          "value": 1776
-        }
-      },
-      "oneQBValues": {
-        "value": 2219,
-        "tep": {
-          "value": 2219
-        },
-        "tepp": {
-          "value": 2219
-        },
-        "teppp": {
-          "value": 2219
-        }
-      },
-      "age": 24.7,
-      "sleeperId": "9494"
-    },
-    {
       "playerName": "Bryce Lance",
       "position": "WR",
       "team": "NOS",
       "superflexValues": {
-        "value": 1776,
+        "value": 1779,
         "tep": {
-          "value": 1776
+          "value": 1779
         },
         "tepp": {
-          "value": 1776
+          "value": 1779
         },
         "teppp": {
-          "value": 1776
+          "value": 1779
         }
       },
       "oneQBValues": {
@@ -9487,9 +9456,9 @@
       "sleeperId": "11655"
     },
     {
-      "playerName": "Jahan Dotson",
+      "playerName": "Marvin Mims",
       "position": "WR",
-      "team": "ATL",
+      "team": "DEN",
       "superflexValues": {
         "value": 1773,
         "tep": {
@@ -9503,15 +9472,46 @@
         }
       },
       "oneQBValues": {
-        "value": 2158,
+        "value": 2219,
         "tep": {
-          "value": 2158
+          "value": 2219
         },
         "tepp": {
-          "value": 2158
+          "value": 2219
         },
         "teppp": {
-          "value": 2158
+          "value": 2219
+        }
+      },
+      "age": 24.7,
+      "sleeperId": "9494"
+    },
+    {
+      "playerName": "Jahan Dotson",
+      "position": "WR",
+      "team": "ATL",
+      "superflexValues": {
+        "value": 1770,
+        "tep": {
+          "value": 1770
+        },
+        "tepp": {
+          "value": 1770
+        },
+        "teppp": {
+          "value": 1770
+        }
+      },
+      "oneQBValues": {
+        "value": 2155,
+        "tep": {
+          "value": 2155
+        },
+        "tepp": {
+          "value": 2155
+        },
+        "teppp": {
+          "value": 2155
         }
       },
       "age": 26.7,
@@ -9534,15 +9534,15 @@
         }
       },
       "oneQBValues": {
-        "value": 1461,
+        "value": 1458,
         "tep": {
-          "value": 1461
+          "value": 1458
         },
         "tepp": {
-          "value": 1461
+          "value": 1458
         },
         "teppp": {
-          "value": 1461
+          "value": 1458
         }
       },
       "age": 29.5,
@@ -9553,15 +9553,15 @@
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 1762,
+        "value": 1765,
         "tep": {
-          "value": 1762
+          "value": 1765
         },
         "tepp": {
-          "value": 1762
+          "value": 1765
         },
         "teppp": {
-          "value": 1762
+          "value": 1765
         }
       },
       "oneQBValues": {
@@ -9654,15 +9654,15 @@
         }
       },
       "oneQBValues": {
-        "value": 2271,
+        "value": 2274,
         "tep": {
-          "value": 2271
+          "value": 2274
         },
         "tepp": {
-          "value": 2271
+          "value": 2274
         },
         "teppp": {
-          "value": 2271
+          "value": 2274
         }
       },
       "age": 24.4,
@@ -9716,15 +9716,15 @@
         }
       },
       "oneQBValues": {
-        "value": 2087,
+        "value": 2084,
         "tep": {
-          "value": 2087
+          "value": 2084
         },
         "tepp": {
-          "value": 2087
+          "value": 2084
         },
         "teppp": {
-          "value": 2087
+          "value": 2084
         }
       },
       "age": 23.2,
@@ -10415,27 +10415,27 @@
       "position": "RB",
       "team": "NYG",
       "superflexValues": {
-        "value": 1551,
+        "value": 1548,
         "tep": {
-          "value": 1551
+          "value": 1548
         },
         "tepp": {
-          "value": 1551
+          "value": 1548
         },
         "teppp": {
-          "value": 1551
+          "value": 1548
         }
       },
       "oneQBValues": {
-        "value": 1939,
+        "value": 1935,
         "tep": {
-          "value": 1939
+          "value": 1935
         },
         "tepp": {
-          "value": 1939
+          "value": 1935
         },
         "teppp": {
-          "value": 1939
+          "value": 1935
         }
       },
       "age": 29.2,
@@ -10446,15 +10446,15 @@
       "position": "QB",
       "team": "CHI",
       "superflexValues": {
-        "value": 1546,
+        "value": 1543,
         "tep": {
-          "value": 1546
+          "value": 1543
         },
         "tepp": {
-          "value": 1546
+          "value": 1543
         },
         "teppp": {
-          "value": 1546
+          "value": 1543
         }
       },
       "oneQBValues": {
@@ -10508,15 +10508,15 @@
       "position": "TE",
       "team": "NYG",
       "superflexValues": {
-        "value": 1512,
+        "value": 1515,
         "tep": {
-          "value": 1884
+          "value": 1888
         },
         "tepp": {
-          "value": 2124
+          "value": 2127
         },
         "teppp": {
-          "value": 2363
+          "value": 2367
         }
       },
       "oneQBValues": {
@@ -10656,66 +10656,97 @@
       }
     },
     {
+      "playerName": "Nate Boerkircher",
+      "position": "TE",
+      "team": "JAC",
+      "superflexValues": {
+        "value": 1487,
+        "tep": {
+          "value": 1859
+        },
+        "tepp": {
+          "value": 2097
+        },
+        "teppp": {
+          "value": 2335
+        }
+      },
+      "oneQBValues": {
+        "value": 1655,
+        "tep": {
+          "value": 2050
+        },
+        "tepp": {
+          "value": 2307
+        },
+        "teppp": {
+          "value": 2565
+        }
+      },
+      "age": 25.2,
+      "sleeperId": "13299"
+    },
+    {
       "playerName": "Barion Brown",
       "position": "WR",
       "team": "NOS",
       "superflexValues": {
-        "value": 1484,
+        "value": 1481,
         "tep": {
-          "value": 1484
+          "value": 1481
         },
         "tepp": {
-          "value": 1484
+          "value": 1481
         },
         "teppp": {
-          "value": 1484
+          "value": 1481
         }
       },
       "oneQBValues": {
-        "value": 1773,
+        "value": 1767,
         "tep": {
-          "value": 1773
+          "value": 1767
         },
         "tepp": {
-          "value": 1773
+          "value": 1767
         },
         "teppp": {
-          "value": 1773
+          "value": 1767
         }
       },
       "age": 23,
       "sleeperId": "13533"
     },
     {
-      "playerName": "Nate Boerkircher",
+      "playerName": "Evan Engram",
       "position": "TE",
-      "team": "JAC",
+      "team": "DEN",
       "superflexValues": {
-        "value": 1483,
+        "value": 1476,
         "tep": {
-          "value": 1855
+          "value": 1848
         },
         "tepp": {
-          "value": 2093
+          "value": 2086
         },
         "teppp": {
-          "value": 2331
+          "value": 2323
         }
       },
       "oneQBValues": {
-        "value": 1652,
+        "value": 1732,
         "tep": {
-          "value": 2047
+          "value": 2127
         },
         "tepp": {
-          "value": 2304
+          "value": 2389
         },
         "teppp": {
-          "value": 2562
+          "value": 2651
         }
       },
-      "age": 25.2,
-      "sleeperId": "13299"
+      "age": 32.2,
+      "sleeperId": "4066"
     },
     {
       "playerName": "Tyler Goodson",
@@ -10747,37 +10778,6 @@
       },
       "age": 26,
       "sleeperId": "8207"
-    },
-    {
-      "playerName": "Evan Engram",
-      "position": "TE",
-      "team": "DEN",
-      "superflexValues": {
-        "value": 1473,
-        "tep": {
-          "value": 1845
-        },
-        "tepp": {
-          "value": 2083
-        },
-        "teppp": {
-          "value": 2320
-        }
-      },
-      "oneQBValues": {
-        "value": 1729,
-        "tep": {
-          "value": 2124
-        },
-        "tepp": {
-          "value": 2386
-        },
-        "teppp": {
-          "value": 2647
-        }
-      },
-      "age": 32.2,
-      "sleeperId": "4066"
     },
     {
       "playerName": "Ty Johnson",
@@ -11026,37 +11026,6 @@
       "sleeperId": "12048"
     },
     {
-      "playerName": "Jake Tonges",
-      "position": "TE",
-      "team": "SFO",
-      "superflexValues": {
-        "value": 1374,
-        "tep": {
-          "value": 1741
-        },
-        "tepp": {
-          "value": 1970
-        },
-        "teppp": {
-          "value": 2199
-        }
-      },
-      "oneQBValues": {
-        "value": 1682,
-        "tep": {
-          "value": 2076
-        },
-        "tepp": {
-          "value": 2335
-        },
-        "teppp": {
-          "value": 2593
-        }
-      },
-      "age": 27.4,
-      "sleeperId": "8698"
-    },
-    {
       "playerName": "Kendrick Bourne",
       "position": "WR",
       "team": "ARI",
@@ -11086,6 +11055,37 @@
       },
       "age": 31.3,
       "sleeperId": "4454"
+    },
+    {
+      "playerName": "Jake Tonges",
+      "position": "TE",
+      "team": "SFO",
+      "superflexValues": {
+        "value": 1371,
+        "tep": {
+          "value": 1738
+        },
+        "tepp": {
+          "value": 1967
+        },
+        "teppp": {
+          "value": 2196
+        }
+      },
+      "oneQBValues": {
+        "value": 1679,
+        "tep": {
+          "value": 2073
+        },
+        "tepp": {
+          "value": 2332
+        },
+        "teppp": {
+          "value": 2590
+        }
+      },
+      "age": 27.4,
+      "sleeperId": "8698"
     },
     {
       "playerName": "Jordan Whittington",
@@ -11123,15 +11123,15 @@
       "position": "QB",
       "team": "KCC",
       "superflexValues": {
-        "value": 1363,
+        "value": 1366,
         "tep": {
-          "value": 1363
+          "value": 1366
         },
         "tepp": {
-          "value": 1363
+          "value": 1366
         },
         "teppp": {
-          "value": 1363
+          "value": 1366
         }
       },
       "oneQBValues": {
@@ -11150,9 +11150,9 @@
       "sleeperId": "7591"
     },
     {
-      "playerName": "Luke McCaffrey",
+      "playerName": "Brenen Thompson",
       "position": "WR",
-      "team": "WAS",
+      "team": "LAC",
       "superflexValues": {
         "value": 1358,
         "tep": {
@@ -11166,24 +11166,24 @@
         }
       },
       "oneQBValues": {
-        "value": 1683,
+        "value": 1666,
         "tep": {
-          "value": 1683
+          "value": 1666
         },
         "tepp": {
-          "value": 1683
+          "value": 1666
         },
         "teppp": {
-          "value": 1683
+          "value": 1666
         }
       },
-      "age": 25.6,
-      "sleeperId": "11650"
+      "age": 23.3,
+      "sleeperId": "13380"
     },
     {
-      "playerName": "Brenen Thompson",
+      "playerName": "Luke McCaffrey",
       "position": "WR",
-      "team": "LAC",
+      "team": "WAS",
       "superflexValues": {
         "value": 1355,
         "tep": {
@@ -11197,46 +11197,46 @@
         }
       },
       "oneQBValues": {
-        "value": 1663,
+        "value": 1680,
         "tep": {
-          "value": 1663
+          "value": 1680
         },
         "tepp": {
-          "value": 1663
+          "value": 1680
         },
         "teppp": {
-          "value": 1663
+          "value": 1680
         }
       },
-      "age": 23.3,
-      "sleeperId": "13380"
+      "age": 25.6,
+      "sleeperId": "11650"
     },
     {
       "playerName": "Jaleel McLaughlin",
       "position": "RB",
       "team": "CLE",
       "superflexValues": {
-        "value": 1353,
+        "value": 1347,
         "tep": {
-          "value": 1353
+          "value": 1347
         },
         "tepp": {
-          "value": 1353
+          "value": 1347
         },
         "teppp": {
-          "value": 1353
+          "value": 1347
         }
       },
       "oneQBValues": {
-        "value": 1652,
+        "value": 1649,
         "tep": {
-          "value": 1652
+          "value": 1649
         },
         "tepp": {
-          "value": 1652
+          "value": 1649
         },
         "teppp": {
-          "value": 1652
+          "value": 1649
         }
       },
       "age": 26.2,
@@ -11247,27 +11247,27 @@
       "position": "WR",
       "team": "SFO",
       "superflexValues": {
-        "value": 1341,
+        "value": 1344,
         "tep": {
-          "value": 1341
+          "value": 1344
         },
         "tepp": {
-          "value": 1341
+          "value": 1344
         },
         "teppp": {
-          "value": 1341
+          "value": 1344
         }
       },
       "oneQBValues": {
-        "value": 1573,
+        "value": 1576,
         "tep": {
-          "value": 1573
+          "value": 1576
         },
         "tepp": {
-          "value": 1573
+          "value": 1576
         },
         "teppp": {
-          "value": 1573
+          "value": 1576
         }
       },
       "age": 25.8,
@@ -11402,27 +11402,27 @@
       "position": "WR",
       "team": "MIN",
       "superflexValues": {
-        "value": 1319,
+        "value": 1322,
         "tep": {
-          "value": 1319
+          "value": 1322
         },
         "tepp": {
-          "value": 1319
+          "value": 1322
         },
         "teppp": {
-          "value": 1319
+          "value": 1322
         }
       },
       "oneQBValues": {
-        "value": 1625,
+        "value": 1628,
         "tep": {
-          "value": 1625
+          "value": 1628
         },
         "tepp": {
-          "value": 1625
+          "value": 1628
         },
         "teppp": {
-          "value": 1625
+          "value": 1628
         }
       },
       "age": 23.7,
@@ -11433,15 +11433,15 @@
       "position": "RB",
       "team": "DET",
       "superflexValues": {
-        "value": 1309,
+        "value": 1306,
         "tep": {
-          "value": 1309
+          "value": 1306
         },
         "tepp": {
-          "value": 1309
+          "value": 1306
         },
         "teppp": {
-          "value": 1309
+          "value": 1306
         }
       },
       "oneQBValues": {
@@ -11491,50 +11491,19 @@
       "sleeperId": "12470"
     },
     {
-      "playerName": "Davis Allen",
-      "position": "TE",
-      "team": "LAR",
-      "superflexValues": {
-        "value": 1303,
-        "tep": {
-          "value": 1670
-        },
-        "tepp": {
-          "value": 1895
-        },
-        "teppp": {
-          "value": 2120
-        }
-      },
-      "oneQBValues": {
-        "value": 1428,
-        "tep": {
-          "value": 1815
-        },
-        "tepp": {
-          "value": 2056
-        },
-        "teppp": {
-          "value": 2296
-        }
-      },
-      "age": 25.8,
-      "sleeperId": "10214"
-    },
-    {
       "playerName": "Eli Heidenreich",
       "position": "RB",
       "team": "PIT",
       "superflexValues": {
-        "value": 1300,
+        "value": 1303,
         "tep": {
-          "value": 1300
+          "value": 1303
         },
         "tepp": {
-          "value": 1300
+          "value": 1303
         },
         "teppp": {
-          "value": 1300
+          "value": 1303
         }
       },
       "oneQBValues": {
@@ -11553,19 +11522,50 @@
       "sleeperId": "13423"
     },
     {
+      "playerName": "Davis Allen",
+      "position": "TE",
+      "team": "LAR",
+      "superflexValues": {
+        "value": 1300,
+        "tep": {
+          "value": 1668
+        },
+        "tepp": {
+          "value": 1892
+        },
+        "teppp": {
+          "value": 2118
+        }
+      },
+      "oneQBValues": {
+        "value": 1428,
+        "tep": {
+          "value": 1815
+        },
+        "tepp": {
+          "value": 2056
+        },
+        "teppp": {
+          "value": 2296
+        }
+      },
+      "age": 25.8,
+      "sleeperId": "10214"
+    },
+    {
       "playerName": "2029 Late 4th",
       "position": "RDP",
       "team": "FA",
       "superflexValues": {
-        "value": 1300,
+        "value": 1297,
         "tep": {
-          "value": 1300
+          "value": 1297
         },
         "tepp": {
-          "value": 1300
+          "value": 1297
         },
         "teppp": {
-          "value": 1300
+          "value": 1297
         }
       },
       "oneQBValues": {
@@ -11710,15 +11710,15 @@
       "position": "QB",
       "team": "KCC",
       "superflexValues": {
-        "value": 1277,
+        "value": 1280,
         "tep": {
-          "value": 1277
+          "value": 1280
         },
         "tepp": {
-          "value": 1277
+          "value": 1280
         },
         "teppp": {
-          "value": 1277
+          "value": 1280
         }
       },
       "oneQBValues": {
@@ -11772,15 +11772,15 @@
       "position": "TE",
       "team": "BAL",
       "superflexValues": {
-        "value": 1263,
+        "value": 1266,
         "tep": {
-          "value": 1631
+          "value": 1634
         },
         "tepp": {
-          "value": 1854
+          "value": 1857
         },
         "teppp": {
-          "value": 2077
+          "value": 2080
         }
       },
       "oneQBValues": {
@@ -12156,15 +12156,15 @@
         }
       },
       "oneQBValues": {
-        "value": 1491,
+        "value": 1494,
         "tep": {
-          "value": 1491
+          "value": 1494
         },
         "tepp": {
-          "value": 1491
+          "value": 1494
         },
         "teppp": {
-          "value": 1491
+          "value": 1494
         }
       },
       "age": 24.3,
@@ -12233,6 +12233,37 @@
       "sleeperId": "12457"
     },
     {
+      "playerName": "Tahj Brooks",
+      "position": "RB",
+      "team": "CIN",
+      "superflexValues": {
+        "value": 1193,
+        "tep": {
+          "value": 1193
+        },
+        "tepp": {
+          "value": 1193
+        },
+        "teppp": {
+          "value": 1193
+        }
+      },
+      "oneQBValues": {
+        "value": 1556,
+        "tep": {
+          "value": 1556
+        },
+        "tepp": {
+          "value": 1556
+        },
+        "teppp": {
+          "value": 1556
+        }
+      },
+      "age": 24.5,
+      "sleeperId": "12543"
+    },
+    {
       "playerName": "Jalen Tolbert",
       "position": "WR",
       "team": "MIA",
@@ -12295,50 +12326,19 @@
       "sleeperId": "9230"
     },
     {
-      "playerName": "Tahj Brooks",
-      "position": "RB",
-      "team": "CIN",
-      "superflexValues": {
-        "value": 1187,
-        "tep": {
-          "value": 1187
-        },
-        "tepp": {
-          "value": 1187
-        },
-        "teppp": {
-          "value": 1187
-        }
-      },
-      "oneQBValues": {
-        "value": 1553,
-        "tep": {
-          "value": 1553
-        },
-        "tepp": {
-          "value": 1553
-        },
-        "teppp": {
-          "value": 1553
-        }
-      },
-      "age": 24.5,
-      "sleeperId": "12543"
-    },
-    {
       "playerName": "Taylen Green",
       "position": "QB",
       "team": "CLE",
       "superflexValues": {
-        "value": 1186,
+        "value": 1183,
         "tep": {
-          "value": 1186
+          "value": 1183
         },
         "tepp": {
-          "value": 1186
+          "value": 1183
         },
         "teppp": {
-          "value": 1186
+          "value": 1183
         }
       },
       "oneQBValues": {
@@ -12361,27 +12361,27 @@
       "position": "WR",
       "team": "SFO",
       "superflexValues": {
-        "value": 1183,
+        "value": 1177,
         "tep": {
-          "value": 1183
+          "value": 1177
         },
         "tepp": {
-          "value": 1183
+          "value": 1177
         },
         "teppp": {
-          "value": 1183
+          "value": 1177
         }
       },
       "oneQBValues": {
-        "value": 1320,
+        "value": 1317,
         "tep": {
-          "value": 1320
+          "value": 1317
         },
         "tepp": {
-          "value": 1320
+          "value": 1317
         },
         "teppp": {
-          "value": 1320
+          "value": 1317
         }
       },
       "age": 28.7,
@@ -12671,27 +12671,27 @@
       "position": "WR",
       "team": "SFO",
       "superflexValues": {
-        "value": 1126,
+        "value": 1123,
         "tep": {
-          "value": 1126
+          "value": 1123
         },
         "tepp": {
-          "value": 1126
+          "value": 1123
         },
         "teppp": {
-          "value": 1126
+          "value": 1123
         }
       },
       "oneQBValues": {
-        "value": 1397,
+        "value": 1393,
         "tep": {
-          "value": 1397
+          "value": 1393
         },
         "tepp": {
-          "value": 1397
+          "value": 1393
         },
         "teppp": {
-          "value": 1397
+          "value": 1393
         }
       },
       "age": 32.2,
@@ -12702,15 +12702,15 @@
       "position": "TE",
       "team": "CIN",
       "superflexValues": {
-        "value": 1125,
+        "value": 1122,
         "tep": {
-          "value": 1494
+          "value": 1491
         },
         "tepp": {
-          "value": 1709
+          "value": 1706
         },
         "teppp": {
-          "value": 1924
+          "value": 1920
         }
       },
       "oneQBValues": {
@@ -12764,27 +12764,27 @@
       "position": "TE",
       "team": "CIN",
       "superflexValues": {
-        "value": 1096,
+        "value": 1099,
         "tep": {
-          "value": 1463
+          "value": 1466
         },
         "tepp": {
-          "value": 1676
+          "value": 1679
         },
         "teppp": {
-          "value": 1888
+          "value": 1892
         }
       },
       "oneQBValues": {
-        "value": 1340,
+        "value": 1343,
         "tep": {
-          "value": 1724
+          "value": 1728
         },
         "tepp": {
-          "value": 1959
+          "value": 1962
         },
         "teppp": {
-          "value": 2193
+          "value": 2197
         }
       },
       "age": 26.2,
@@ -12826,62 +12826,31 @@
       "position": "WR",
       "team": "NOS",
       "superflexValues": {
-        "value": 1091,
+        "value": 1094,
         "tep": {
-          "value": 1091
+          "value": 1094
         },
         "tepp": {
-          "value": 1091
+          "value": 1094
         },
         "teppp": {
-          "value": 1091
+          "value": 1094
         }
       },
       "oneQBValues": {
-        "value": 1333,
+        "value": 1336,
         "tep": {
-          "value": 1333
+          "value": 1336
         },
         "tepp": {
-          "value": 1333
+          "value": 1336
         },
         "teppp": {
-          "value": 1333
+          "value": 1336
         }
       },
       "age": 26.6,
       "sleeperId": "10444"
-    },
-    {
-      "playerName": "Dameon Pierce",
-      "position": "RB",
-      "team": "FA",
-      "superflexValues": {
-        "value": 1072,
-        "tep": {
-          "value": 1072
-        },
-        "tepp": {
-          "value": 1072
-        },
-        "teppp": {
-          "value": 1072
-        }
-      },
-      "oneQBValues": {
-        "value": 1379,
-        "tep": {
-          "value": 1379
-        },
-        "tepp": {
-          "value": 1379
-        },
-        "teppp": {
-          "value": 1379
-        }
-      },
-      "age": 26.8,
-      "sleeperId": "8129"
     },
     {
       "playerName": "Elijah Mitchell",
@@ -12915,19 +12884,50 @@
       "sleeperId": "7561"
     },
     {
+      "playerName": "Dameon Pierce",
+      "position": "RB",
+      "team": "FA",
+      "superflexValues": {
+        "value": 1069,
+        "tep": {
+          "value": 1069
+        },
+        "tepp": {
+          "value": 1069
+        },
+        "teppp": {
+          "value": 1069
+        }
+      },
+      "oneQBValues": {
+        "value": 1375,
+        "tep": {
+          "value": 1375
+        },
+        "tepp": {
+          "value": 1375
+        },
+        "teppp": {
+          "value": 1375
+        }
+      },
+      "age": 26.8,
+      "sleeperId": "8129"
+    },
+    {
       "playerName": "Trey Palmer",
       "position": "WR",
       "team": "NOS",
       "superflexValues": {
-        "value": 1068,
+        "value": 1069,
         "tep": {
-          "value": 1068
+          "value": 1069
         },
         "tepp": {
-          "value": 1068
+          "value": 1069
         },
         "teppp": {
-          "value": 1068
+          "value": 1069
         }
       },
       "oneQBValues": {
@@ -12950,15 +12950,15 @@
       "position": "QB",
       "team": "ARI",
       "superflexValues": {
-        "value": 1062,
+        "value": 1065,
         "tep": {
-          "value": 1062
+          "value": 1065
         },
         "tepp": {
-          "value": 1062
+          "value": 1065
         },
         "teppp": {
-          "value": 1062
+          "value": 1065
         }
       },
       "oneQBValues": {
@@ -13043,15 +13043,15 @@
       "position": "QB",
       "team": "NOS",
       "superflexValues": {
-        "value": 1046,
+        "value": 1049,
         "tep": {
-          "value": 1046
+          "value": 1049
         },
         "tepp": {
-          "value": 1046
+          "value": 1049
         },
         "teppp": {
-          "value": 1046
+          "value": 1049
         }
       },
       "oneQBValues": {
@@ -13539,15 +13539,15 @@
       "position": "QB",
       "team": "CLE",
       "superflexValues": {
-        "value": 940,
+        "value": 937,
         "tep": {
-          "value": 940
+          "value": 937
         },
         "tepp": {
-          "value": 940
+          "value": 937
         },
         "teppp": {
-          "value": 940
+          "value": 937
         }
       },
       "oneQBValues": {
@@ -13601,27 +13601,27 @@
       "position": "RB",
       "team": "ATL",
       "superflexValues": {
-        "value": 920,
+        "value": 923,
         "tep": {
-          "value": 920
+          "value": 923
         },
         "tepp": {
-          "value": 920
+          "value": 923
         },
         "teppp": {
-          "value": 920
+          "value": 923
         }
       },
       "oneQBValues": {
-        "value": 1001,
+        "value": 1004,
         "tep": {
-          "value": 1001
+          "value": 1004
         },
         "tepp": {
-          "value": 1001
+          "value": 1004
         },
         "teppp": {
-          "value": 1001
+          "value": 1004
         }
       },
       "age": 28.6,
@@ -13632,27 +13632,27 @@
       "position": "TE",
       "team": "DAL",
       "superflexValues": {
-        "value": 915,
+        "value": 912,
         "tep": {
-          "value": 1278
+          "value": 1275
         },
         "tepp": {
-          "value": 1478
+          "value": 1474
         },
         "teppp": {
-          "value": 1678
+          "value": 1674
         }
       },
       "oneQBValues": {
-        "value": 1056,
+        "value": 1053,
         "tep": {
-          "value": 1431
+          "value": 1427
         },
         "tepp": {
-          "value": 1644
+          "value": 1640
         },
         "teppp": {
-          "value": 1857
+          "value": 1853
         }
       },
       "age": 24.4,
@@ -13725,27 +13725,27 @@
       "position": "WR",
       "team": "CLE",
       "superflexValues": {
-        "value": 895,
+        "value": 898,
         "tep": {
-          "value": 895
+          "value": 898
         },
         "tepp": {
-          "value": 895
+          "value": 898
         },
         "teppp": {
-          "value": 895
+          "value": 898
         }
       },
       "oneQBValues": {
-        "value": 1111,
+        "value": 1114,
         "tep": {
-          "value": 1111
+          "value": 1114
         },
         "tepp": {
-          "value": 1111
+          "value": 1114
         },
         "teppp": {
-          "value": 1111
+          "value": 1114
         }
       },
       "age": 25.9,
@@ -14233,15 +14233,15 @@
         }
       },
       "oneQBValues": {
-        "value": 994,
+        "value": 992,
         "tep": {
-          "value": 994
+          "value": 992
         },
         "tepp": {
-          "value": 994
+          "value": 992
         },
         "teppp": {
-          "value": 994
+          "value": 992
         }
       },
       "age": 24.7,
@@ -14530,27 +14530,27 @@
       "position": "WR",
       "team": "FA",
       "superflexValues": {
-        "value": 601,
+        "value": 598,
         "tep": {
-          "value": 601
+          "value": 598
         },
         "tepp": {
-          "value": 601
+          "value": 598
         },
         "teppp": {
-          "value": 601
+          "value": 598
         }
       },
       "oneQBValues": {
-        "value": 726,
+        "value": 720,
         "tep": {
-          "value": 726
+          "value": 720
         },
         "tepp": {
-          "value": 726
+          "value": 720
         },
         "teppp": {
-          "value": 726
+          "value": 720
         }
       },
       "age": 33.2,
@@ -14561,31 +14561,62 @@
       "position": "WR",
       "team": "IND",
       "superflexValues": {
-        "value": 583,
+        "value": 580,
         "tep": {
-          "value": 583
+          "value": 580
         },
         "tepp": {
-          "value": 583
+          "value": 580
         },
         "teppp": {
-          "value": 583
+          "value": 580
         }
       },
       "oneQBValues": {
-        "value": 741,
+        "value": 738,
         "tep": {
-          "value": 741
+          "value": 738
         },
         "tepp": {
-          "value": 741
+          "value": 738
         },
         "teppp": {
-          "value": 741
+          "value": 738
         }
       },
       "age": 29.7,
       "sleeperId": "7496"
+    },
+    {
+      "playerName": "Phil Mafah",
+      "position": "RB",
+      "team": "NYG",
+      "superflexValues": {
+        "value": 576,
+        "tep": {
+          "value": 576
+        },
+        "tepp": {
+          "value": 576
+        },
+        "teppp": {
+          "value": 576
+        }
+      },
+      "oneQBValues": {
+        "value": 796,
+        "tep": {
+          "value": 796
+        },
+        "tepp": {
+          "value": 796
+        },
+        "teppp": {
+          "value": 796
+        }
+      },
+      "age": 24.1,
+      "sleeperId": "12738"
     },
     {
       "playerName": "Tyler Johnson",
@@ -14650,62 +14681,31 @@
       "sleeperId": "9505"
     },
     {
-      "playerName": "Phil Mafah",
-      "position": "RB",
-      "team": "NYG",
-      "superflexValues": {
-        "value": 573,
-        "tep": {
-          "value": 573
-        },
-        "tepp": {
-          "value": 573
-        },
-        "teppp": {
-          "value": 573
-        }
-      },
-      "oneQBValues": {
-        "value": 787,
-        "tep": {
-          "value": 787
-        },
-        "tepp": {
-          "value": 787
-        },
-        "teppp": {
-          "value": 787
-        }
-      },
-      "age": 24.1,
-      "sleeperId": "12738"
-    },
-    {
       "playerName": "Xavier Gipson",
       "position": "WR",
       "team": "NYG",
       "superflexValues": {
-        "value": 566,
+        "value": 569,
         "tep": {
-          "value": 566
+          "value": 569
         },
         "tepp": {
-          "value": 566
+          "value": 569
         },
         "teppp": {
-          "value": 566
+          "value": 569
         }
       },
       "oneQBValues": {
-        "value": 794,
+        "value": 797,
         "tep": {
-          "value": 794
+          "value": 797
         },
         "tepp": {
-          "value": 794
+          "value": 797
         },
         "teppp": {
-          "value": 794
+          "value": 797
         }
       },
       "age": 25.7,
@@ -14821,15 +14821,15 @@
         }
       },
       "oneQBValues": {
-        "value": 701,
+        "value": 698,
         "tep": {
-          "value": 701
+          "value": 698
         },
         "tepp": {
-          "value": 701
+          "value": 698
         },
         "teppp": {
-          "value": 701
+          "value": 698
         }
       },
       "age": 27.6,
@@ -14933,27 +14933,27 @@
       "position": "WR",
       "team": "TEN",
       "superflexValues": {
-        "value": 519,
+        "value": 522,
         "tep": {
-          "value": 519
+          "value": 522
         },
         "tepp": {
-          "value": 519
+          "value": 522
         },
         "teppp": {
-          "value": 519
+          "value": 522
         }
       },
       "oneQBValues": {
-        "value": 673,
+        "value": 676,
         "tep": {
-          "value": 673
+          "value": 676
         },
         "tepp": {
-          "value": 673
+          "value": 676
         },
         "teppp": {
-          "value": 673
+          "value": 676
         }
       },
       "age": 25.9,
@@ -14964,27 +14964,27 @@
       "position": "WR",
       "team": "LAR",
       "superflexValues": {
-        "value": 516,
+        "value": 513,
         "tep": {
-          "value": 516
+          "value": 513
         },
         "tepp": {
-          "value": 516
+          "value": 513
         },
         "teppp": {
-          "value": 516
+          "value": 513
         }
       },
       "oneQBValues": {
-        "value": 715,
+        "value": 712,
         "tep": {
-          "value": 715
+          "value": 712
         },
         "tepp": {
-          "value": 715
+          "value": 712
         },
         "teppp": {
-          "value": 715
+          "value": 712
         }
       },
       "age": 25.1,
@@ -14995,93 +14995,93 @@
       "position": "RB",
       "team": "HOU",
       "superflexValues": {
-        "value": 491,
+        "value": 494,
         "tep": {
-          "value": 491
+          "value": 494
         },
         "tepp": {
-          "value": 491
+          "value": 494
         },
         "teppp": {
-          "value": 491
+          "value": 494
         }
       },
       "oneQBValues": {
-        "value": 646,
+        "value": 649,
         "tep": {
-          "value": 646
+          "value": 649
         },
         "tepp": {
-          "value": 646
+          "value": 649
         },
         "teppp": {
-          "value": 646
+          "value": 649
         }
       },
       "age": 27.3,
       "sleeperId": "11588"
     },
     {
-      "playerName": "Mecole Hardman",
-      "position": "WR",
-      "team": "IND",
-      "superflexValues": {
-        "value": 489,
-        "tep": {
-          "value": 489
-        },
-        "tepp": {
-          "value": 489
-        },
-        "teppp": {
-          "value": 489
-        }
-      },
-      "oneQBValues": {
-        "value": 557,
-        "tep": {
-          "value": 557
-        },
-        "tepp": {
-          "value": 557
-        },
-        "teppp": {
-          "value": 557
-        }
-      },
-      "age": 28.7,
-      "sleeperId": "5917"
-    },
-    {
       "playerName": "Mason Tipton",
       "position": "WR",
       "team": "NOS",
       "superflexValues": {
-        "value": 484,
+        "value": 490,
         "tep": {
-          "value": 484
+          "value": 490
         },
         "tepp": {
-          "value": 484
+          "value": 490
         },
         "teppp": {
-          "value": 484
+          "value": 490
         }
       },
       "oneQBValues": {
-        "value": 577,
+        "value": 583,
         "tep": {
-          "value": 577
+          "value": 583
         },
         "tepp": {
-          "value": 577
+          "value": 583
         },
         "teppp": {
-          "value": 577
+          "value": 583
         }
       },
       "age": 26.2,
       "sleeperId": "11895"
+    },
+    {
+      "playerName": "Mecole Hardman",
+      "position": "WR",
+      "team": "IND",
+      "superflexValues": {
+        "value": 486,
+        "tep": {
+          "value": 486
+        },
+        "tepp": {
+          "value": 486
+        },
+        "teppp": {
+          "value": 486
+        }
+      },
+      "oneQBValues": {
+        "value": 554,
+        "tep": {
+          "value": 554
+        },
+        "tepp": {
+          "value": 554
+        },
+        "teppp": {
+          "value": 554
+        }
+      },
+      "age": 28.7,
+      "sleeperId": "5917"
     },
     {
       "playerName": "Jeremy Ruckert",
@@ -15177,37 +15177,6 @@
       "sleeperId": "6920"
     },
     {
-      "playerName": "Jalen Reagor",
-      "position": "WR",
-      "team": "MIA",
-      "superflexValues": {
-        "value": 459,
-        "tep": {
-          "value": 459
-        },
-        "tepp": {
-          "value": 459
-        },
-        "teppp": {
-          "value": 459
-        }
-      },
-      "oneQBValues": {
-        "value": 565,
-        "tep": {
-          "value": 565
-        },
-        "tepp": {
-          "value": 565
-        },
-        "teppp": {
-          "value": 565
-        }
-      },
-      "age": 27.9,
-      "sleeperId": "6798"
-    },
-    {
       "playerName": "Julius Chestnut",
       "position": "RB",
       "team": "TEN",
@@ -15248,10 +15217,10 @@
           "value": 799
         },
         "tepp": {
-          "value": 964
+          "value": 963
         },
         "teppp": {
-          "value": 1128
+          "value": 1127
         }
       },
       "oneQBValues": {
@@ -15268,6 +15237,37 @@
       },
       "age": 29.7,
       "sleeperId": "5973"
+    },
+    {
+      "playerName": "Jalen Reagor",
+      "position": "WR",
+      "team": "MIA",
+      "superflexValues": {
+        "value": 453,
+        "tep": {
+          "value": 453
+        },
+        "tepp": {
+          "value": 453
+        },
+        "teppp": {
+          "value": 453
+        }
+      },
+      "oneQBValues": {
+        "value": 559,
+        "tep": {
+          "value": 559
+        },
+        "tepp": {
+          "value": 559
+        },
+        "teppp": {
+          "value": 559
+        }
+      },
+      "age": 27.9,
+      "sleeperId": "6798"
     },
     {
       "playerName": "Austin Hooper",
@@ -15332,66 +15332,66 @@
       "sleeperId": "9999"
     },
     {
-      "playerName": "Van Jefferson",
-      "position": "WR",
-      "team": "WAS",
-      "superflexValues": {
-        "value": 450,
-        "tep": {
-          "value": 450
-        },
-        "tepp": {
-          "value": 450
-        },
-        "teppp": {
-          "value": 450
-        }
-      },
-      "oneQBValues": {
-        "value": 524,
-        "tep": {
-          "value": 524
-        },
-        "tepp": {
-          "value": 524
-        },
-        "teppp": {
-          "value": 524
-        }
-      },
-      "age": 30.3,
-      "sleeperId": "6853"
-    },
-    {
       "playerName": "Donovan Edwards",
       "position": "RB",
       "team": "FA",
       "superflexValues": {
-        "value": 446,
+        "value": 449,
         "tep": {
-          "value": 446
+          "value": 449
         },
         "tepp": {
-          "value": 446
+          "value": 449
         },
         "teppp": {
-          "value": 446
+          "value": 449
         }
       },
       "oneQBValues": {
-        "value": 534,
+        "value": 537,
         "tep": {
-          "value": 534
+          "value": 537
         },
         "tepp": {
-          "value": 534
+          "value": 537
         },
         "teppp": {
-          "value": 534
+          "value": 537
         }
       },
       "age": 23.7,
       "sleeperId": "12515"
+    },
+    {
+      "playerName": "Van Jefferson",
+      "position": "WR",
+      "team": "WAS",
+      "superflexValues": {
+        "value": 447,
+        "tep": {
+          "value": 447
+        },
+        "tepp": {
+          "value": 447
+        },
+        "teppp": {
+          "value": 447
+        }
+      },
+      "oneQBValues": {
+        "value": 521,
+        "tep": {
+          "value": 521
+        },
+        "tepp": {
+          "value": 521
+        },
+        "teppp": {
+          "value": 521
+        }
+      },
+      "age": 30.3,
+      "sleeperId": "6853"
     },
     {
       "playerName": "Mason Rudolph",
