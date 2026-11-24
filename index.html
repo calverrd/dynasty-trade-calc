@@ -327,6 +327,9 @@
         <div id="draftOrderStrip" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
       </div>
 
+      <!-- Sell windows on my roster -->
+      <div id="sellCard" class="hidden bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5"></div>
+
       <!-- League Power Rankings Table -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
@@ -893,6 +896,44 @@
         <span class="inline-flex w-14 h-2 rounded-sm overflow-hidden"><span class="bg-emerald-600" style="width:${e}%"></span><span class="bg-amber-400" style="width:${s}%"></span><span class="bg-rose-500" style="width:${bu}%"></span></span>
         <span class="text-[10px]"><span class="font-bold text-emerald-700 dark:text-emerald-400">${e}% elite</span> · <span class="font-bold text-amber-600 dark:text-amber-400">${s}% starter</span> · <span class="font-bold text-rose-600 dark:text-rose-400">${bu}% bust</span></span></span>`;
     }
+
+    // ---- Veteran sell windows (2015-2024 study: 876 seasons of 12+ PPG; QB 16+) ----
+    // Odds a current starter posts 12+ PPG again next season (8+ games), by position, age and whether
+    // his PPG is above that position's median. Smoothed so odds never rise with age past the cliff.
+    let PPG = {};
+    const SELL = {
+      RB: { med: 14.9, ages: [24, 26, 27, 28, 29], top: [.88, .78, .82, .67, .57, .22], bot: [.51, .44, .46, .22, .17, .17] },
+      WR: { med: 15.0, ages: [25, 27, 29, 30, 31], top: [.74, .72, .83, .75, .75, .38], bot: [.59, .58, .41, .29, .29, .09] },
+      TE: { med: 14.4, ages: [26, 28, 30, 31, 32], top: [.75, .75, .75, .75, .75, .75], bot: [.46, .40, .40, .40, .25, .12] }
+    };
+    function sellInfo(p) {
+      if (!p || p.pick || !p.age) return null;
+      const r = PPG[normName(p.name)];
+      const cfg = SELL[p.pos];
+      if (!r || !cfg || r.pos !== p.pos || r.ppg < 12) return null;
+      const age = Number(p.age);
+      const i = cfg.ages.filter(a => age >= a).length;
+      const odds = Math.round(100 * (r.ppg >= cfg.med ? cfg.top : cfg.bot)[i]);
+      let flag = null;
+      if (p.pos === 'RB') flag = age >= 28 ? 'now' : age >= 27 ? 'window' : null;
+      if (p.pos === 'WR') flag = age >= 31 ? 'now' : (age >= 29 && r.ppg < cfg.med) ? 'window' : null;
+      if (p.pos === 'TE' && r.ppg < cfg.med) flag = age >= 32 ? 'now' : age >= 31 ? 'window' : null;
+      return { odds, flag, ppg: r.ppg, season: r.s, gp: r.gp, age };
+    }
+    function sellBadge(p) {
+      const x = sellInfo(p);
+      if (!x || !x.flag) return '';
+      const cls = x.flag === 'now' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : 'bg-amber-400/20 text-amber-800 dark:text-amber-300';
+      return `<span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap ${cls}" title="${p.pos}, age ${x.age.toFixed(1)}, ${x.ppg} PPG in ${x.season}: historically ${x.odds}% of players like this posted 12+ PPG again the next season">${x.flag === 'now' ? 'SELL NOW' : 'SELL WINDOW'} · ${x.odds}%</span>`;
+    }
+    function sellLine(p) {
+      const x = sellInfo(p);
+      if (!x) return '';
+      return ` · <span title="Share of similar players (position, age, PPG) who posted 12+ PPG again the next season, 2015-2024">Next-year odds: <strong>${x.odds}%</strong> to repeat 12+ (${x.ppg} PPG in ${x.season})</span>`;
+    }
+    fetch(`./ppg.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
+      if (d && d.players) { PPG = d.players; try { all(); } catch (e) { /* app not ready yet; next render picks it up */ } }
+    }).catch(() => {});
 
     function bucketBadge(p) {
       const b = getBucket(p);
@@ -2089,8 +2130,8 @@
       const ser = histSeries(p, days);
       const posLbl = p.pick ? 'Pick' : p.pos;
       document.getElementById('pmHeader').innerHTML = `
-        <div class="flex items-center gap-2 flex-wrap">${posTag(p.pos)}<h3 class="text-base sm:text-lg font-extrabold">${esc(p.name)}</h3>${p.pick ? pickOddsHtml(p) : bucketBadge(p)}${!p.pick && OWN[p.id] !== undefined && OWN[p.id] !== ME && T[ME] ? `<button type="button" data-findpkg="${p.id}" class="ml-auto px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Find offers for him →</button>` : ''}</div>
-        <div class="text-xs text-[#5d6672] dark:text-[#98a2ae] mt-0.5">${p.pick ? `Projected ${esc(p.tier || 'mid')} pick · KTC history uses its “${esc((p.ktcKey || '').split('|')[0])}” value` : `${esc(p.team || 'FA')}${p.age ? ` · Age ${Number(p.age).toFixed(1)}` : ''}`} · ${esc(ownTxt(p.id))}</div>`;
+        <div class="flex items-center gap-2 flex-wrap">${posTag(p.pos)}<h3 class="text-base sm:text-lg font-extrabold">${esc(p.name)}</h3>${p.pick ? pickOddsHtml(p) : bucketBadge(p) + sellBadge(p)}${!p.pick && OWN[p.id] !== undefined && OWN[p.id] !== ME && T[ME] ? `<button type="button" data-findpkg="${p.id}" class="ml-auto px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Find offers for him →</button>` : ''}</div>
+        <div class="text-xs text-[#5d6672] dark:text-[#98a2ae] mt-0.5">${p.pick ? `Projected ${esc(p.tier || 'mid')} pick · KTC history uses its “${esc((p.ktcKey || '').split('|')[0])}” value` : `${esc(p.team || 'FA')}${p.age ? ` · Age ${Number(p.age).toFixed(1)}` : ''}${sellLine(p)}`} · ${esc(ownTxt(p.id))}</div>`;
       const t7 = trendWindow(p, 7), t30 = trendWindow(p, 30);
       const chg = (t, lbl) => {
         if (!t) return `<div class="text-sm font-extrabold text-[#5d6672] dark:text-[#98a2ae]">—</div><div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">${lbl}: not enough history yet</div>`;
@@ -2375,7 +2416,7 @@
             </div>
           </td>
           <td class="py-2 pr-2 hidden sm:table-cell text-xs text-[#5d6672] dark:text-[#98a2ae] truncate max-w-[140px]">${esc(ownTxt(p.id))}</td>
-          <td class="py-2 pr-2 hidden md:table-cell">${bucketBadge(p)}</td>
+          <td class="py-2 pr-2 hidden md:table-cell">${bucketBadge(p)}${sellBadge(p)}</td>
           <td class="py-2 pr-2 text-right hidden lg:table-cell text-[11px] text-[#5d6672] dark:text-[#98a2ae]">${p.k ? fmt(p.k) : '—'} / ${p.fRaw ? fmt(p.fRaw) : '—'}</td>
           <td class="py-2 pr-2 text-right font-extrabold">${fmt(V[p.id])}</td>
           <td class="py-2 pl-2 text-right whitespace-nowrap">
@@ -2401,7 +2442,7 @@
             ${posTag(p.pos)}
             <div class="min-w-0">
               <div class="text-xs font-bold truncate"><button type="button" data-player="${p.id}" class="hover:underline cursor-pointer">${esc(p.name)}</button>${item.via && item.via !== 'own' ? ` <span class="font-normal text-[#5d6672]">(${esc(item.via)})</span>` : ''}${trendBadge(p)}</div>
-              <div class="mt-0.5">${p.pick ? pickOddsHtml(p) || bucketBadge(p) : bucketBadge(p)}</div>
+              <div class="mt-0.5">${p.pick ? pickOddsHtml(p) || bucketBadge(p) : bucketBadge(p) + sellBadge(p)}</div>
             </div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
@@ -3455,12 +3496,35 @@
       });
     }
 
+    function renderSellCard() {
+      const el = document.getElementById('sellCard');
+      if (!el) return;
+      if (!owners.length || !T[ME]) { el.classList.add('hidden'); return; }
+      const mine = (T[ME].ids || []).map(id => P[id]).filter(p => p && sellInfo(p) && sellInfo(p).flag)
+        .sort((a, b) => sellInfo(a).odds - sellInfo(b).odds);
+      el.classList.remove('hidden');
+      const head = `<div><h2 class="text-sm font-bold">Sell windows on your roster</h2>
+        <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Starters at the age where production usually drops. The % is how often similar players (position, age, PPG) posted 12+ PPG again the next season, 2015–2024. RBs fall off at 27; WRs under 15 PPG at 29 and everyone at 31; TEs under 14.4 PPG at 31. QBs don't show an age cliff. Buyers = contenders weakest at that position.</p></div>`;
+      if (!mine.length) { el.innerHTML = head + `<div class="text-xs text-[#5d6672] dark:text-[#98a2ae]">No starters on your roster are in a sell window right now.</div>`; return; }
+      const { rows } = getLeaguePartnerProfiles();
+      const buyers = pos => rows.filter(r => r.o !== ME && r.arch.label === 'Contender').sort((a, b) => a.posTotals[pos] - b.posTotals[pos]).slice(0, 2).map(r => r.t.n);
+      el.innerHTML = head + `<div class="grid sm:grid-cols-2 gap-2">${mine.map(p => {
+        const x = sellInfo(p);
+        const b = buyers(p.pos);
+        return `<div class="p-2.5 rounded-lg bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] text-xs">
+          <div class="flex items-center gap-2 flex-wrap">${posTag(p.pos)}<button type="button" data-player="${p.id}" class="font-bold hover:underline cursor-pointer">${esc(p.name)}</button>${sellBadge(p)}<span class="ml-auto font-extrabold">${fmt(V[p.id])}</span></div>
+          <div class="mt-1 text-[#5d6672] dark:text-[#98a2ae]">Age ${x.age.toFixed(1)} · ${x.ppg} PPG in ${x.season} (${x.gp} games)${b.length ? ` · Buyers: ${esc(b.join(', '))}` : ''}</div>
+        </div>`;
+      }).join('')}</div>`;
+    }
+
     function all() {
       syncControls();
       renderChart();
       renderCalc();
       renderTradeIdeas();
       renderLeague();
+      renderSellCard();
       sendLeagueToFrames();
       renderScout();
       renderMovers();
