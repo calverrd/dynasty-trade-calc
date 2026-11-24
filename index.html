@@ -121,6 +121,10 @@
 
     <!-- ==================== TAB 1: TRADE CHART ==================== -->
     <section id="view-chart" class="hidden space-y-3">
+      <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
+        <summary class="cursor-pointer font-bold">How to use this tab</summary>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Values:</strong> each player's value blends KeepTradeCut and FantasyCalc. Use Blend / KTC / FC and the KTC % slider at the top to change the mix; it updates every tab.</li><li><strong>Find a player:</strong> search, filter by position or Pick, or set the owner menu to one team to see just their roster.</li><li><strong>Badges:</strong> the bucket badge shows that player's profile bucket with its hit % and repeat %. A <strong>SELL WINDOW</strong> or <strong>SELL NOW</strong> tag means he's at the age where players like him usually decline, with his odds to post 12+ PPG again next season.</li><li><strong>Build a trade:</strong> tap +A or +B to drop a player or pick into the trade calculator. Tap a name for his value history and next-year odds.</li><li><strong>Rookie picks:</strong> open “What a rookie pick usually becomes” above the list for elite / starter / bust odds by draft slot.</li></ul>
+      </details>
       <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4">
         <summary class="cursor-pointer text-sm font-extrabold">What a rookie pick usually becomes</summary>
         <p class="text-xs text-[#5d6672] dark:text-[#98a2ae] mt-1 mb-3">2015–2023 rookie QBs, WRs, RBs and TEs in a 12-team superflex draft order. There's no historical rookie ADP here, so the order is NFL draft slot with RBs moved up 18 picks (fantasy drafts take Round 2 RBs like Breece Hall and Jonathan Taylor in the 1st). That puts about two QBs in each class's top four. Elite = QB 20+, WR 14+, RB 15+, TE 17+ PPG in a completed season; Starter = QB 16+, others 12+; Bust = neither. The same odds show under every pick in the trade calculator.</p>
@@ -170,6 +174,10 @@
 
     <!-- ==================== TAB 2: TRADE CALCULATOR ==================== -->
     <section id="view-calc" class="space-y-4">
+      <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
+        <summary class="cursor-pointer font-bold">How to use this tab</summary>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Pick the two teams</strong> at the top (your team is usually side A), then add players or picks to each side with the search boxes or the roster quick-add.</li><li><strong>Read the verdict:</strong> it compares the two sides after the value adjustment (which accounts for getting the best player). Within the Fair ±% slider counts as fair; otherwise the suggestions show what to add to the short side.</li><li><strong>Before → after ranks:</strong> the table shows how each team's QB / RB / WR / TE ranks, starting lineup, win-now and total value would move. Screenshot it to pitch the deal.</li><li><strong>Picks</strong> show their elite / starter / bust odds under the name, based on where that pick is projected to land. Players in a sell window are tagged.</li><li><strong>Trade ideas:</strong> pick one of your players in the idea finder for fair offers from teams whose needs fit yours. To go after a specific player, tap <strong>Offer</strong> on a rookie or bucket tab, or <strong>Find offers for him</strong> on his player card, and the Trade Finder loads the best-fitting package.</li></ul>
+      </details>
       <!-- Top Action Bar -->
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="text-xs text-[#5d6672] dark:text-[#98a2ae]">
@@ -319,11 +327,24 @@
 
     <!-- ==================== TAB 3: LEAGUE (POWER RANKINGS & PARTNER MATCHER) ==================== -->
     <section id="view-league" class="hidden space-y-4">
+      <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
+        <summary class="cursor-pointer font-bold">How to use this tab</summary>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Draft order:</strong> the strip projects next year's rookie draft. Choose whether your league orders it by standings or by Max PF; it's saved per league and sets every pick's Early / Mid / Late value and odds.</li><li><strong>Sell windows on your roster:</strong> your starters at the age where production usually drops, with the contenders weakest at that position as likely buyers.</li><li><strong>Power rankings:</strong> click any column to sort. Position columns rank each team's value at that spot; Fit scores how well a team's surpluses match your needs; Max PF and Win Now show who's actually strong this season.</li><li><strong>Find a partner:</strong> filter to Contenders, Rebuilders or teams with next year's 1st, then tap <strong>Trade →</strong> to open the calculator against that team.</li><li><strong>Trade history</strong> at the bottom grades every trade in the league at today's values, so you can see who tends to win deals.</li></ul>
+      </details>
       <!-- 2027 Draft Order Strip -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5">
-        <div>
-          <h2 class="text-sm font-bold">Projected <span class="draft-yr">2027</span> Draft Order</h2>
-          <p id="draftOrderSub" class="text-xs text-[#5d6672] dark:text-[#98a2ae]"></p>
+        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+          <div>
+            <h2 class="text-sm font-bold">Projected <span class="draft-yr">2027</span> Draft Order</h2>
+            <p id="draftOrderSub" class="text-xs text-[#5d6672] dark:text-[#98a2ae]"></p>
+          </div>
+          <div class="shrink-0 flex items-center gap-2 text-xs">
+            <span class="text-[#5d6672] dark:text-[#98a2ae]">This league orders by</span>
+            <div class="inline-flex rounded-lg border border-[#d6dbe3] dark:border-[#2e3540] overflow-hidden bg-[#f6f7f9] dark:bg-[#0f1216]">
+              <button type="button" data-dorder="standings" class="dorder-btn px-2.5 py-1.5 font-semibold cursor-pointer">Standings</button>
+              <button type="button" data-dorder="maxpf" class="dorder-btn px-2.5 py-1.5 font-semibold cursor-pointer border-l border-[#d6dbe3] dark:border-[#2e3540]">Max PF</button>
+            </div>
+          </div>
         </div>
         <div id="draftOrderStrip" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
       </div>
@@ -385,6 +406,10 @@
 
     <!-- ==================== TAB 4: SCOUT & WAIVERS (RADAR + FREE AGENTS) ==================== -->
     <section id="view-scout" class="hidden space-y-4">
+      <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
+        <summary class="cursor-pointer font-bold">How to use this tab</summary>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Sell-High Radar:</strong> your players whose value is ahead of their profile: low repeat-rate spikes, big KTC-vs-FantasyCalc gaps, and aging players. Shop these first.</li><li><strong>Buy-Low Targets:</strong> high repeat-rate players on other rosters that the market is discounting.</li><li><strong>Risers and Fallers:</strong> the biggest recent value moves on rostered players in your league.</li><li><strong>Best Available:</strong> the most valuable unrostered players in your league, with Sleeper add trends. Check it before waivers run.</li><li>Tap any name for his value history and odds; everything follows the value mix you set at the top.</li></ul>
+      </details>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- Sell-High Radar -->
         <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
@@ -1895,8 +1920,14 @@
         const newOWN = {};
         const rosterIdToKey = {};
 
-        // Sort rosters for projected 2027 draft order (worst wins first, then lowest PF)
+        // Sort rosters for projected draft order: by standings (worst wins first, then lowest PF)
+        // or, for leagues that set it that way, by lowest Max PF (best possible lineup points)
+        const maxPf = r => (r.settings?.ppts || 0) + (r.settings?.ppts_decimal || 0) / 100;
         const sortedForDraft = (rosters || []).slice().sort((a, b) => {
+          if (activeLeague.draftOrder === 'maxpf') {
+            const d = maxPf(a) - maxPf(b);
+            if (d) return d;
+          }
           const wa = a.settings?.wins || 0, wb = b.settings?.wins || 0;
           if (wa !== wb) return wa - wb;
           const pfa = (a.settings?.fpts || 0) + (a.settings?.fpts_decimal || 0) / 100;
@@ -3094,10 +3125,14 @@
         const scaleNote = nTeams !== 12
           ? ` In a ${nTeams}-team league each pick is valued by its overall pick number (e.g. 1.${nTeams} = overall #${nTeams}, priced like a 12-team ${Math.ceil(nTeams / 12)}.${String(nTeams - (Math.ceil(nTeams / 12) - 1) * 12).padStart(2, '0')}).`
           : '';
-        draftSub.textContent = `Worst record picks first (lower PF breaks ties). Sets Early (1–${earlyCut}), Mid (${earlyCut + 1}–${midCut}), and Late (${midCut + 1}–${nTeams}) ${DRAFT_YEARS[0]} pick tiers. ${DRAFT_YEARS[0]} picks are valued at their projected slot (e.g. 1.03).${scaleNote}`;
+        draftSub.textContent = `${activeLeague.draftOrder === 'maxpf' ? 'Lowest Max PF picks first (Max PF = what the best possible lineup would have scored each week).' : 'Worst record picks first (lower PF breaks ties).'} Saved per league. Sets Early (1–${earlyCut}), Mid (${earlyCut + 1}–${midCut}), and Late (${midCut + 1}–${nTeams}) ${DRAFT_YEARS[0]} pick tiers. ${DRAFT_YEARS[0]} picks are valued at their projected slot (e.g. 1.03).${scaleNote}`;
       }
 
       document.querySelectorAll('.draft-yr').forEach(el => { el.textContent = DRAFT_YEARS[0]; });
+      document.querySelectorAll('.dorder-btn').forEach(b => {
+        const on = (activeLeague.draftOrder || 'standings') === b.dataset.dorder;
+        b.classList.toggle('bg-blue-600', on); b.classList.toggle('text-white', on);
+      });
       document.getElementById('draftOrderStrip').innerHTML = bySlot.map((o, idx) => {
         const slot = T[o].slot || (idx + 1);
         const tier = slot <= earlyCut ? 'Early' : slot <= midCut ? 'Mid' : 'Late';
@@ -3108,7 +3143,7 @@
             <span class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">${tier}</span>
           </div>
           <div class="truncate font-semibold mt-0.5">${esc(T[o].n)}</div>
-          <div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">${esc(T[o].r || '0-0')} · ${fmt(T[o].pf)} PF</div>
+          <div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">${esc(T[o].r || '0-0')} · ${activeLeague.draftOrder === 'maxpf' ? `${fmt(T[o].mpf || 0)} Max PF` : `${fmt(T[o].pf)} PF`}</div>
         </div>`;
       }).join('');
 
@@ -3471,6 +3506,7 @@
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
             <button type="button" data-qbtoggle="${esc(lg.id)}" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-600/12 text-blue-700 dark:text-blue-300 cursor-pointer">${qbTxt}</button>
+            <button type="button" data-dordertoggle="${esc(lg.id)}" title="How this league sets rookie draft order" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-600/12 text-blue-700 dark:text-blue-300 cursor-pointer">Draft: ${lg.draftOrder === 'maxpf' ? 'Max PF' : 'Standings'}</button>
             ${savedLeagues.length > 1 ? `<button type="button" data-delleague="${esc(lg.id)}" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-500/12 text-rose-600 dark:text-rose-400 cursor-pointer">✕</button>` : ''}
           </div>
         </div>`;
@@ -3755,6 +3791,16 @@
       document.getElementById('btnOpenSync')?.addEventListener('click', () => syncModal.classList.remove('hidden'));
       document.getElementById('btnCloseSync')?.addEventListener('click', () => syncModal.classList.add('hidden'));
       document.getElementById('btnSyncLive')?.addEventListener('click', () => syncLiveSleeperAndFC(false));
+      document.querySelectorAll('.dorder-btn').forEach(b => b.addEventListener('click', () => {
+        const mode = b.dataset.dorder;
+        if ((activeLeague.draftOrder || 'standings') === mode) return;
+        activeLeague.draftOrder = mode;
+        const saved = savedLeagues.find(l => l.id === activeLeague.id);
+        if (saved) saved.draftOrder = mode;
+        saveLeaguesToStorage();
+        toast(mode === 'maxpf' ? 'Draft order now by lowest Max PF. Re-syncing picks…' : 'Draft order now by standings. Re-syncing picks…');
+        syncLiveSleeperAndFC(false);
+      }));
       document.getElementById('btnCopyKtcCmd')?.addEventListener('click', () => {
         copyText('copy(JSON.stringify(window.playersArray.map(p=>({playerName:p.playerName,position:p.position,team:p.team,age:p.age,superflexValues:p.superflexValues,oneQBValues:p.oneQBValues}))))');
       });
@@ -3897,6 +3943,20 @@
           switchTab('calc');
           window.scrollTo({ top: 0, behavior: 'smooth' });
           toast(`Loaded ${P[pId]?.name} on Side B!`);
+          return;
+        }
+        const doToggle = e.target.closest('[data-dordertoggle]');
+        if (doToggle) {
+          const lg = savedLeagues.find(l => l.id === doToggle.dataset.dordertoggle);
+          if (lg) {
+            lg.draftOrder = lg.draftOrder === 'maxpf' ? 'standings' : 'maxpf';
+            if (lg.id === activeLeague.id) {
+              activeLeague.draftOrder = lg.draftOrder;
+              syncLiveSleeperAndFC(false);
+            }
+            saveLeaguesToStorage();
+            renderSavedLeaguesModal();
+          }
           return;
         }
         const qbToggle = e.target.closest('[data-qbtoggle]');
