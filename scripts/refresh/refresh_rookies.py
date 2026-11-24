@@ -137,10 +137,10 @@ def comps(rows, pairs):
 
 
 # ---------------------------------------------------------------- Year 2 (all positions)
-Y2 = {  # usage formula per game, and tag cut-offs: low rookie < lo, Year-2 jump >= hi, rising >= rise
-    "WR": dict(lo=15, hi=15, rise=12),
-    "RB": dict(lo=14, hi=20, rise=17),
-    "TE": dict(lo=6, hi=9, rise=7.5),
+Y2 = {  # JUMPED tag cut-offs: rookie usage < lo and Year-2 usage >= hi (RISING/FADING were dropped Nov 2026)
+    "WR": dict(lo=15, hi=15),
+    "RB": dict(lo=14, hi=20),
+    "TE": dict(lo=6, hi=9),
 }
 
 
@@ -193,14 +193,7 @@ def add_year2(rows, pos):
         u1, u2 = o.get("u") or 0.0, o["u2"]   # no early rookie games counts as 0 usage
         if u2 is None or o["g2"] < 2:
             continue
-        t = []
-        if u1 < cut["lo"] and u2 >= cut["hi"]:
-            t.append("jump")
-        elif u1 < cut["lo"] and u2 >= cut["rise"]:
-            t.append("rise")
-        if u1 >= cut["hi"] and u2 < cut["hi"]:
-            t.append("fade")
-        o["y2t"] = t
+        o["y2t"] = ["jump"] if (u1 < cut["lo"] and u2 >= cut["hi"]) else []
 
 
 # ---------------------------------------------------------------- RB / TE full rebuild
