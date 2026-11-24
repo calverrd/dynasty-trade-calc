@@ -320,6 +320,14 @@
     const isHit12 = p => p.tier === 'g17' || p.tier === 'g14' || p.tier === 'g12';
     const pct = (a, n) => (n ? Math.round(100 * a / n) : 0);
 
+    // Show a segment's % only when it fits inside the segment
+    function fitSegLabels(el) {
+      requestAnimationFrame(() => el.querySelectorAll('.seglbl').forEach(l => {
+        l.style.visibility = l.offsetWidth + 4 <= l.parentElement.clientWidth ? 'visible' : 'hidden';
+      }));
+    }
+    window.addEventListener('resize', () => { const el = document.getElementById('outcome'); if (el) fitSegLabels(el); });
+
     // Career outcomes for whatever is currently filtered (2025-26 non-hitters are too early to count)
     function renderOutcome(rows) {
       const done = rows.filter(p => p.tier !== 'tbd');
@@ -332,7 +340,7 @@
       const r = n - g - yl;
       const el = document.getElementById('outcome');
       if (!n) { el.innerHTML = `<div class="text-xs text-slate-500 dark:text-slate-400">No players with a settled career outcome in this view${early ? ` (${early} too early to call)` : ''}.</div>`; return; }
-      const seg = (v, cls, label) => v ? `<div class="${cls} h-full flex items-center justify-center text-[10px] sm:text-[11px] font-bold text-white overflow-hidden whitespace-nowrap" style="width:${100 * v / n}%" title="${label}: ${v} of ${n} (${pct(v, n)}%)">${pct(v, n) >= 9 ? pct(v, n) + '%' : ''}</div>` : '';
+      const seg = (v, cls, label) => v ? `<div class="${cls} h-full flex items-center justify-center text-[10px] sm:text-[11px] font-bold text-white overflow-hidden whitespace-nowrap" style="width:${100 * v / n}%" title="${label}: ${v} of ${n} (${pct(v, n)}%)"><span class="seglbl">${pct(v, n)}%</span></div>` : '';
       el.innerHTML = `
         <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 mb-1.5">
           <div class="text-xs sm:text-sm font-bold">Career outcomes for this view: <span class="text-emerald-700 dark:text-emerald-300">${pct(g + yl, n)}% reached 12+ PPG</span></div>
@@ -347,6 +355,7 @@
           <span><span class="inline-block w-2 h-2 rounded-sm bg-emerald-400 mr-1"></span>12–13.9: ${lo} (${pct(lo, n)}%)</span>
           <span><span class="inline-block w-2 h-2 rounded-sm bg-rose-600 mr-1"></span>Under 12: ${r} (${pct(r, n)}%)</span>
         </div>`;
+      fitSegLabels(el);
     }
 
     const NCOLS = () => (st.mode === 8 ? 14 : 10) + (LEAGUE ? 1 : 0);
