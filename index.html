@@ -89,6 +89,7 @@
           <a href="#rookies" data-tab="rookies" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookie WRs</a>
           <a href="#rbs" data-tab="rbs" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookie RBs</a>
           <a href="#tes" data-tab="tes" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookie TEs</a>
+          <a href="#pros" data-tab="pros" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Prospects</a>
           <a href="#about" data-tab="about" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">How it works</a>
         </nav>
 
@@ -477,6 +478,12 @@
     <!-- ==================== TAB: ROOKIE RB USAGE (rookie-rb-tracker.html, lazy iframe) ==================== -->
     <section id="view-rbs" class="hidden">
       <iframe id="rbs-frame" data-src="./rookie-rb-tracker.html" title="Rookie RB Usage Tracker"
+        class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1400px;"></iframe>
+    </section>
+
+    <!-- ==================== TAB: 2027 PROSPECTS (prospects.html, lazy iframe) ==================== -->
+    <section id="view-pros" class="hidden">
+      <iframe id="pros-frame" data-src="./prospects.html" title="2027 Prospects"
         class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1400px;"></iframe>
     </section>
 
@@ -1072,6 +1079,21 @@
       const n = Math.ceil(Number(h) || 0);
       if (fr && n > 200 && Math.abs(parseFloat(fr.style.height) - n) > 1) fr.style.height = `${n}px`;
     }
+    // ---- Prospects iframe ----
+    function loadProsFrame() {
+      const fr = document.getElementById('pros-frame');
+      if (!fr || fr.getAttribute('src')) return;
+      fr.addEventListener('load', syncProsFrameTheme);
+      fr.src = fr.dataset.src;
+    }
+    function syncProsFrameTheme() {
+      const fr = document.getElementById('pros-frame');
+      if (!fr || !fr.getAttribute('src')) return;
+      const dark = document.documentElement.classList.contains('dark');
+      try { fr.contentWindow.postMessage({ type: 'dtc-theme', theme: dark ? 'dark' : 'light' }, '*'); } catch (e) {}
+      try { fr.contentDocument.documentElement.classList.toggle('dark', dark); } catch (e) {}
+    }
+
     // ---- Rookie TEs iframe ----
     function loadTesFrame() {
       const fr = document.getElementById('tes-frame');
@@ -1131,6 +1153,7 @@
       if (e.data.frame === 'rookies') resizeRookiesFrame(e.data.height);
       else if (e.data.frame === 'rbs') resizeRbsFrame(e.data.height);
       else if (e.data.frame === 'tes') resizeTesFrame(e.data.height);
+      else if (e.data.frame === 'pros') { const fr = document.getElementById('pros-frame'); const n = Math.ceil(Number(e.data.height) || 0); if (fr && n > 200) fr.style.height = `${n}px`; }
       else resizeBucketsFrame(e.data.height);
     });
 
@@ -1145,6 +1168,7 @@
       syncRookiesFrameTheme();
       syncRbsFrameTheme();
       syncTesFrameTheme();
+      syncProsFrameTheme();
     }
 
     function save() {
@@ -3534,9 +3558,9 @@
     }
 
     function switchTab(tab) {
-      if (!['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'about'].includes(tab)) tab = 'calc';
+      if (!['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'pros', 'about'].includes(tab)) tab = 'calc';
       st.tab = tab;
-      ['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'about'].forEach(t => {
+      ['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'pros', 'about'].forEach(t => {
         const sec = document.getElementById(`view-${t}`);
         if (sec) sec.classList.toggle('hidden', t !== tab);
       });
@@ -3547,6 +3571,7 @@
       if (tab === 'rookies') loadRookiesFrame();
       if (tab === 'rbs') loadRbsFrame();
       if (tab === 'tes') loadTesFrame();
+      if (tab === 'pros') loadProsFrame();
       if (tab === 'league') loadTradeHistory();
       try { history.replaceState(null, '', `#${tab}`); } catch (e) {}
     }
@@ -3916,7 +3941,7 @@
       wireEvents();
       loadFallbackDataset();
       const initialHash = (location.hash || '').replace('#', '');
-      switchTab(['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'about'].includes(initialHash) ? initialHash : 'calc');
+      switchTab(['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'pros', 'about'].includes(initialHash) ? initialHash : 'calc');
       syncLiveSleeperAndFC(true);
     });
   })();

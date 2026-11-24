@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2027 Prospects</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Montserrat', 'system-ui', '-apple-system', 'sans-serif'] } } } };
+  </script>
+  <style>
+    body { font-family: 'Montserrat', system-ui, -apple-system, sans-serif; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+    .pos-btn[aria-pressed="true"] { background: #2563eb; color: #fff; }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { color: #0ea5e9; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased">
+  <main class="max-w-6xl mx-auto px-3 sm:px-5 py-5 space-y-4">
+    <header>
+      <h1 class="text-lg sm:text-xl font-extrabold tracking-tight">2027 Prospects</h1>
+      <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Your early prospect board (as of Nov 18, 2026) with loose hit rates for each profile type. Types will shift as the college season ends, and the odds sharpen once draft capital is known in April.</p>
+    </header>
+
+    <details class="rounded-xl border border-sky-200 dark:border-sky-500/30 bg-sky-50 dark:bg-sky-500/10 text-sm" open>
+      <summary class="cursor-pointer px-4 py-3 font-bold">How to read this</summary>
+      <div class="px-4 pb-4 space-y-2 leading-relaxed text-slate-700 dark:text-slate-300">
+        <p>Rates come from your Profile Buckets history: every past player with that position and profile type, across all draft tiers. Hit = QB 20+, RB 15+, WR 14+, TE 12+ PPG in a season (your bucket thresholds). Starter = QB 16+, RB/WR 12+.</p>
+        <p><strong>These are loose.</strong> Draft capital matters more than type: a Hog WR drafted as an Elite-tier pick hit 78%, but a Clogger-tier Hog hit 9%. Use the second chart to see how much each type depends on where he's drafted, and treat today's type-only rate as a starting point.</p>
+      </div>
+    </details>
+
+    <section class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3">
+      <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 class="text-sm font-bold">Loose hit rate by profile type</h2>
+        <div class="flex gap-3 text-[11px] text-slate-500 dark:text-slate-400">
+          <span><span class="inline-block w-2 h-2 rounded-sm bg-emerald-700 mr-1"></span>Elite</span>
+          <span><span class="inline-block w-2 h-2 rounded-sm bg-emerald-400 mr-1"></span>Hit</span>
+          <span><span class="inline-block w-2 h-2 rounded-sm bg-amber-400 mr-1"></span>Starter</span>
+          <span><span class="inline-block w-2 h-2 rounded-sm bg-rose-500 mr-1"></span>Bust</span>
+        </div>
+      </div>
+      <div id="typeChart" class="grid sm:grid-cols-2 gap-x-6 gap-y-3"></div>
+    </section>
+
+    <section class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3">
+      <div>
+        <h2 class="text-sm font-bold">Same type, by draft tier (hit rate)</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Once a prospect's draft tier is known, read his odds from his row. Cells with fewer than 5 players are faded.</p>
+      </div>
+      <div class="overflow-x-auto"><table class="w-full text-xs sm:text-sm"><thead id="tierHead"></thead><tbody id="tierBody"></tbody></table></div>
+    </section>
+
+    <section class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="inline-flex rounded-lg border border-slate-300 dark:border-slate-700 overflow-hidden text-xs sm:text-sm font-semibold" role="group" aria-label="Position">
+          <button type="button" class="pos-btn px-3 py-1.5" data-pos="" aria-pressed="true">All</button>
+          <button type="button" class="pos-btn px-3 py-1.5 border-l border-slate-300 dark:border-slate-700" data-pos="QB" aria-pressed="false">QB</button>
+          <button type="button" class="pos-btn px-3 py-1.5 border-l border-slate-300 dark:border-slate-700" data-pos="RB" aria-pressed="false">RB</button>
+          <button type="button" class="pos-btn px-3 py-1.5 border-l border-slate-300 dark:border-slate-700" data-pos="WR" aria-pressed="false">WR</button>
+          <button type="button" class="pos-btn px-3 py-1.5 border-l border-slate-300 dark:border-slate-700" data-pos="TE" aria-pressed="false">TE</button>
+        </div>
+        <select id="typef" class="px-3 py-2 rounded-lg text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"><option value="">All types</option></select>
+        <input id="search" type="search" placeholder="Search prospect…" class="px-3 py-2 rounded-lg text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 w-full sm:w-56" />
+        <span id="count" class="text-xs text-slate-500 dark:text-slate-400"></span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs sm:text-sm">
+          <thead class="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+            <tr>
+              <th class="sortable text-left py-2 pr-2" data-k="n">Prospect</th>
+              <th class="sortable text-left py-2 px-2" data-k="pos">Pos</th>
+              <th class="sortable text-left py-2 px-2" data-k="type">Type</th>
+              <th class="sortable text-left py-2 px-2" data-k="hit">Loose odds (type only)</th>
+              <th class="text-left py-2 pl-2">Draft tier</th>
+            </tr>
+          </thead>
+          <tbody id="rows" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+        </table>
+      </div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400">Draft tier fills in after the NFL draft. Board source: your prospects board export, Nov 18, 2026.</p>
+    </section>
+  </main>
+
+  <script>
+  (() => {
+    const D = {"stats": [{"pos": "QB", "type": "Konami", "n": 19, "l1": 37, "l2": 32, "l3": 26, "tiers": {"Cornerstone": {"n": 1, "hit": 100}, "Elite": {"n": 4, "hit": 75}, "Upside": {"n": 5, "hit": 20}, "Depth": {"n": 4, "hit": 25}, "Clogger": {"n": 5, "hit": 0}}}, {"pos": "QB", "type": "Pocket", "n": 128, "l1": 22, "l2": 14, "l3": 5, "tiers": {"Elite": {"n": 7, "hit": 86}, "Upside": {"n": 11, "hit": 27}, "Depth": {"n": 35, "hit": 20}, "Clogger": {"n": 75, "hit": 3}}}, {"pos": "QB", "type": "Scramble", "n": 76, "l1": 42, "l2": 30, "l3": 12, "tiers": {"Elite": {"n": 8, "hit": 100}, "Upside": {"n": 13, "hit": 54}, "Depth": {"n": 17, "hit": 24}, "Clogger": {"n": 38, "hit": 11}}}, {"pos": "RB", "type": "Bellcow", "n": 27, "l1": 74, "l2": 52, "l3": 33, "tiers": {"Cornerstone": {"n": 1, "hit": 100}, "Elite": {"n": 13, "hit": 69}, "Upside": {"n": 3, "hit": 100}, "Clogger": {"n": 10, "hit": 10}}}, {"pos": "RB", "type": "Workhorse", "n": 107, "l1": 46, "l2": 33, "l3": 18, "tiers": {"Elite": {"n": 7, "hit": 100}, "Upside": {"n": 12, "hit": 75}, "Depth": {"n": 33, "hit": 36}, "Clogger": {"n": 55, "hit": 13}}}, {"pos": "RB", "type": "Committee", "n": 268, "l1": 19, "l2": 8, "l3": 3, "tiers": {"Upside": {"n": 5, "hit": 0}, "Depth": {"n": 65, "hit": 18}, "Clogger": {"n": 198, "hit": 5}}}, {"pos": "WR", "type": "Hog", "n": 104, "l1": 55, "l2": 42, "l3": 31, "tiers": {"Cornerstone": {"n": 1, "hit": 100}, "Elite": {"n": 18, "hit": 78}, "Upside": {"n": 41, "hit": 51}, "Depth": {"n": 21, "hit": 29}, "Clogger": {"n": 23, "hit": 9}}}, {"pos": "WR", "type": "Runt", "n": 512, "l1": 15, "l2": 10, "l3": 6, "tiers": {"Elite": {"n": 1, "hit": 0}, "Upside": {"n": 35, "hit": 49}, "Depth": {"n": 152, "hit": 17}, "Clogger": {"n": 324, "hit": 3}}}, {"pos": "TE", "type": "Freak", "n": 44, "l1": 39, "l2": 25, "l3": 14, "tiers": {"Elite": {"n": 1, "hit": 100}, "Upside": {"n": 6, "hit": 100}, "Depth": {"n": 17, "hit": 35}, "Clogger": {"n": 20, "hit": 20}}}, {"pos": "TE", "type": "Gifted", "n": 253, "l1": 17, "l2": 11, "l3": 5, "tiers": {"Elite": {"n": 1, "hit": 100}, "Upside": {"n": 17, "hit": 71}, "Depth": {"n": 63, "hit": 24}, "Clogger": {"n": 172, "hit": 8}}}], "th": {"QB": ["16+", "20+", "24+"], "RB": ["12+", "15+", "18+"], "WR": ["12+", "14+", "16+"], "TE": ["12+", "14+", "17+"]}, "pros": [{"pos": "WR", "type": "Hog", "yr": 2027, "n": "Jeremiah Smith"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "CJ Carr"}, {"pos": "QB", "type": "Konami", "yr": 2027, "n": "Michael Hawkins Jr"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Julian Sayin"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Drew Mestemaker"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Brad Jackson"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Devon Dampier"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Kalieb Osborne"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Darian Mensah"}, {"pos": "WR", "type": "Hog", "yr": 2027, "n": "Charlie Becker"}, {"pos": "WR", "type": "Hog", "yr": 2027, "n": "KJ Duff"}, {"pos": "WR", "type": "Hog", "yr": 2027, "n": "Wyatt Young"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Trey'Dez Green"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Aaron Philo"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Lincoln Kienholz"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Demond Williams Jr"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Sam Leavitt"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Luke Dehnicke"}, {"pos": "WR", "type": "Hog", "yr": 2027, "n": "Nick Marsh"}, {"pos": "RB", "type": "Workhorse", "yr": 2027, "n": "Jadan Baugh"}, {"pos": "RB", "type": "Workhorse", "yr": 2027, "n": "J'Koby Williams"}, {"pos": "RB", "type": "Workhorse", "yr": 2027, "n": "Wayshawn Parker"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "DJ Vonnahme"}, {"pos": "RB", "type": "Workhorse", "yr": 2027, "n": "Ahmad Hardy"}, {"pos": "RB", "type": "Workhorse", "yr": 2027, "n": "Kewan Lacy"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Kari Ashley"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Ryan Wingo"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Ryan Coleman-Williams"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Luke Reynolds"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Mario Craver"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Dante Moore"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Mike Matthews"}, {"pos": "RB", "type": "Workhorse", "yr": 2027, "n": "Jahiem White"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Jeremiah McClellan"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Cam Coleman"}, {"pos": "RB", "type": "Workhorse", "yr": 2027, "n": "Dylan Riley"}, {"pos": "RB", "type": "Workhorse", "yr": 2027, "n": "Antwan Raymond"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Turbo Richard"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Conner Weigman"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Patrick Overmyer"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Gio Lopez"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Arch Manning"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Danny Scudero"}, {"pos": "QB", "type": "Konami", "yr": 2027, "n": "Avery Johnson"}, {"pos": "QB", "type": "Konami", "yr": 2027, "n": "Byrum Brown"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Caleb Odom"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Jordan Shipp"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Terrell Anderson"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Ashton Bethel-Roman"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Kwazi Gilmer"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Anthony Colandrea"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Bryant Wesco Jr"}, {"pos": "RB", "type": "Workhorse", "yr": 2027, "n": "Isaac Brown"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Cameron Dickey"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Gunner Stockton"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "CJ Bailey"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Trinidad Chambliss"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Micah Ford"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Amare Thomas"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Cade Wolford"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Aidan Chiles"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Jordan Faison"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Dilin Jones"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Jeremy Payne"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Joseph Williams"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Chris Durr Jr"}, {"pos": "QB", "type": "Konami", "yr": 2027, "n": "Brendan Sorsby"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Jayden Maiava"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Austin Simmons"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Ethan Grunkemeyer"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Braylon Staley"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Griffin Wilde"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Eric Olsen"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Willie Rodriguez"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Carlos Hernandez"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Kenny Minchey"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Anthony Evans III"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Cayden Lee"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Cam Cook"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Isiah Canion"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Jayce Brown"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Emmett Mosley V"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Chauncey Bowens"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Lawayne McCoy"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Collin Dixon"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Deuce Alexander"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Hogan Hansen"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Eli Finley"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "DeSean Bishop"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Wayne Knight"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Micah Gilbert"}, {"pos": "RB", "type": "Workhorse", "yr": 2027, "n": "Rodney Fields Jr"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Josh Hoover"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Mark Fletcher Jr"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Marcus Stokes"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Tre Richardson"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Fluff Bothwell"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Nate Frazier"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Jackson Harris"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Josh Schuchts"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Jamari Johnson"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Cade Keith"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "LaNorris Sellers"}, {"pos": "RB", "type": "Workhorse", "yr": 2027, "n": "Justice Haynes"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "LJ Martin"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Jackson Arnold"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Malcolm Simmons"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Broc Lowry"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Jelani Thurman"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Yannick Smith"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Noah Fifita"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Junior Sherrill"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Marcel Reed"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Keshaun Singleton"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "TJ Moore"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Jacory Barney Jr"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Benjamin Brahmer"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Jamal Roberts"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Adam Mohammed"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Fame Ijeboi"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Duce Robinson"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Xavier Robinson"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Sean Wilson"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Que'Sean Brown"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Yasin Willis"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Daylan Smothers"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Kendrick Raphael"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Beau Sparks"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Alberto Mendoza"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Kevin Jennings"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Will Henderson III"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Nykahi Davenport"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Jacob Harris"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Jordan Marshall"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Peter Clarke"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Kam Davis"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Darius Taylor"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Dylan Raiola"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Chris Dawn Jr"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Khobie Martin"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Caleb Komolafe"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Kenny Johnson"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Telly Johnson Jr"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Micahi Danzy"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Chris Barnes"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Elija Lofton"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Ethan Davis"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Sire Gaines"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Terrance Carter"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Cutter Boley"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "DJ Lagway"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Reece Vander Zee"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Jai'Den Thomas"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Reed Harris"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Cole Tabb"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Matthew Fuller"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Tre Brown III"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Devin McCuin"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Drake Lindsey"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Hunter Tipton"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Micah Alejado"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Nico Iamaleava"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "JJ Kohl"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Matt Wagner"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Yamir Knight"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Marcel Williams"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Landon Ellis"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Chase Hendricks"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Brett Eskildsen"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Decker DeGraaf"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Kamari Moulton"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Asaad Waseem"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Walker Lyons"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Aneyas Williams"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Parker Kingston"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Cole Keller"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Randy Pittman Jr"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Evan Dickens"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Jekail Middlebrook"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Omarion Miller"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Peyton Lewis"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Brett Norfleet"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Aiden Flora"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "King Miller"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Isaiah Sategna III"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Joe Jackson"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Beau Pribula"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Garrett Oakley"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Kaden Feagin"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Braden Pegan"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Kelby Valsin"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "CJ Baxter"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Mason Mini"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Umari Hatcher"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Benji Blackburn"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Dylan Edwards"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Zion Booker"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Ian Strong"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Hunter Andrews"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "John Mateer"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Rocco Becht"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Dylan Wade"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Lawson Luckie"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Micah Hudson"}, {"pos": "QB", "type": "Scramble", "yr": 2027, "n": "Nathan Hayes"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Dorian Fleming"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Christian Bentancur"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Duke Watson"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Dwight Phillips Jr"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "DeAndre Moore Jr"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Jeron Askren"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Raleek Brown"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Tre Wisner"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Cooper Barkate"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Chauncy Cobb"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Isaiah Johnson"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Jeremiah Hasley"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Nyck Harbor"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Luke Harpring"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Jayden Scott"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Jaden Reddell"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Carson Hansen"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Parker Livingstone"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Easton Messer"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Keyjuan Brown"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Malachi Hosley"}, {"pos": "QB", "type": "Pocket", "yr": 2027, "n": "Caden Veltkamp"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Dre'lon Miller"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Jordan Dwyer"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Landen Thomas"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Jordan Napier"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Camryn Edwards"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Dorian Thomas"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Jayvontay Conner"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Jaleel Skinner"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Jeremiah Cobb"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Jason Patterson"}, {"pos": "RB", "type": "Committee", "yr": 2027, "n": "Bryson Donelson"}, {"pos": "WR", "type": "Runt", "yr": 2027, "n": "Eugene Wilson III"}, {"pos": "TE", "type": "Gifted", "yr": 2027, "n": "Juice Vereen"}], "tiers": ["Cornerstone", "Elite", "Upside", "Depth", "Clogger"]};
+    const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const ORDER = ['QB', 'RB', 'WR', 'TE'];
+    const S = {};
+    D.stats.forEach(s => { S[s.pos + '|' + s.type] = s; });
+    const hitOf = s => (s.pos === 'TE' ? s.l1 : s.l2);   // TE hit = 12+ (lowest tier)
+    const labels = pos => {
+      const [a, b, c] = D.th[pos];
+      return pos === 'TE' ? [`${c} PPG`, `${b} PPG`, `${a} PPG`] : [`Elite ${c}`, `Hit ${b}`, `Starter ${a}`];
+    };
+    function bar(s) {
+      const segs = [
+        [s.l3, 'bg-emerald-700 text-white'],
+        [s.l2 - s.l3, 'bg-emerald-400 text-emerald-950'],
+        [s.l1 - s.l2, s.pos === 'TE' ? 'bg-emerald-200 text-emerald-950' : 'bg-amber-400 text-amber-950'],
+        [100 - s.l1, 'bg-rose-500 text-white']
+      ];
+      const lb = labels(s.pos).concat(['Bust']);
+      return `<div class="flex h-4 rounded overflow-hidden text-[10px] font-bold">${segs.map(([v, c], i) => v > 0 ? `<div class="${c} flex items-center justify-center" style="width:${v}%" title="${lb[i]}: ${v}%">${v >= 9 ? v + '%' : ''}</div>` : '').join('')}</div>`;
+    }
+    const posTag = p => `<span class="inline-block w-8 text-center text-[10px] font-extrabold rounded px-1 py-0.5 ${{ QB: 'bg-rose-500/15 text-rose-600 dark:text-rose-300', RB: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', WR: 'bg-sky-500/15 text-sky-700 dark:text-sky-300', TE: 'bg-amber-500/20 text-amber-700 dark:text-amber-300' }[p] || ''}">${p}</span>`;
+    const boardCount = (pos, type) => D.pros.filter(p => p.pos === pos && p.type === type).length;
+
+    // type chart
+    const stats = D.stats.slice().sort((a, b) => ORDER.indexOf(a.pos) - ORDER.indexOf(b.pos) || hitOf(b) - hitOf(a));
+    document.getElementById('typeChart').innerHTML = stats.map(s => {
+      const nb = boardCount(s.pos, s.type);
+      return `<div>
+        <div class="flex justify-between items-baseline text-xs mb-1 gap-2">
+          <span class="flex items-center gap-1.5">${posTag(s.pos)}<strong>${esc(s.type)}</strong><span class="text-[11px] text-slate-500 dark:text-slate-400">${s.n} past players${nb ? ` · ${nb} on your board` : ''}</span></span>
+          <span class="text-slate-500 dark:text-slate-400 whitespace-nowrap">${hitOf(s)}% hit</span>
+        </div>${bar(s)}</div>`;
+    }).join('');
+
+    // tier matrix
+    document.getElementById('tierHead').innerHTML = `<tr class="text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800"><th class="text-left py-2 pr-2">Type</th>${D.tiers.map(t => `<th class="text-center py-2 px-2">${t}</th>`).join('')}<th class="text-center py-2 pl-2">All</th></tr>`;
+    document.getElementById('tierBody').innerHTML = stats.map(s => `<tr class="border-b border-slate-100 dark:border-slate-800">
+      <td class="py-2 pr-2 whitespace-nowrap">${posTag(s.pos)} <strong>${esc(s.type)}</strong></td>
+      ${D.tiers.map(t => {
+        const c = s.tiers[t];
+        if (!c) return '<td class="text-center py-2 px-2 text-slate-400">—</td>';
+        const cls = c.hit >= 50 ? 'text-emerald-700 dark:text-emerald-300 font-extrabold' : c.hit >= 25 ? 'text-amber-700 dark:text-amber-300 font-bold' : 'text-rose-600 dark:text-rose-400 font-semibold';
+        return `<td class="text-center py-2 px-2 tabular-nums ${c.n < 5 ? 'opacity-45' : ''}" title="${c.n} players"><span class="${cls}">${c.hit}%</span><span class="text-[10px] text-slate-400 ml-1">${c.n}</span></td>`;
+      }).join('')}
+      <td class="text-center py-2 pl-2 tabular-nums font-bold">${hitOf(s)}%<span class="text-[10px] text-slate-400 ml-1">${s.n}</span></td></tr>`).join('');
+
+    // prospect list
+    const st = { pos: '', type: '', q: '', k: 'hit', dir: -1 };
+    D.pros.forEach(p => { const s = S[p.pos + '|' + p.type]; p.s = s; p.hit = s ? hitOf(s) : null; });
+    const tsel = document.getElementById('typef');
+    [...new Set(D.pros.map(p => p.pos + '|' + p.type))].sort((a, b) => ORDER.indexOf(a.split('|')[0]) - ORDER.indexOf(b.split('|')[0])).forEach(k => {
+      const o = document.createElement('option'); o.value = k; o.textContent = k.replace('|', ' · '); tsel.appendChild(o);
+    });
+    function render() {
+      const rows = D.pros.filter(p => (!st.pos || p.pos === st.pos) && (!st.type || p.pos + '|' + p.type === st.type) && (!st.q || p.n.toLowerCase().includes(st.q)))
+        .sort((a, b) => {
+          const va = a[st.k], vb = b[st.k];
+          if (va === vb) return a.n.localeCompare(b.n);
+          if (va == null) return 1; if (vb == null) return -1;
+          return (typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb))) * st.dir;
+        });
+      document.getElementById('count').textContent = `${rows.length} of ${D.pros.length} prospects`;
+      document.getElementById('rows').innerHTML = rows.map(p => `<tr>
+        <td class="py-2 pr-2 font-semibold whitespace-nowrap">${esc(p.n)}</td>
+        <td class="py-2 px-2">${posTag(p.pos)}</td>
+        <td class="py-2 px-2 whitespace-nowrap">${esc(p.type)}</td>
+        <td class="py-2 px-2 min-w-[9rem]">${p.s ? `<div class="flex items-center gap-2"><div class="flex-1">${bar(p.s)}</div><span class="text-[11px] font-bold tabular-nums w-9 text-right">${p.hit}%</span></div>` : '<span class="text-slate-400">no history</span>'}</td>
+        <td class="py-2 pl-2 text-[11px] text-slate-400">TBD</td></tr>`).join('');
+    }
+    document.querySelectorAll('.pos-btn').forEach(b => b.addEventListener('click', () => {
+      st.pos = b.dataset.pos;
+      document.querySelectorAll('.pos-btn').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      if (st.type && st.pos && !st.type.startsWith(st.pos + '|')) { st.type = ''; tsel.value = ''; }
+      render();
+    }));
+    tsel.addEventListener('change', e => { st.type = e.target.value; render(); });
+    document.getElementById('search').addEventListener('input', e => { st.q = e.target.value.trim().toLowerCase(); render(); });
+    document.querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => {
+      const k = th.dataset.k; st.dir = st.k === k ? -st.dir : (k === 'hit' ? -1 : 1); st.k = k; render();
+    }));
+    render();
+
+    // embedded in the hub: theme + height
+    const EMBEDDED = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+    if (EMBEDDED) {
+      window.addEventListener('message', e => {
+        if (e.origin !== location.origin || !e.data || e.data.type !== 'dtc-theme') return;
+        document.documentElement.classList.toggle('dark', e.data.theme === 'dark');
+      });
+      const post = () => { try { window.parent.postMessage({ type: 'dtc-height', frame: 'pros', height: document.body.offsetHeight }, location.origin); } catch (e) {} };
+      if ('ResizeObserver' in window) new ResizeObserver(post).observe(document.body);
+      window.addEventListener('load', post);
+    }
+  })();
+  </script>
+</body>
+</html>
