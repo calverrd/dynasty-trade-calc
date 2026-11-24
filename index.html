@@ -1034,7 +1034,7 @@
       if (!fr || fr.getAttribute('src')) return;
       fr.addEventListener('load', onBucketsFrameLoad);
       fr.removeAttribute('loading'); // src is already deferred until the tab is opened; don't let native lazy-loading stall it
-      fr.src = fr.dataset.src;
+      fr.src = freshSrc(fr.dataset.src);
     }
 
     function syncBucketsFrameTheme() {
@@ -1076,7 +1076,7 @@
       const fr = document.getElementById('rookies-frame');
       if (!fr || fr.getAttribute('src')) return;
       fr.addEventListener('load', () => { syncRookiesFrameTheme(); sendLeagueToFrames(); });
-      fr.src = fr.dataset.src;
+      fr.src = freshSrc(fr.dataset.src);
     }
     function syncRookiesFrameTheme() {
       const fr = document.getElementById('rookies-frame');
@@ -1090,7 +1090,7 @@
       const fr = document.getElementById('rbs-frame');
       if (!fr || fr.getAttribute('src')) return;
       fr.addEventListener('load', () => { syncRbsFrameTheme(); sendLeagueToFrames(); });
-      fr.src = fr.dataset.src;
+      fr.src = freshSrc(fr.dataset.src);
     }
     function syncRbsFrameTheme() {
       const fr = document.getElementById('rbs-frame');
@@ -1104,12 +1104,16 @@
       const n = Math.ceil(Number(h) || 0);
       if (fr && n > 200 && Math.abs(parseFloat(fr.style.height) - n) > 1) fr.style.height = `${n}px`;
     }
+    // Embedded pages update often; a per-visit token stops browsers from showing a stale cached copy
+    var FRAME_TOKEN = Date.now().toString(36);
+    function freshSrc(u) { return u + (u.includes('?') ? '&' : '?') + 'v=' + FRAME_TOKEN; }
+
     // ---- Prospects iframe ----
     function loadProsFrame() {
       const fr = document.getElementById('pros-frame');
       if (!fr || fr.getAttribute('src')) return;
       fr.addEventListener('load', syncProsFrameTheme);
-      fr.src = fr.dataset.src;
+      fr.src = freshSrc(fr.dataset.src);
     }
     function syncProsFrameTheme() {
       const fr = document.getElementById('pros-frame');
@@ -1124,7 +1128,7 @@
       const fr = document.getElementById('tes-frame');
       if (!fr || fr.getAttribute('src')) return;
       fr.addEventListener('load', () => { syncTesFrameTheme(); sendLeagueToFrames(); });
-      fr.src = fr.dataset.src;
+      fr.src = freshSrc(fr.dataset.src);
     }
     function syncTesFrameTheme() {
       const fr = document.getElementById('tes-frame');
