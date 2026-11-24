@@ -29,14 +29,14 @@ jobs:
       - name: Download nflverse data
         run: python scripts/refresh/fetch_nflverse.py nflverse_raw
 
-      - name: Rebuild rookie WR / RB / TE data
+      - name: Rebuild rookie WR / RB / TE data and veteran PPG (ppg.json)
         run: python scripts/refresh/refresh_rookies.py nflverse_raw .
 
       - name: Commit if anything changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
-          git add rookie-wr-tracker.html rookie-rb-tracker.html rookie-te-tracker.html
+          git add rookie-wr-tracker.html rookie-rb-tracker.html rookie-te-tracker.html ppg.json
           if git diff --cached --quiet; then
             echo "No changes."
             exit 0
