@@ -1,0 +1,46 @@
+name: Refresh rookie tabs
+
+# Tuesdays at 9:17 AM Central (14:17 UTC), September through January, plus a manual "Run workflow" button.
+on:
+  schedule:
+    - cron: "17 14 * 1,9-12 2"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rookie-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install pandas numpy
+
+      - name: Download nflverse data
+        run: python scripts/refresh/fetch_nflverse.py nflverse_raw
+
+      - name: Rebuild rookie WR / RB / TE data
+        run: python scripts/refresh/refresh_rookies.py nflverse_raw .
+
+      - name: Commit if anything changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add rookie-wr-tracker.html rookie-rb-tracker.html rookie-te-tracker.html
+          if git diff --cached --quiet; then
+            echo "No changes."
+            exit 0
+          fi
+          git commit -m "Refresh rookie tabs from nflverse ($(date -u +%F))"
+          git pull --rebase origin main
+          git push origin HEAD:main
