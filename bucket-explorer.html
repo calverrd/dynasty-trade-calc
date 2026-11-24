@@ -1675,7 +1675,7 @@
         </div>
         <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
           Hit: <span class="text-emerald-600 dark:text-emerald-400">${esc(pm.hitLbl)}</span> ·
-          ${pm.nearLbl ? `Near: <span class="text-amber-600 dark:text-amber-400">${esc(pm.nearLbl)}</span> ·` : 'No near tier ·'}
+          ${pm.nearLbl ? `Near: <span class="text-amber-400 dark:text-amber-400">${esc(pm.nearLbl)}</span> ·` : 'No near tier ·'}
           Elite: <span class="text-sky-600 dark:text-sky-400">${esc(pm.eliteLbl)}</span>
         </div>`;
 
@@ -1831,7 +1831,7 @@
               </div>
               <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold">
                 <span class="text-emerald-700 dark:text-emerald-400">Hit ${hitW.toFixed(1)}%</span>
-                ${b.noNear ? '' : `<span class="text-amber-700 dark:text-amber-300">Near Hit Only ${nearW.toFixed(1)}%</span>`}
+                ${b.noNear ? '' : `<span class="text-amber-400 dark:text-amber-400">Near Hit Only ${nearW.toFixed(1)}%</span>`}
                 <span class="text-rose-700 dark:text-rose-400">Bust ${bustW.toFixed(1)}%</span>
               </div>
             </div>
@@ -1999,7 +1999,7 @@
       // --- Stat tiles vs position average ---
       const tiles = [
         ['Hit', 'hitPct', `${pm.hitLbl}`, 'text-emerald-700 dark:text-emerald-400'],
-        ...(b.noNear ? [] : [['Near hit only', 'nearOnlyPct', pm.nearLbl, 'text-amber-700 dark:text-amber-300']]),
+        ...(b.noNear ? [] : [['Near hit only', 'nearOnlyPct', pm.nearLbl, 'text-amber-400 dark:text-amber-400']]),
         ['Bust', 'bustPct', 'never reached near/hit', 'text-rose-700 dark:text-rose-400'],
         ['Elite', 'elitePct', pm.eliteLbl, 'text-sky-700 dark:text-sky-400'],
         ['2+ seasons', 'twoPlusPct', `hit ${hitLbl} twice+`, 'text-indigo-700 dark:text-indigo-400'],
@@ -2245,7 +2245,7 @@
 
       document.getElementById('modalProbLegend').innerHTML = `
         <span class="text-emerald-700 dark:text-emerald-400">● Hit Odds: ${b.hitPct.toFixed(1)}%</span>
-        ${b.noNear ? '' : `<span class="text-amber-700 dark:text-amber-300">● Near Hit Only: ${b.nearOnlyPct.toFixed(1)}%</span>`}
+        ${b.noNear ? '' : `<span class="text-amber-400 dark:text-amber-400">● Near Hit Only: ${b.nearOnlyPct.toFixed(1)}%</span>`}
         <span class="text-rose-700 dark:text-rose-400">● Bust Odds: ${b.bustPct.toFixed(1)}%</span>
       `;
 
@@ -2254,7 +2254,7 @@
       document.getElementById('modalKpiGrid').className = `grid grid-cols-2 ${b.noNear ? 'sm:grid-cols-4' : 'sm:grid-cols-5'} gap-2.5 pt-1`;
       const nearKpi = b.noNear ? '' : `
         <div class="rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-500/30 p-2.5 text-center">
-          <div class="text-base sm:text-lg font-extrabold text-amber-600 dark:text-amber-400">${b.nearOnlyPct.toFixed(1)}%</div>
+          <div class="text-base sm:text-lg font-extrabold text-amber-400 dark:text-amber-400">${b.nearOnlyPct.toFixed(1)}%</div>
           <div class="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5">Near Hit Only</div>
         </div>`;
       document.getElementById('modalKpiGrid').innerHTML = `
@@ -2350,13 +2350,13 @@
         sections.push(`
           <div class="rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-500/30 p-3.5 space-y-2.5">
             <div class="flex items-center justify-between gap-2">
-              <h4 class="text-xs font-extrabold uppercase tracking-wider text-amber-900 dark:text-amber-300">
+              <h4 class="text-xs font-extrabold uppercase tracking-wider text-amber-400 dark:text-amber-400">
                 Near Hits / Flex Starters (${nears.length})
               </h4>
-              <span class="text-[10px] font-bold text-amber-800 dark:text-amber-400">${esc(pm.nearLbl)} only</span>
+              <span class="text-[10px] font-bold text-amber-400 dark:text-amber-400">${esc(pm.nearLbl)} only</span>
             </div>
             <div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-              ${nears.length ? nears.map(x => compRow(x, 'text-amber-700 dark:text-amber-300')).join('') : '<p class="text-xs italic text-slate-500 dark:text-slate-400">No near-hit-only players in this bucket.</p>'}
+              ${nears.length ? nears.map(x => compRow(x, 'text-amber-400 dark:text-amber-400')).join('') : '<p class="text-xs italic text-slate-500 dark:text-slate-400">No near-hit-only players in this bucket.</p>'}
             </div>
           </div>`);
       }

@@ -2787,7 +2787,7 @@
       try {
         const ls = st.leagueSort || { k: 'rank', dir: 1 };
         const rec = r => {
-          const [w, l, t] = String(r.t.r || '0-0').split('-').map(x => Number(x) || 0);
+          const [w = 0, l = 0, t = 0] = String(r.t.r || '0-0').split('-').map(x => Number(x) || 0);
           const g = w + l + t;
           return g ? (w + 0.5 * t) / g : 0;
         };
