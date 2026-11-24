@@ -366,6 +366,44 @@ def write_data(path, s, rows, old):
     open(path, "w", encoding="utf-8").write(s)
 
 
+# ---------------------------------------------------------------- ppg.json (veteran sell windows)
+def norm_name(x):
+    import unicodedata
+    x = unicodedata.normalize("NFKD", str(x or "")).encode("ascii", "ignore").decode().lower()
+    x = re.sub(r"['’.]", "", x)
+    x = re.sub(r"\b(jr|sr|ii|iii|iv|v)\b", "", x)
+    return re.sub(r"[^a-z0-9]+", " ", x).strip()
+
+
+def write_ppg():
+    """Latest 8+ game season PPG per QB/RB/WR/TE (current season once 8 games are in, else last season).
+    PPR; TEs get +0.5 per catch (1.5 TE premium)."""
+    x = wk[wk.season >= CUR - 1].assign(tep=lambda d: d.fantasy_points_ppr + 0.5 * d.receptions)
+    x = x[x.position.isin(["QB", "RB", "WR", "TE"])]
+    g = x.groupby(["player_id", "season"]).agg(n=("player_display_name", "last"), pos=("position", "last"), gp=("week", "count"),
+                                               ppr=("fantasy_points_ppr", "sum"), tep=("tep", "sum")).reset_index()
+    g = g[g.gp >= 8]
+    g["ppg"] = np.where(g.pos == "TE", g.tep, g.ppr) / g.gp
+    g = g.sort_values("season").groupby("player_id").tail(1)
+    out = {}
+    for r in g.itertuples():
+        k = norm_name(r.n)
+        if k in out and out[k]["ppg"] >= r.ppg:
+            continue
+        out[k] = {"pos": r.pos, "ppg": round(float(r.ppg), 1), "gp": int(r.gp), "s": int(r.season)}
+    path = f"{SITE}/ppg.json"
+    new = json.dumps({"season": CUR, "players": out}, separators=(",", ":"), sort_keys=True)
+    try:
+        if open(path).read() == new:
+            print("ppg.json unchanged"); return
+    except FileNotFoundError:
+        pass
+    open(path, "w").write(new)
+    print("ppg.json", len(out), "players")
+
+
+write_ppg()
+
 for pos, fname in (("RB", "rookie-rb-tracker.html"), ("TE", "rookie-te-tracker.html"), ("WR", "rookie-wr-tracker.html")):
     path = f"{SITE}/{fname}"
     s, rows = read_data(path)
