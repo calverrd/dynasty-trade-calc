@@ -88,6 +88,7 @@
           <a href="#buckets" data-tab="buckets" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Profile Buckets</a>
           <a href="#rookies" data-tab="rookies" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookie WRs</a>
           <a href="#rbs" data-tab="rbs" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookie RBs</a>
+          <a href="#tes" data-tab="tes" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookie TEs</a>
           <a href="#about" data-tab="about" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">How it works</a>
         </nav>
 
@@ -284,7 +285,7 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div>
             <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">💡 Player Trade Idea Finder</h2>
-            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Pick any player to generate fair 1-for-1, player + pick, and 2-for-1 upgrade offers using live league rosters. When you're shopping your own player, partners whose needs fit yours rank higher. To go after a specific player, tap <strong>Offer</strong> next to him on the Rookie WRs or Rookie RBs tab, in a Profile Bucket, or in his player card.</p>
+            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Pick any player to generate fair 1-for-1, player + pick, and 2-for-1 upgrade offers using live league rosters. When you're shopping your own player, partners whose needs fit yours rank higher. To go after a specific player, tap <strong>Offer</strong> next to him on the Rookie WR, RB or TE tabs, in a Profile Bucket, or in his player card.</p>
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
@@ -467,6 +468,12 @@
     <!-- ==================== TAB: ROOKIE RB USAGE (rookie-rb-tracker.html, lazy iframe) ==================== -->
     <section id="view-rbs" class="hidden">
       <iframe id="rbs-frame" data-src="./rookie-rb-tracker.html" title="Rookie RB Usage Tracker"
+        class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1400px;"></iframe>
+    </section>
+
+    <!-- ==================== TAB: ROOKIE TE USAGE (rookie-te-tracker.html, lazy iframe) ==================== -->
+    <section id="view-tes" class="hidden">
+      <iframe id="tes-frame" data-src="./rookie-te-tracker.html" title="Rookie TE Usage Tracker"
         class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1400px;"></iframe>
     </section>
 
@@ -998,6 +1005,25 @@
       const n = Math.ceil(Number(h) || 0);
       if (fr && n > 200 && Math.abs(parseFloat(fr.style.height) - n) > 1) fr.style.height = `${n}px`;
     }
+    // ---- Rookie TEs iframe ----
+    function loadTesFrame() {
+      const fr = document.getElementById('tes-frame');
+      if (!fr || fr.getAttribute('src')) return;
+      fr.addEventListener('load', () => { syncTesFrameTheme(); sendLeagueToFrames(); });
+      fr.src = fr.dataset.src;
+    }
+    function syncTesFrameTheme() {
+      const fr = document.getElementById('tes-frame');
+      if (!fr || !fr.getAttribute('src')) return;
+      const dark = document.documentElement.classList.contains('dark');
+      try { fr.contentWindow.postMessage({ type: 'dtc-theme', theme: dark ? 'dark' : 'light' }, '*'); } catch (e) {}
+      try { fr.contentDocument.documentElement.classList.toggle('dark', dark); } catch (e) {}
+    }
+    function resizeTesFrame(h) {
+      const fr = document.getElementById('tes-frame');
+      const n = Math.ceil(Number(h) || 0);
+      if (fr && n > 200 && Math.abs(parseFloat(fr.style.height) - n) > 1) fr.style.height = `${n}px`;
+    }
     function resizeRookiesFrame(h) {
       const fr = document.getElementById('rookies-frame');
       const n = Math.ceil(Number(h) || 0);
@@ -1037,6 +1063,7 @@
       if (e.origin !== location.origin || !e.data || e.data.type !== 'dtc-height') return;
       if (e.data.frame === 'rookies') resizeRookiesFrame(e.data.height);
       else if (e.data.frame === 'rbs') resizeRbsFrame(e.data.height);
+      else if (e.data.frame === 'tes') resizeTesFrame(e.data.height);
       else resizeBucketsFrame(e.data.height);
     });
 
@@ -1050,6 +1077,7 @@
       syncBucketsFrameTheme();
       syncRookiesFrameTheme();
       syncRbsFrameTheme();
+      syncTesFrameTheme();
     }
 
     function save() {
@@ -1439,7 +1467,7 @@
         const players = {};
         Object.entries(OWN).forEach(([pid, o]) => { const p = P[pid]; if (p && !p.pick) players[normName(p.name)] = o; });
         const msg = { type: 'dtc-league', league: activeLeague.name || '', teams, players };
-        ['rookies-frame', 'rbs-frame', 'buckets-frame'].forEach(id => {
+        ['rookies-frame', 'rbs-frame', 'tes-frame', 'buckets-frame'].forEach(id => {
           const fr = document.getElementById(id);
           if (fr && fr.getAttribute('src') && fr.contentWindow) fr.contentWindow.postMessage(msg, location.origin);
         });
@@ -3416,9 +3444,9 @@
     }
 
     function switchTab(tab) {
-      if (!['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'about'].includes(tab)) tab = 'calc';
+      if (!['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'about'].includes(tab)) tab = 'calc';
       st.tab = tab;
-      ['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'about'].forEach(t => {
+      ['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'about'].forEach(t => {
         const sec = document.getElementById(`view-${t}`);
         if (sec) sec.classList.toggle('hidden', t !== tab);
       });
@@ -3428,6 +3456,7 @@
       if (tab === 'buckets') loadBucketsFrame();
       if (tab === 'rookies') loadRookiesFrame();
       if (tab === 'rbs') loadRbsFrame();
+      if (tab === 'tes') loadTesFrame();
       if (tab === 'league') loadTradeHistory();
       try { history.replaceState(null, '', `#${tab}`); } catch (e) {}
     }
@@ -3797,7 +3826,7 @@
       wireEvents();
       loadFallbackDataset();
       const initialHash = (location.hash || '').replace('#', '');
-      switchTab(['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'about'].includes(initialHash) ? initialHash : 'calc');
+      switchTab(['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'about'].includes(initialHash) ? initialHash : 'calc');
       syncLiveSleeperAndFC(true);
     });
   })();
