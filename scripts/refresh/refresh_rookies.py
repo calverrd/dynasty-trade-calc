@@ -426,11 +426,81 @@ def apply_sheet(rows, pos):
     return rows
 
 
+# ---------------------------------------------------------------- hit odds for unsettled rookies
+# Logistic regression of "ever a 12+ PPG season" on usage and log(draft pick), fit per position and
+# window on settled classes (the same two inputs the leave-one-season-out tests validated). Each
+# unsettled rookie (gray / TBD) gets hp = {window: probability %}; the rookie tabs compare it with
+# KTC (model vs market) and signals.json feeds the hub's Scout tab.
+WINDOWS = {"WR": (("4", "u", "g"), ("8", "u8", "g8")),
+           "RB": (("4", "u", "g"), ("8", "u8", "g8"), ("L", "uL", "gL")),
+           "TE": (("8", "u8", "g8"), ("L", "uL", "gL"))}
+
+
+def logit_fit(X, y, l2=1e-3, iters=50):
+    X = np.column_stack([np.ones(len(X)), X])
+    w = np.zeros(X.shape[1])
+    for _ in range(iters):
+        p = 1 / (1 + np.exp(-X @ w))
+        W = p * (1 - p) + 1e-9
+        H = X.T @ (X * W[:, None]) + l2 * np.eye(X.shape[1])
+        w -= np.linalg.solve(H, X.T @ (p - y) + l2 * w)
+    return w
+
+
+def add_odds(rows, pos):
+    hit = lambda o: o["tier"] not in ("red", "tbd")
+    lp = lambda o: math.log(o.get("pk") or 262)
+    for o in rows:
+        o.pop("hp", None)
+    for key, uk, gk in WINDOWS[pos]:
+        tr = [o for o in rows if o["tier"] != "tbd" and o["yr"] <= LAST_DONE - 1 and (o.get(gk) or 0) >= 2 and o.get(uk) is not None]
+        if len(tr) < 30:
+            continue
+        X = np.array([[o[uk], lp(o)] for o in tr], dtype=float)
+        mu, sd = X.mean(0), X.std(0) + 1e-9
+        w = logit_fit((X - mu) / sd, np.array([1.0 if hit(o) else 0.0 for o in tr]))
+        for o in rows:
+            if o["tier"] != "tbd" or (o.get(gk) or 0) < 1 or o.get(uk) is None:
+                continue
+            z = (np.array([o[uk], lp(o)]) - mu) / sd
+            p = 1 / (1 + math.exp(-(w[0] + w[1] * z[0] + w[2] * z[1])))
+            o.setdefault("hp", {})[key] = max(1, min(99, int(round(100 * p))))
+    return rows
+
+
+def signals(rows, pos):
+    out = []
+    for o in rows:
+        tags = set(o.get("tags") or []) | set(o.get("tags8") or [])
+        sig = {"buy": "buy" in tags and o["yr"] == CUR, "jump": "jump" in (o.get("y2t") or []) and o["yr"] == CUR - 1,
+               "missed": "missed" in tags and o["yr"] == CUR}
+        if o["tier"] != "tbd" and not sig["jump"]:
+            continue
+        if not (o.get("hp") or any(sig.values())):
+            continue
+        out.append({"n": o["n"], "pos": pos, "yr": o["yr"], "rd": o.get("rd"), "pk": o.get("pk"), "tm": o.get("tm", ""),
+                    "hp": o.get("hp", {}), "u": o.get("u"), "u8": o.get("u8"), "u2": o.get("u2"), "bf8": o.get("bf8"),
+                    "sig": [k for k, v in sig.items() if v]})
+    return out
+
+
+SIGNALS = []
 for pos, fname in (("RB", "rookie-rb-tracker.html"), ("TE", "rookie-te-tracker.html"), ("WR", "rookie-wr-tracker.html")):
     path = f"{SITE}/{fname}"
     s, rows = read_data(path)
     old = json.loads(json.dumps(rows))
     rows = wr_update(rows) if pos == "WR" else build_rb_te(pos)
     rows = apply_sheet(rows, pos)
+    rows = add_odds(rows, pos)
+    SIGNALS.extend(signals(rows, pos))
     write_data(path, s, rows, old)
     print(pos, len(rows), "rows;", sum(1 for o in rows if o["y2t"]), "Year 2 tags")
+
+sig_path = f"{SITE}/signals.json"
+new_sig = json.dumps({"season": CUR, "players": SIGNALS}, separators=(",", ":"), ensure_ascii=False, sort_keys=True)
+old_sig = open(sig_path).read() if os.path.exists(sig_path) else ""
+if old_sig.strip() != new_sig:
+    open(sig_path, "w").write(new_sig + "\n")
+    print("signals.json", len(SIGNALS), "players")
+else:
+    print("signals.json unchanged")
