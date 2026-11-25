@@ -329,7 +329,7 @@
     <section id="view-league" class="hidden space-y-4">
       <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
         <summary class="cursor-pointer font-bold">How to use this tab</summary>
-        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Draft order:</strong> the strip projects next year's rookie draft. Choose whether your league orders it by standings or by Max PF; it's saved per league and sets every pick's Early / Mid / Late value and odds.</li><li><strong>Sell windows on your roster:</strong> your starters at the age where production usually drops, with the contenders weakest at that position as likely buyers.</li><li><strong>Power rankings:</strong> click any column to sort. Position columns rank each team's value at that spot; Fit scores how well a team's surpluses match your needs; Max PF and Win Now show who's actually strong this season.</li><li><strong>Find a partner:</strong> filter to Contenders, Rebuilders or teams with next year's 1st, then tap <strong>Trade →</strong> to open the calculator against that team.</li><li><strong>Playoff odds:</strong> simulates the rest of the regular season. Bubble teams (35–75%) are the likeliest buyers for veterans; unlucky teams with a strong lineup but poor odds may sell theirs.</li><li><strong>Team timeline:</strong> ages every roster 1 and 2 years forward on historical age curves, to show whose window is closing and who is a year away.</li><li><strong>Pick ownership:</strong> who holds extra or missing picks for the next three drafts.</li><li><strong>Handcuffs:</strong> backups for your RB1s held elsewhere, and backups you hold that another team's RB1 needs (easy throw-ins).</li><li><strong>Trade history</strong> at the bottom grades every trade in the league at today's values, so you can see who tends to win deals.</li></ul>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Draft order:</strong> the strip projects next year's rookie draft. Choose whether your league orders it by standings or by Max PF; it's saved per league and sets every pick's Early / Mid / Late value and odds.</li><li><strong>Sell windows on your roster:</strong> your starters at the age where production usually drops, with the contenders weakest at that position as likely buyers.</li><li><strong>Power rankings:</strong> click any column to sort. Position columns rank each team's value at that spot; Fit scores how well a team's surpluses match your needs; Max PF and Win Now show who's actually strong this season.</li><li><strong>Find a partner:</strong> filter to Contenders, Rebuilders or teams with next year's 1st, then tap <strong>Trade →</strong> to open the calculator against that team.</li><li><strong>Playoff odds:</strong> simulates the rest of the regular season. Bubble teams (25–75%) are the likeliest buyers for veterans; unlucky teams with a strong lineup but poor odds may sell theirs.</li><li><strong>Team timeline:</strong> ages every team's Win Now lineup 1 and 2 years forward on historical production curves, to show whose window is closing and who is a year away (current rosters only).</li><li><strong>Pick ownership:</strong> who holds extra or missing picks for the next three drafts.</li><li><strong>Handcuffs:</strong> backups for your RB1s held elsewhere, and backups you hold that another team's RB1 needs (easy throw-ins).</li><li><strong>Trade history</strong> at the bottom grades every trade in the league at today's values, so you can see who tends to win deals.</li></ul>
       </details>
       <!-- 2027 Draft Order Strip -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5">
@@ -1767,6 +1767,7 @@
     let DRAFT_YEARS = [2027, 2028, 2029];
     let SLOT_BY_RID = {};
     let RID_TO_KEY = {};
+    let SID_OWNER = {};          // Sleeper id -> roster key, for every rostered player (incl. ones outside KTC's top 500)
     let TRENDING = new Map();   // sleeperId -> adds in last 24h
     let FC_CAPPED = false;
     const ORD_NAME = ['', '1st', '2nd', '3rd', '4th', '5th'];
@@ -1789,6 +1790,7 @@
         rounds: Number(d.settings?.draft_rounds) || 4,
         playoffWeekStart: Number(d.settings?.playoff_week_start) || 15,
         playoffTeams: Number(d.settings?.playoff_teams) || 6,
+        median: Number(d.settings?.league_average_match) === 1,
         season: Number(d.season) || null,
         prevId: d.previous_league_id ? String(d.previous_league_id) : '',
         slots: slots.length ? slots : ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX']
@@ -1952,6 +1954,7 @@
 
         const newT = {};
         const newOWN = {};
+        const newSidOwner = {};
         const rosterIdToKey = {};
 
         // Sort rosters for projected draft order: by standings (worst wins first, then lowest PF)
@@ -1981,6 +1984,7 @@
 
           const ids = [];
           (r.players || []).forEach(sid => {
+            newSidOwner[String(sid)] = key;
             const pid = sleeperIdToPid.get(String(sid));
             if (pid !== undefined) {
               ids.push(pid);
@@ -2035,6 +2039,7 @@
         P = newP;
         T = newT;
         OWN = newOWN;
+        SID_OWNER = newSidOwner;
         SLEEPER_TO_PID = sleeperIdToPid;
         PICK_LOOKUP = pickLookup;
         SLOT_BY_RID = slotByRosterId;
@@ -3631,14 +3636,16 @@
       // Model vs market, same rule as the rookie tabs: odds rank vs KTC rank among unsettled rookies at the position
       ['WR', 'RB', 'TE'].forEach(pos => {
         const key = '8';
-        const pool = out.filter(x => x.s.pos === pos && x.s.hp && x.s.hp[key] != null && x.p.k > 0);
+        // current rookie class only, same rule as the rookie tabs (rank gap + a real value gap)
+        const pool = out.filter(x => x.s.pos === pos && x.s.yr === SIGNALS.season && x.s.hp && x.s.hp[key] != null && x.p.k > 0);
         const n = pool.length;
         if (n < 6) return;
         const th = Math.max(3, Math.round(n * 0.2));
         const byK = pool.slice().sort((a, b) => b.p.k - a.p.k);
         pool.slice().sort((a, b) => b.s.hp[key] - a.s.hp[key] || b.p.k - a.p.k).forEach((x, i) => {
           const kr = byK.indexOf(x) + 1, gap = kr - (i + 1);
-          x.mv = { hp: x.s.hp[key], hr: i + 1, kr, n, flag: gap >= th ? 'cheap' : gap <= -th ? 'pricey' : '' };
+          const kAt = byK[i].p.k, big = Math.abs(x.p.k - kAt) >= Math.max(500, 0.15 * x.p.k);
+          x.mv = { hp: x.s.hp[key], hr: i + 1, kr, n, flag: big ? (gap >= th ? 'cheap' : gap <= -th ? 'pricey' : '') : '' };
         });
       });
       return out;
@@ -3654,9 +3661,9 @@
       xs.sort((a, b) => score(b) - score(a));
       const why = x => {
         const r = [];
-        if (x.s.sig.includes('buy')) r.push('BUY: role ahead of his points (13 of 21 historical BUYs hit)');
-        if (x.s.sig.includes('jump')) r.push(`Year 2 JUMPED (${x.s.pos === 'RB' ? '79%' : x.s.pos === 'TE' ? '33%' : '31%'} hit historically)`);
-        if (x.mv && x.mv.flag === 'cheap') r.push(`CHEAP: ${x.mv.hp}% odds (#${x.mv.hr} of ${x.mv.n}) but KTC #${x.mv.kr}`);
+        if (x.s.sig.includes('buy')) r.push('WR BUY: role ahead of his points (13 of 21 historical BUYs hit)');
+        if (x.s.sig.includes('jump')) r.push(`Y2 ${x.s.pos} JUMPED (${x.s.pos === 'RB' ? '79%' : x.s.pos === 'TE' ? '33%' : '31%'} hit historically)`);
+        if (x.mv && x.mv.flag === 'cheap') r.push(`${x.s.yr} CHEAP: ${x.mv.hp}% odds (#${x.mv.hr} of ${x.mv.n} in his class) but KTC #${x.mv.kr}`);
         else if (x.mv) r.push(`${x.mv.hp}% odds`);
         return r.join(' · ');
       };
@@ -3672,16 +3679,18 @@
       }).join('');
     }
 
-    // ---- Team timeline: project each team's starting value 1 and 2 years out ----
-    // Age curves from nflverse 2015-2024: how much of a player's PPG typically carries into next season at
-    // each age (dropping out counts as zero), scaled so the position average = 1. That leaves only the age
-    // effect: young players gain, old players lose. QBs showed no reliable age effect, so they barely move.
+    // ---- Team timeline: project each team's Win Now (this-season) lineup 1 and 2 years out ----
+    // Ages FantasyCalc redraft values, not dynasty values (dynasty values already price age).
+    // Age curves (nflverse 2015-2024, players with 8+ games and a starter-level PPG): median next-season
+    // PPG / this-season PPG among players with 8+ games both years, times the share who played 8+ games
+    // next season. 3-year age windows; forced non-increasing after the peak. Only ranks and changes
+    // relative to the league are shown, since every curve sits below 1 (regression to the mean).
     const AGE_R = {
       start: 21,
-      RB: [1.15, 1.15, 1.15, 1.117, 1.098, 1.002, 0.97, 0.889, 0.867, 0.813, 0.813, 0.712, 0.712, 0.712, 0.712, 0.712, 0.712],
-      WR: [1.15, 1.15, 1.106, 1.077, 1.026, 1.026, 0.996, 0.984, 0.918, 0.865, 0.813, 0.813, 0.79, 0.79, 0.79, 0.79, 0.79],
-      TE: [0.945, 1.054, 1.145, 1.12, 1.072, 1.025, 1.025, 0.957, 0.902, 0.815, 0.815, 0.815, 0.786, 0.72, 0.72, 0.72, 0.72],
-      QB: [1.03, 1.03, 1.03, 1.03, 1.03, 1.03, 1.03, 1, 1, 1, 1, 1, 1, 0.93, 0.93, 0.93, 0.93]
+      QB: [0.85, 0.839, 0.863, 0.855, 0.827, 0.773, 0.691, 0.681, 0.675, 0.675, 0.675, 0.675, 0.675, 0.675, 0.675, 0.621, 0.519],
+      RB: [0.891, 0.814, 0.781, 0.732, 0.71, 0.69, 0.684, 0.567, 0.567, 0.477, 0.477, 0.477, 0.477, 0.477, 0.477, 0.477, 0.477],
+      WR: [0.981, 0.856, 0.838, 0.796, 0.796, 0.776, 0.773, 0.741, 0.723, 0.643, 0.596, 0.496, 0.496, 0.496, 0.496, 0.496, 0.496],
+      TE: [0.837, 0.936, 0.858, 0.815, 0.768, 0.768, 0.768, 0.739, 0.653, 0.645, 0.593, 0.593, 0.593, 0.593, 0.593, 0.593, 0.593]
     };
     function ageRet(pos, age) {
       const arr = AGE_R[pos];
@@ -3689,11 +3698,10 @@
       const i = Math.max(0, Math.min(arr.length - 1, Math.floor(age) - AGE_R.start));
       return arr[i];
     }
-    function projValue(id, years) {
+    function projWinNow(id, years) {
       const p = P[id];
-      if (!p) return 0;
-      let v = V[id] || 0;
-      if (p.pick) return v;
+      if (!p || p.pick) return 0;
+      let v = p.rdv || 0;
       for (let j = 0; j < years; j++) v *= ageRet(p.pos, p.age ? Number(p.age) + j : null);
       return v;
     }
@@ -3702,11 +3710,10 @@
       if (!el) return;
       if (owners.length < 4) { el.classList.add('hidden'); return; }
       el.classList.remove('hidden');
-      const rows = owners.map(o => {
-        const ids = T[o].ids || [];
-        const s = [0, 1, 2].map(y => solveLineup(ids, id => projValue(id, y)).total);
-        return { o, s };
-      });
+      if (!HAS_RDV()) { el.innerHTML = cardHead('Team timeline', 'Needs FantasyCalc redraft (Win Now) values, which didn\'t load. Try Sync.'); return; }
+      const rows = owners.map(o => ({ o, s: [0, 1, 2].map(y => solveLineup(T[o].ids || [], id => projWinNow(id, y)).total) }));
+      const avg = y => rows.reduce((a, r) => a + r.s[y], 0) / rows.length;
+      const lg = [avg(0), avg(1), avg(2)];
       const rk = y => { const m = {}; rows.slice().sort((a, b) => b.s[y] - a.s[y]).forEach((r, i) => { m[r.o] = i + 1; }); return m; };
       const r0 = rk(0), r1 = rk(1), r2 = rk(2);
       const n = rows.length;
@@ -3718,9 +3725,10 @@
         if (d >= 3) return ['Getting better', 'bg-sky-500/15 text-sky-700 dark:text-sky-300'];
         return ['', ''];
       };
-      const pct = (a, b) => { const x = b ? Math.round(100 * (a - b) / b) : 0; return `<span class="${x >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${x >= 0 ? '+' : ''}${x}%</span>`; };
-      const cell = (r, y) => `<td class="py-1.5 px-1.5 text-right tabular-nums whitespace-nowrap"><span class="font-semibold">#${[r0, r1, r2][y][r.o]}</span>${y ? ` <span class="text-[10px]">${pct(r.s[y], r.s[0])}</span>` : ` <span class="text-[10px] ${MUTED}">${fmt(r.s[0])}</span>`}</td>`;
-      el.innerHTML = cardHead('Team timeline', 'Each team\'s best starting lineup by value today, then projected 1 and 2 years out by aging every player along historical age curves (picks hold their value; rookies drafted later aren\'t included). Ranks are what matter: a rough guide to whose window is closing and who is a year away, not a forecast.') +
+      // change vs the league average change, so a team that ages like the league reads 0%
+      const rel = (r, y) => { const x = Math.round(100 * ((r.s[y] / r.s[0]) / (lg[y] / lg[0]) - 1)); return `<span class="${x >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${x >= 0 ? '+' : ''}${x}%</span>`; };
+      const cell = (r, y) => `<td class="py-1.5 px-1.5 text-right tabular-nums whitespace-nowrap"><span class="font-semibold">#${[r0, r1, r2][y][r.o]}</span>${y ? ` <span class="text-[10px]">${rel(r, y)}</span>` : ` <span class="text-[10px] ${MUTED}">${fmt(r.s[0])}</span>`}</td>`;
+      el.innerHTML = cardHead('Team timeline', 'Each team\'s best Win Now lineup (FantasyCalc redraft values), projected 1 and 2 years out by aging every rostered player along historical production curves. % = change relative to the league as a whole. Current rosters only: future picks and rookies aren\'t included, so rebuilding teams with lots of picks will look weaker than they are. A rough guide to whose window is closing, not a forecast.') +
         `<div class="overflow-x-auto"><table class="w-full text-xs border-collapse">
           <thead><tr class="text-[10px] uppercase tracking-wider ${MUTED}"><th class="text-left py-1 pr-2">Team</th><th class="text-right px-1.5">Now</th><th class="text-right px-1.5">${(activeLeague.season || 2026) + 1}</th><th class="text-right px-1.5">${(activeLeague.season || 2026) + 2}</th><th class="text-left pl-2">Trend</th></tr></thead>
           <tbody>${rows.sort((a, b) => r0[a.o] - r0[b.o]).map(r => { const [lab, cls] = label(r); return `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1.5 pr-2 font-semibold whitespace-nowrap">${esc(T[r.o].n)}${r.o === ME ? ' <span class="text-[10px] px-1 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td>${cell(r, 0)}${cell(r, 1)}${cell(r, 2)}<td class="pl-2">${lab ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${cls}">${lab}</span>` : ''}</td></tr>`; }).join('')}</tbody>
@@ -3762,51 +3770,94 @@
         </table></div>`;
     }
 
-    // ---- Handcuffs: RB1 / RB2 on each NFL team (ranked by this-season value) ----
+    // ---- Handcuffs + stash alerts: RB1 / RB2 on each NFL team ----
+    // depth.json (daily, from Sleeper's players file): RBs in depth-chart order with injury status.
+    // bf.json (weekly, from nflverse): each RB's share of his team's RB work over its last 4 games.
+    // Without a fresh depth.json, RB1 / RB2 fall back to value order.
+    let DEPTH = null, BFSH = null;
+    fetch(`./depth.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
+      if (d && d.teams && Date.now() - Date.parse(d.updatedAt) < 4 * 864e5) { DEPTH = d; try { all(); } catch (e) { /* not ready */ } }
+    }).catch(() => {});
+    fetch(`./bf.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
+      if (d && d.players) { BFSH = d.players; try { all(); } catch (e) { /* not ready */ } }
+    }).catch(() => {});
+    const INJ_BAD = /^(Questionable|Doubtful|Out|IR|PUP|Sus|NA|COV)/i;
+    function injTag(x) {
+      if (!x.inj) return '';
+      const bad = /^(Out|IR|PUP|Sus|Doubtful)/i.test(x.inj);
+      return ` <span class="px-1 rounded text-[10px] font-bold ${bad ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : 'bg-amber-400/20 text-amber-800 dark:text-amber-300'}">${esc(x.inj)}</span>`;
+    }
+    function bfOf(x, tm) {
+      const v = BFSH && BFSH[`${normName(x.name)}|${tm}`];
+      return v != null ? ` · ${Math.round(100 * v)}% of the backfield (last 4)` : '';
+    }
     function backfields() {
+      const rb = (sid, name, age, inj) => {
+        const pid = sid ? SLEEPER_TO_PID.get(String(sid)) : undefined;
+        const p = pid !== undefined ? P[pid] : null;
+        return { sid: String(sid || ''), pid, name: p ? p.name : name, age: p && p.age ? Number(p.age) : (age ? Number(age) : null), inj: inj || null, own: sid ? SID_OWNER[String(sid)] : (pid !== undefined ? OWN[pid] : undefined) };
+      };
+      const out = [];
+      if (DEPTH) {
+        Object.entries(DEPTH.teams).forEach(([tm, list]) => {
+          const d = list.filter(x => x.o < 99);
+          if (d.length < 2) return;
+          // RB1 = depth-chart #1 (even if hurt: that's when his backup matters). RB2 = the next healthy back
+          // (no IR / PUP / Out), unless one further down has clearly more of the work lately (+10 pts of share).
+          const share = x => (BFSH && BFSH[`${normName(x.n)}|${tm}`]) || 0;
+          const healthy = d.slice(1).filter(x => !/^(IR|PUP|Out|Sus)/i.test(x.inj || ''));
+          if (!healthy.length) return;
+          let pick = healthy[0];
+          healthy.slice(1).forEach(x => { if (share(x) >= share(pick) + 0.10) pick = x; });
+          const a = rb(d[0].sid, d[0].n, d[0].age, d[0].inj), b = rb(pick.sid, pick.n, pick.age, pick.inj);
+          if (a.pid === undefined) return;       // starter isn't fantasy-relevant
+          out.push({ tm, rb1: a, rb2: b, src: 'depth' });
+        });
+        return out;
+      }
       const val = p => (HAS_RDV() ? (p.rdv || 0) : (V[p.id] || 0));
       const teams = {};
       P.forEach(p => { if (!p.pick && p.pos === 'RB' && p.team && p.team !== 'FA') (teams[p.team] = teams[p.team] || []).push(p); });
-      const out = [];
       Object.entries(teams).forEach(([tm, rbs]) => {
         rbs.sort((a, b) => val(b) - val(a));
         if (rbs.length < 2 || val(rbs[0]) <= 0) return;
-        out.push({ tm, rb1: rbs[0], rb2: rbs[1] });
+        out.push({ tm, rb1: rb(rbs[0].sleeperId, rbs[0].name, rbs[0].age), rb2: rb(rbs[1].sleeperId, rbs[1].name, rbs[1].age), src: 'value' });
       });
       return out;
     }
-    function bfOf(p) {
-      const s = SIGNALS && SIGNALS.players.find(x => x.pos === 'RB' && normName(x.n) === normName(p.name));
-      return s && s.bf8 != null ? ` · ${Math.round(100 * s.bf8)}% backfield share` : '';
-    }
+    const whoOwns = o => (o ? (o === ME ? 'you' : T[o]?.n || o) : 'free agent');
+    const rbName = x => (x.pid !== undefined ? `<button type="button" data-player="${x.pid}" class="font-semibold hover:underline cursor-pointer">${esc(x.name)}</button>` : `<span class="font-semibold">${esc(x.name)}</span>`);
     function renderHandcuffs() {
       const el = document.getElementById('handcuffCard');
       if (!el) return;
       if (!owners.length || !T[ME]) { el.classList.add('hidden'); return; }
       el.classList.remove('hidden');
-      const bfs = backfields().filter(b => OWN[b.rb1.id]);
-      const who = id => (OWN[id] ? (OWN[id] === ME ? 'you' : T[OWN[id]]?.n || OWN[id]) : 'free agent');
-      const line = (b, txt) => `<div class="py-1 border-b border-[#eef0f4] dark:border-[#232933]"><span class="font-semibold">${esc(b.rb2.name)}</span> <span class="${MUTED}">(${esc(b.tm)} RB2)</span> ${txt}</div>`;
-      const mine = bfs.filter(b => OWN[b.rb1.id] === ME && OWN[b.rb2.id] !== ME);
-      const sweet = bfs.filter(b => OWN[b.rb2.id] === ME && OWN[b.rb1.id] !== ME);
-      const league = bfs.filter(b => OWN[b.rb1.id] !== ME && OWN[b.rb2.id] && OWN[b.rb2.id] !== OWN[b.rb1.id] && OWN[b.rb2.id] !== ME);
-      el.innerHTML = cardHead('Handcuffs', `Each NFL team's top two RBs by ${HAS_RDV() ? 'this-season (FantasyCalc redraft)' : 'dynasty'} value, which isn't always the official depth chart. Use it to find insurance and easy throw-ins.`) +
+      const bfs = backfields().filter(b => b.rb1.own);
+      const src = bfs[0]?.src === 'depth' ? "Sleeper's depth charts (updated daily), with injury status" : `value order (${HAS_RDV() ? 'FantasyCalc redraft' : 'dynasty'}), since today's depth charts didn't load`;
+      const line = (b, txt) => `<div class="py-1 border-b border-[#eef0f4] dark:border-[#232933]">${rbName(b.rb2)}${injTag(b.rb2)} <span class="${MUTED}">(${esc(b.tm)} RB2${bfOf(b.rb2, b.tm)})</span> ${txt}</div>`;
+      const starter = b => `${esc(b.rb1.name)}${injTag(b.rb1)}`;
+      const mine = bfs.filter(b => b.rb1.own === ME && b.rb2.own !== ME);
+      const sweet = bfs.filter(b => b.rb2.own === ME && b.rb1.own !== ME);
+      const league = bfs.filter(b => b.rb1.own !== ME && b.rb2.own && b.rb2.own !== b.rb1.own && b.rb2.own !== ME);
+      el.innerHTML = cardHead('Handcuffs', `Each NFL team's RB1 and RB2 from ${src}. Backfield % is each back's share of his team's RB carries and targets over its last 4 games. Use it to find insurance and easy throw-ins.`) +
         `<div class="grid md:grid-cols-3 gap-3 text-xs">
-          <div><div class="font-bold mb-1">Your RB1s without their backup</div>${mine.length ? mine.map(b => line(b, `behind your ${esc(b.rb1.name)} · held by <strong>${esc(who(b.rb2.id))}</strong>${bfOf(b.rb2)}`)).join('') : `<div class="${MUTED}">Every RB1 you own has his backup on your roster, or there's no clear one.</div>`}</div>
-          <div><div class="font-bold mb-1">Sweeteners you hold</div>${sweet.length ? sweet.map(b => line(b, `backs up ${esc(b.rb1.name)} on <strong>${esc(who(b.rb1.id))}</strong>: an easy add-on when you trade with them`)).join('') : `<div class="${MUTED}">You don't hold another team's RB1 backup.</div>`}</div>
-          <div><div class="font-bold mb-1">Split around the league</div>${league.length ? league.slice(0, 8).map(b => line(b, `backs up ${esc(b.rb1.name)} (${esc(who(b.rb1.id))}) but is on <strong>${esc(who(b.rb2.id))}</strong>`)).join('') : `<div class="${MUTED}">No split backfields.</div>`}</div>
+          <div><div class="font-bold mb-1">Your RB1s without their backup</div>${mine.length ? mine.map(b => line(b, `behind your ${starter(b)} · held by <strong>${esc(whoOwns(b.rb2.own))}</strong>`)).join('') : `<div class="${MUTED}">Every RB1 you own has his backup on your roster.</div>`}</div>
+          <div><div class="font-bold mb-1">Sweeteners you hold</div>${sweet.length ? sweet.map(b => line(b, `backs up ${starter(b)} on <strong>${esc(whoOwns(b.rb1.own))}</strong>: an easy add-on when you trade with them`)).join('') : `<div class="${MUTED}">You don't hold another team's RB1 backup.</div>`}</div>
+          <div><div class="font-bold mb-1">Split around the league</div>${league.length ? league.slice(0, 8).map(b => line(b, `backs up ${starter(b)} (${esc(whoOwns(b.rb1.own))}) but is on <strong>${esc(whoOwns(b.rb2.own))}</strong>`)).join('') : `<div class="${MUTED}">No split backfields.</div>`}</div>
         </div>`;
     }
     function renderStashAlerts() {
       const el = document.getElementById('stashList');
       if (!el) return;
       if (!owners.length) { el.innerHTML = ''; return; }
-      const xs = backfields().filter(b => !OWN[b.rb2.id] && b.rb1.age && Number(b.rb1.age) >= 26.5)
-        .sort((a, b) => (V[b.rb2.id] || 0) - (V[a.rb2.id] || 0)).slice(0, 8);
+      const hurt = b => !!(b.rb1.inj && INJ_BAD.test(b.rb1.inj));
+      const xs = backfields().filter(b => !b.rb2.own && (hurt(b) || (b.rb1.age && b.rb1.age >= 26.5)))
+        .sort((a, b) => (hurt(b) - hurt(a)) || ((BFSH?.[`${normName(b.rb2.name)}|${b.tm}`] || 0) - (BFSH?.[`${normName(a.rb2.name)}|${a.tm}`] || 0)))
+        .slice(0, 10);
       el.innerHTML = xs.length ? xs.map(b => `<div class="flex items-center justify-between gap-2 py-1.5 border-b border-[#eef0f4] dark:border-[#232933] text-xs">
-          <span class="min-w-0">${posTag('RB')} <button type="button" data-player="${b.rb2.id}" class="font-semibold hover:underline cursor-pointer">${esc(b.rb2.name)}</button> <span class="${MUTED}">${esc(b.tm)} · behind ${esc(b.rb1.name)} (age ${Number(b.rb1.age).toFixed(1)}, ${esc(OWN[b.rb1.id] ? T[OWN[b.rb1.id]]?.n || '' : 'FA')})${bfOf(b.rb2)}</span></span>
-          <span class="font-bold shrink-0">${fmt(V[b.rb2.id])}</span></div>`).join('')
-        : `<div class="text-xs ${MUTED} py-2">No unrostered RB2s behind aging starters right now.</div>`;
+          <span class="min-w-0">${posTag('RB')} ${rbName(b.rb2)}${injTag(b.rb2)} <span class="${MUTED}">${esc(b.tm)} RB2 · behind ${esc(b.rb1.name)}${injTag(b.rb1)}${b.rb1.age ? ` (age ${b.rb1.age.toFixed(1)})` : ''}, ${esc(whoOwns(b.rb1.own))}${bfOf(b.rb2, b.tm)}</span></span>
+          <span class="font-bold shrink-0">${b.rb2.pid !== undefined ? fmt(V[b.rb2.pid]) : ''}</span></div>`).join('')
+        : `<div class="text-xs ${MUTED} py-2">No unrostered RB2s behind an injured or aging (27+) starter right now.</div>`;
     }
 
     // ---- Playoff odds (simulates the rest of the regular season) ----
@@ -3821,7 +3872,8 @@
         const reqs = [];
         for (let w = 1; w <= regEnd; w++) reqs.push(fetch(`https://api.sleeper.app/v1/league/${lg.id}/matchups/${w}`).then(r => (r.ok ? r.json() : [])).catch(() => []));
         const weeks = await Promise.all(reqs);
-        PLAYOFF = { key, data: { weeks, regEnd }, loading: false };
+        const state = await fetch('https://api.sleeper.app/v1/state/nfl').then(r => (r.ok ? r.json() : null)).catch(() => null);
+        PLAYOFF = { key, data: { weeks, regEnd, state }, loading: false };
         renderPlayoffCard();
       } catch (e) {
         PLAYOFF.loading = false;
@@ -3833,7 +3885,13 @@
       const keys = owners.slice();
       const n = keys.length;
       const rec = k => { const [w = 0, l = 0, t = 0] = String(T[k].r || '0-0').split('-').map(Number); return { w, l, t, g: w + l + t }; };
-      const G = Math.max(...keys.map(k => rec(k).g));
+      // Weeks played = the last week with matchup points, minus the NFL week still in progress.
+      // (Wins + losses can't be used: leagues with a median game log two results a week.)
+      let G = 0;
+      d.weeks.forEach((wk, i) => { if ((wk || []).some(m => Number(m.points) > 0)) G = i + 1; });
+      const stw = d.state && String(d.state.season) === String(activeLeague.season) && d.state.season_type === 'regular' ? Number(d.state.week) : null;
+      if (stw && G >= stw) G = stw - 1;
+      G = Math.min(G, d.regEnd);
       const keyByRid = {}; keys.forEach(k => { keyByRid[T[k].rid] = k; });
       // scores from completed weeks
       const scores = {}; keys.forEach(k => { scores[k] = []; });
@@ -3850,7 +3908,8 @@
       keys.forEach(k => {
         const s = scores[k];
         const pfpg = s.length ? s.reduce((a, b) => a + b, 0) / s.length : mean;
-        mu[k] = wnMean > 0 ? 0.5 * pfpg + 0.5 * mean * (wn[k] / wnMean) : pfpg;
+        const wPpg = G / (G + 8);   // early on lean on the Win Now lineup, later on actual scoring
+        mu[k] = wnMean > 0 ? wPpg * pfpg + (1 - wPpg) * mean * (wn[k] / wnMean) : pfpg;
         mpg[k] = G ? (T[k].mpf || 0) / G : mean * 1.15;
       });
       const remaining = [];
@@ -3868,11 +3927,17 @@
         const w = {}, pf = {}, mp = {};
         keys.forEach(k => { const r = rec(k); w[k] = r.w + 0.5 * r.t; pf[k] = T[k].pf || 0; mp[k] = T[k].mpf || 0; });
         remaining.forEach(week => {
+          const sc = {};
           week.forEach(([a, b]) => {
             const sa = mu[a] + sd * gauss(), sb = mu[b] + sd * gauss();
+            sc[a] = sa; sc[b] = sb;
             pf[a] += sa; pf[b] += sb;
             if (sa > sb) w[a]++; else w[b]++;
           });
+          if (activeLeague.median) {   // extra game vs the league median each week
+            const v = Object.values(sc).sort((x, y) => x - y), mid = v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2;
+            Object.entries(sc).forEach(([k, x]) => { if (x > mid) w[k]++; });
+          }
           keys.forEach(k => { mp[k] += mpg[k] + 0.7 * sd * gauss(); });
         });
         const order = keys.slice().sort((a, b) => w[b] - w[a] || pf[b] - pf[a]);
@@ -3881,7 +3946,7 @@
         res[lastK].last++;
       }
       keys.forEach(k => { ['po', 'bye', 'last'].forEach(x => { res[k][x] = Math.round(100 * res[k][x] / N); }); });
-      return { res, G, regEnd: d.regEnd, pt, byes, left: remaining.length, sd: Math.round(sd), wn };
+      return { res, G, regEnd: d.regEnd, pt, byes, left: remaining.length, sd: Math.round(sd), wn, wPpg: Math.round(100 * G / (G + 8)) };
     }
     function renderPlayoffCard() {
       const el = document.getElementById('playoffCard');
@@ -3901,14 +3966,14 @@
       const flag = k => {
         const r = sim.res[k];
         if (k === ME) return '';
-        if (r.po >= 35 && r.po <= 75) return ['Bubble: may pay for vets', 'bg-amber-500/15 text-amber-800 dark:text-amber-300'];
-        if (r.po < 15 && wnRank[k] <= Math.ceil(n / 2)) return ['Unlucky: may sell vets', 'bg-sky-500/15 text-sky-700 dark:text-sky-300'];
+        if (r.po >= 25 && r.po <= 75) return ['Bubble: may pay for vets', 'bg-amber-500/15 text-amber-800 dark:text-amber-300'];
+        if (r.po < 15 && wnRank[k] <= 5) return ['Unlucky: may sell vets', 'bg-sky-500/15 text-sky-700 dark:text-sky-300'];
         return '';
       };
       const lastLbl = activeLeague.draftOrder === 'maxpf' ? 'Lowest Max PF' : 'Worst record';
       const bar = x => `<div class="flex items-center gap-1.5 justify-end"><span class="tabular-nums font-semibold w-8 text-right">${x}%</span><div class="w-12 h-1.5 rounded bg-[#e3e6eb] dark:bg-[#2a3039] overflow-hidden hidden sm:block"><div class="h-full bg-blue-600" style="width:${x}%"></div></div></div>`;
       const keys = owners.slice().sort((a, b) => sim.res[b].po - sim.res[a].po || sim.res[b].bye - sim.res[a].bye);
-      el.innerHTML = cardHead('Playoff odds', `${sim.left} regular-season week${sim.left === 1 ? '' : 's'} left; top ${sim.pt} make the playoffs${sim.byes ? ` (top ${sim.byes} get byes)` : ''}. 2,000 simulations of the remaining Sleeper matchups. Each team's weekly score is drawn around a blend of its points per game so far and its Win Now lineup, with this league's week-to-week spread (±${sim.sd}). ${lastLbl} % is the chance of the 1.01 under your draft-order setting. <strong>Bubble</strong> teams (35–75%) are the most likely to pay for veterans; <strong>unlucky</strong> teams (strong Win Now, under 15%) may sell theirs.`) +
+      el.innerHTML = cardHead('Playoff odds', `${sim.left} regular-season week${sim.left === 1 ? '' : 's'} left; top ${sim.pt} make the playoffs${sim.byes ? ` (top ${sim.byes} get byes)` : ''}. 2,000 simulations of the remaining Sleeper matchups. Each team's weekly score is drawn around a blend of its points per game so far (${sim.wPpg}% weight, growing each week) and its Win Now lineup, with this league's week-to-week spread (±${sim.sd})${activeLeague.median ? ', plus the weekly game against the league median' : ''}. ${lastLbl} % is the chance of the 1.01 under your draft-order setting. <strong>Bubble</strong> teams (25–75%) are the most likely to pay for veterans; <strong>unlucky</strong> teams (top-5 Win Now, under 15%) may sell theirs.`) +
         `<div class="overflow-x-auto"><table class="w-full text-xs border-collapse">
           <thead><tr class="text-[10px] uppercase tracking-wider ${MUTED}"><th class="text-left py-1 pr-2">Team</th><th class="px-1.5 text-left">Record</th><th class="px-1.5 text-right">Playoffs</th>${sim.byes ? '<th class="px-1.5 text-right">Bye</th>' : ''}<th class="px-1.5 text-right">${lastLbl}</th><th class="pl-2 text-left">Trade read</th></tr></thead>
           <tbody>${keys.map(k => { const r = sim.res[k]; const f = flag(k); return `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1.5 pr-2 font-semibold whitespace-nowrap">${esc(T[k].n)}${k === ME ? ' <span class="text-[10px] px-1 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td><td class="px-1.5 ${MUTED} whitespace-nowrap">${esc(T[k].r)}</td><td class="px-1.5">${bar(r.po)}</td>${sim.byes ? `<td class="px-1.5 text-right tabular-nums">${r.bye}%</td>` : ''}<td class="px-1.5 text-right tabular-nums">${r.last}%</td><td class="pl-2">${f ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap ${f[1]}">${f[0]}</span>` : ''}</td></tr>`; }).join('')}</tbody>
