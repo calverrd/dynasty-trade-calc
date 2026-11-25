@@ -2704,8 +2704,9 @@
       const tr = trackRow(p, ex);
       const sg = ex?.sigBy.get(`${p.pos}|${cmpNorm(p.name)}`) || null;
       const pg = ex?.ppgBy.get(`${p.pos}|${cmpNorm(p.name)}`) || null;
-      const pool = fb ? BUCKETS.filter(x => x.pos === p.pos && tierOf(x.name) === tierOf(b.name)).flatMap(x => x.players) : b.players;
-      const others = pool.filter(x => x.id !== p.id && !x.isRookie);
+      // Comps and odds always come from his own bucket: the player type (e.g. Konami vs Pocket) is the point of
+      // the bucket, so pooling other types at the same tier would mix different ways of scoring
+      const others = b.players.filter(x => x.id !== p.id && !x.isRookie);
       const hits = others.filter(x => x.hit > 0).sort((x, y) => (y.elite - x.elite) || (y.hit - x.hit)).slice(0, 4);
       const busts = others.filter(x => x.status === 'bust').sort((x, y) => y.year - x.year).slice(0, 3);
       const early = !!(tr && ex && tr.yr > ex.settledYr[p.pos]);
@@ -2714,7 +2715,7 @@
       // Current class = newest year on the rookie tabs; older unsettled players are sophomores (odds are from their rookie year)
       const newest = ex?.track[p.pos]?.length ? Math.max(...ex.track[p.pos].map(x => x.yr)) : null;
       return { p, b, fb, tr, sg, pg, hits, busts, early, wrRank, soph: !!(tr && newest && tr.yr < newest), tb: early ? typBestCmp(p.pos, tr, ex) : null, base: draftBaseline(p, tr, ex),
-        safe: fb ? fb.safe : safeOf(b), up: fb ? fb.up : upOf(b), rep: fb ? fb.rep : b.repPct };
+        safe: safeOf(b), up: upOf(b), rep: b.repPct };
     }
 
     // cmpBar(label, valueA, valueB, thresholdA, thresholdB, samePos): the +N lead pill only on same-position pairs,
@@ -2753,17 +2754,23 @@
       const head = d => `<div class="flex flex-wrap items-center gap-1.5"><span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${POS_META[d.p.pos].badgeCls}">${d.p.pos}</span><span class="font-extrabold text-slate-900 dark:text-white">${esc(d.p.name)}</span></div>
         <div class="text-[11px] text-slate-500 dark:text-slate-400">${d.p.year} class${d.tr && d.tr.rd != null ? ` · Rd ${d.tr.rd} · #${d.tr.pk}${d.wrRank ? ` · WR${d.wrRank}` : ''}` : d.tr ? ' · undrafted' : ''}${d.tr?.tm ? ` · ${esc(d.tr.tm)}` : ''}</div>
         <button type="button" data-open-bucket="${esc(d.b.id)}" class="mt-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 hover:underline cursor-pointer">${esc(d.b.name)} · n=${d.b.n}</button>
-        ${d.fb ? `<div class="text-[10px] text-amber-700 dark:text-amber-300 mt-0.5">Bucket has only n=${d.b.n}, so odds and comps use all ${esc(tierOf(d.b.name))} ${d.p.pos}s (n=${d.fb.n})</div>` : ''}`;
+        ${d.fb ? `<div class="text-[10px] font-semibold text-amber-700 dark:text-amber-300 mt-0.5">Small sample (n=${d.b.n}) — treat as a lean, not a rule</div>` : ''}`;
       const sLbl = d => `${safeLbl(d.p.pos)}`, uLbl = d => `${upLbl(d.p.pos)}`;
       let h = `<div class="grid grid-cols-[4.75rem_1fr_1fr] sm:grid-cols-[7.5rem_1fr_1fr] gap-x-2 sm:gap-x-3 gap-3 items-start pb-2"><div></div><div>${col(da, head)}</div><div>${col(db, head)}</div></div>`;
       // Core bucket odds (Safe or Upside first, by toggle)
-      const samePos = !!(da && db && da.p.pos === db.p.pos);
+      const samePos = !!(da && db && da.p.pos === db.p.pos && !da.fb && !db.fb);   // no lead pills across positions or on small samples
       const lineSafe = cmpBar('Safe', da?.safe, db?.safe, da && sLbl(da), db && sLbl(db), samePos);
       const lineUp = cmpBar('Upside', da?.up, db?.up, da && uLbl(da), db && uLbl(db), samePos);
       h += cmpStrip('Profile bucket odds', (up ? lineUp + lineSafe : lineSafe + lineUp) + cmpBar('Repeat (2+ hit seasons, of hitters)', da?.rep, db?.rep, null, null, samePos)
-        + (da && db && !samePos ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 pt-1">Different positions have different PPG bars, so no "leads by" marks.</p>` : ''));
-      h += cmpRow('Bucket hits', col(da, d => d.hits.map(x => `${esc(x.name)} <span class="text-slate-400">${x.year}</span>`).join(', ') || '—'), col(db, d => d.hits.map(x => `${esc(x.name)} <span class="text-slate-400">${x.year}</span>`).join(', ') || '—'));
-      h += cmpRow('Bucket busts', col(da, d => d.busts.map(x => `${esc(x.name)} <span class="text-slate-400">${x.year}</span>`).join(', ') || '—'), col(db, d => d.busts.map(x => `${esc(x.name)} <span class="text-slate-400">${x.year}</span>`).join(', ') || '—'));
+        + (da && db && !samePos ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 pt-1">${da.p.pos !== db.p.pos ? 'Different positions have different PPG bars' : 'One bucket is a small sample'}, so no "leads by" marks.</p>` : ''));
+      const compTxt = (d, list) => list.map(x => `${esc(x.name)} <span class="text-slate-400">${x.year}</span>`).join(', ') || '—';
+      // Small buckets: show the whole tier's rates as a faint reference only (different player types mixed in)
+      if (da?.fb || db?.fb) {
+        const ref = d => d.fb ? `<span class="text-slate-500 dark:text-slate-400">All ${esc(tierOf(d.b.name))} ${d.p.pos}s, any type (n=${d.fb.n}): ${d.fb.safe.toFixed(0)}% safe · ${d.fb.up.toFixed(0)}% upside — different play styles mixed, reference only</span>` : '—';
+        h += cmpRow('Tier average (reference)', col(da, ref), col(db, ref));
+      }
+      h += cmpRow('Bucket hits', col(da, d => compTxt(d, d.hits)), col(db, d => compTxt(d, d.hits)));
+      h += cmpRow('Bucket busts', col(da, d => compTxt(d, d.busts)), col(db, d => compTxt(d, d.busts)));
       // Draft-capital baseline
       if (da?.base || db?.base) {
         const ELT = { WR: '14+', RB: '15+', TE: '17+' };

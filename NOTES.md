@@ -156,14 +156,15 @@ Daily workflow safety:
 - **Built Nov 25 — player comparison** (`bucket-explorer.html`, "Compare two players" section; `wireCompare` / `renderCompare`). Value-free: no KTC, no FC, no CHEAP/PRICEY.
     - Any positions. Two search boxes (datalist of every bucket player), Swap, and a Safe / Upside toggle that sets which odds line comes first.
     - Safe = 12+ PPG (QB 16+) from bucket `nearTotal` (TE: hit). Upside = WR 14+ / RB 15+ / TE 17+ / QB 20+ from bucket `hit` (TE: `elite`).
-    - Buckets with n < 5 fall back to the whole tier at that position, weighted by bucket size (`tierWide`). Repeat %, and the top 4 hits and 3 recent busts from the bucket, are shown too.
+    - Odds and comps always come from the player's own bucket. The type (e.g. Konami vs Pocket) is the point of a bucket, so the owner decided against pooling other types at the same tier (Nov 25).
+    - When a bucket has fewer than 5 players: a "Small sample — treat as a lean" note, a faint tier-average reference line (`tierWide`, labeled "different play styles mixed"), and no lead pills.
+    - Also shown: Repeat %, the top 4 hits and the 3 most recent busts from the bucket.
     - Lazy-loads `signals.json`, `ppg.json` and the three rookie pages' `DATA` the first time it's used (about 1.4 MB).
         - Draft-slot history: same round group, settled classes, % hitting 12+ and % reaching the tab's elite tier (Hit Rates sheet tiers: WR/RB `green` = 14+/15+, TE `g17` = 17+).
         - Early usage (WR/RB Games 1–4, TE Games 1–8), model odds (`hp`), flags (BUY / MISSED TIME / JUMPED), BF%, Year 2 usage.
         - Typical best season: `typBestCmp` uses the same 15-nearest method as the rookie tabs, and matches them exactly (Love 17.7, Coleman 6.3).
         - Career: season counts by PPG tier (bucket data), plus this season's PPG (`ppg.json`).
     - Each Safe/Upside cell prints that player's PPG bar. The "+N" lead pill shows only on same-position pairs.
-    - Fallback note gives the raw bucket n; comps come from the tier pool when it triggers.
     - WR header shows within-class rank (WR1 = first WR drafted that year). Odds for older unsettled players are labeled "Rookie-yr odds"; each view needs 2+ games.
     - Deferred: next-season retention odds, until the sell-window curves are shared as a common JSON.
 - **Fixed Nov 25 — dead-looking presets:** four "best filter combination" bullets had no `data-preset`, so tapping did nothing: WR "Usage 8–15 · Day 3 or undrafted"; TE "Games 1–8 · Usage 9+ · Round 4 or later", "MISSED TIME · Round 1–3" and "Round 4 or later · Games 1–8 usage under 6". All 39 presets now load, and their settled-class numbers match the text.
