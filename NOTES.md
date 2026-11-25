@@ -146,6 +146,9 @@ Daily workflow safety:
 
 ## 8. Open items
 
+- **Top priority — Blend can fall outside KTC and FC.** On real Apes data (Nov 25), one trade showed KTC and FantasyCalc both saying you win by more than 12%, while Blend said +5%. Blend should land between the two.
+    - Likely cause: "FantasyCalc" mode grades on FC's own scale (`fRaw`), while Blend mixes in FC mapped onto KTC's scale (`fK`, via `buildScaleMap`). The value adjustment isn't linear, so the two FC versions can disagree.
+    - Fix first, then re-check the offer check and Trade ideas: grade all three on one scale.
 - **Done Nov 25 — ideas with one team** (`partnerIdeas`): owner asked for trade ideas with one chosen team, based on what each team needs.
     - Uses both full rosters (assets worth 700+): 1-for-1, 2-for-1 / player + pick, and 1-for-2 / get player + pick.
     - Keeps a deal only if, on the selected source, you don't lose by more than Fair and don't win by more than max(12%, 2 × Fair).
@@ -153,7 +156,8 @@ Daily workflow safety:
     - Need fit = filling positions below the league average without opening a hole on the other side, plus timeline (rebuild teams like early picks and youth; contenders don't want picks).
     - Shows up to 12, each with a reason for each side. Ideas passing the offer check under all three sources come first, marked ✓; the rest show which source disagrees.
     - Each asset appears at most twice.
-    - Not yet tested on a real league payload (the sandbox has no Sleeper access): check the live results and tune the weights.
+    - Near-miss deals get one sweetener from the short side, picked to bring all three sources closest to the window.
+    - Live result in the Apes league (Nov 25): 7 of 11 teams get 6–12 ideas, but 4 get only 1, and almost none pass all three sources. Revisit after the Blend fix above. The "hurt neither side" rule may be too strict for a rebuilder trading with contenders (picks score negative for contenders).
 - **About Dec 25:** backtest which source (KTC, FC, Blend) best predicted later value moves, using `ktc-history.json` and `fc-history.json`.
 - **Unresolved method differences** (decide, don't silently pick):
   - An older 24-team chat used a stud premium of `Σ 10000·(v/10000)^1.5`, calibrated to both sites' calculators. The site now uses the KTC-matched adjustment above. Compare the two on 24-team trades.
