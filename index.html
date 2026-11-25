@@ -560,7 +560,7 @@
           </div>
           <div class="p-3.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] space-y-1.5">
             <h3 class="font-bold">3. Value Adjustment (matched to KTC)</h3>
-            <p class="text-[#5d6672] dark:text-[#98a2ae]">Like KeepTradeCut, every asset gets a hidden "raw adjustment" that grows faster than its value (≈10% of value for depth pieces, up to ≈42% for the best player). The side with the bigger raw total is giving up the better piece, so it is credited a <strong>value adjustment</strong> equal to the extra value the other side would need to add. The formula uses KTC's own exponents with constants fitted to KTC's published numbers. <strong>Value adj. ×1.00</strong> = KTC; lower it to soften, 0 turns it off. The League tab shows which setting best fits your league's real trades. Deals inside the <strong>Fair ±</strong> range (default 5% of the larger side) are graded Fair. The <strong>Consensus check</strong> grades every trade under KTC, FantasyCalc and the blend at once and warns you if any of them says your side loses.</p>
+            <p class="text-[#5d6672] dark:text-[#98a2ae]">Like KeepTradeCut, every asset gets a hidden "raw adjustment" that grows faster than its value (≈10% of value for depth pieces, up to ≈42% for the best player). The side with the bigger raw total is giving up the better piece, so it is credited a <strong>value adjustment</strong> equal to the extra value the other side would need to add. The adjustment changes smoothly, so a tiny change in values can't swing the verdict. <strong>Blend</strong> grades the trade under KTC and under FantasyCalc separately and mixes each side's share by the blend weight, so a Blend verdict always falls between the two. The formula uses KTC's own exponents with constants fitted to KTC's published numbers. <strong>Value adj. ×1.00</strong> = KTC; lower it to soften, 0 turns it off. The League tab shows which setting best fits your league's real trades. Deals inside the <strong>Fair ±</strong> range (default 5% of the larger side) are graded Fair. The <strong>Consensus check</strong> grades every trade under KTC, FantasyCalc and the blend at once and warns you if any of them says your side loses.</p>
           </div>
           <div class="p-3.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] space-y-1.5">
             <h3 class="font-bold">4. Hit Rate &amp; Repeater % Model</h3>
@@ -1426,19 +1426,24 @@
         if (diff > 0.5) {
           // value X whose raw adjustment equals the gap (bisection; X may exceed t)
           let lo = 0, hi = 2 * v;
-          for (let i = 0; i < 50; i++) {
+          for (let j = 0; j < 20 && ktcRaw(hi, Math.max(t, hi), Math.max(v, hi)) < diff; j++) hi *= 2;   // blowouts: widen the search
+          for (let i = 0; i < 60; i++) {
             const m = (lo + hi) / 2;
             if (ktcRaw(m, Math.max(t, m), Math.max(v, m)) < diff) lo = m; else hi = m;
           }
           needX = lo;
         }
-        // The adjustment always goes to the side with the best player, sized so that its edge (or deficit)
-        // after adjustment equals X. This keeps the verdict continuous: before Nov 25 the bonus went to
-        // whichever side led on the raw curve, so a near-even stud-for-package trade could swing ~30 points
-        // when that lead flipped. Trades where the stud side leads (all KTC reference trades) are unchanged.
+        // Signed adjustment for the side with the best player, sized so the winner's edge after adjustment
+        // is exactly X (the value whose raw adjustment equals the raw-curve gap). Positive → credited to the
+        // stud side; negative → its opposite is credited to the other side (a more consolidated package).
+        // Continuous everywhere: before Nov 25 the bonus went to whichever side led on the raw curve, so a
+        // near-even stud-for-package trade could swing ~30 points when that lead flipped. Trades where the
+        // stud side leads (all KTC reference trades) are unchanged.
         const studA = Math.max(...va) >= Math.max(...vb);
-        if (studA) vaA = Math.max(0, rawB - rawA + (rA >= rB ? needX : -needX)) * k;
-        else vaB = Math.max(0, rawA - rawB + (rB >= rA ? needX : -needX)) * k;
+        const rS = studA ? rA : rB, rO = studA ? rB : rA, rawS = studA ? rawA : rawB, rawO = studA ? rawB : rawA;
+        const signed = rawO - rawS + (rS >= rO ? needX : -needX);
+        const toStud = Math.max(0, signed) * k, toOther = Math.max(0, -signed) * k;
+        if (studA) { vaA = toStud; vaB = toOther; } else { vaB = toStud; vaA = toOther; }
       }
       const effA = rawA + vaA, effB = rawB + vaB;
       const gapPct = Math.abs(effA - effB) / Math.max(effA, effB, 1) * 100;
@@ -1457,14 +1462,22 @@
       }
       return mixEvals(evalIds(aIds, bIds, 'ktc', strength), evalIds(aIds, bIds, 'fc', strength));
     }
+    // Blend = each source's SHARE of the trade, mixed by the blend weight: shareA = w·sA(KTC) + (1−w)·sA(FC).
+    // A convex mix of shares, so the Blend verdict always lies between KTC's and FC's, and each source
+    // gets exactly its weight on every trade (normalizing by each source's top value instead tilted
+    // the mix toward the flatter curve on mid-tier and depth deals). Totals are shown on Blend's scale.
     function mixEvals(K, F) {
-      const mk = modeValues('ktc').max, mf = modeValues('fc').max, mb = modeValues('blend').max;
       const w = (Number(st.w) || 0) / 100;
-      const mix = (x, y) => (w * x / mk + (1 - w) * y / mf) * mb;
-      const rawA = mix(K.rawA, F.rawA), rawB = mix(K.rawB, F.rawB);
-      const effA = mix(K.effA, F.effA), effB = mix(K.effB, F.effB);
+      const mk = modeValues('ktc').max, mf = modeValues('fc').max, mb = modeValues('blend').max;
+      const share = (a, b) => (a + b > 0 ? a / (a + b) : 0.5);
+      const sEff = w * share(K.effA, K.effB) + (1 - w) * share(F.effA, F.effB);
+      const sRaw = w * share(K.rawA, K.rawB) + (1 - w) * share(F.rawA, F.rawB);
+      const totEff = (w * (K.effA + K.effB) / mk + (1 - w) * (F.effA + F.effB) / mf) * mb;
+      const totRaw = (w * (K.rawA + K.rawB) / mk + (1 - w) * (F.rawA + F.rawB) / mf) * mb;
+      const effA = sEff * totEff, effB = (1 - sEff) * totEff;
+      const rawA = sRaw * totRaw, rawB = (1 - sRaw) * totRaw;
       const gapPct = Math.abs(effA - effB) / Math.max(effA, effB, 1) * 100;
-      return { rawA, rawB, vaA: effA - rawA, vaB: effB - rawB, effA, effB, gapPct };
+      return { rawA, rawB, vaA: Math.max(0, effA - rawA), vaB: Math.max(0, effB - rawB), effA, effB, gapPct };
     }
     function evalTrade(aItems, bItems) {
       return evalIds(aItems.map(x => x.id), bItems.map(x => x.id), st.src);
@@ -2475,6 +2488,18 @@
         if (!best || med < best.med - 1e-9) best = { k: Math.round(k * 100) / 100, med };
       }
       const at = kk => curve.find(c => Math.abs(c[0] - kk) < 1e-6)?.[1];
+      // How many trades actually move with the adjustment (uneven piece counts), and what KTC and FC
+      // each prefer on their own (FC's steeper curve may want a lighter adjustment)
+      const uneven = usable.filter(g => g.sides[0].got.filter(x => x.pos !== 'FAAB').length !== g.sides[1].got.filter(x => x.pos !== 'FAAB').length).length;
+      const bestFor = m => {
+        let b = null;
+        for (let k = 0; k <= 1.5001; k += 0.05) {
+          const med = median(usable.map(g => evalIds(g.sides[0].got.map(x => x.id), g.sides[1].got.map(x => x.id), m, k).gapPct));
+          if (!b || med < b.med - 1e-9) b = { k: Math.round(k * 100) / 100, med };
+        }
+        return b.k;
+      };
+      const bestK = bestFor('ktc'), bestF = bestFor('fc');
       // Which value source (at the current adjustment) makes these trades look fairest?
       const sources = [['ktc', 'KTC'], ['fc', 'FantasyCalc'], ['blend', `Blend (${st.w}% KTC)`]].map(([m, label]) => {
         const mv = modeValues(m);
@@ -2482,7 +2507,7 @@
         const gaps = usable.map(g => evalIds(g.sides[0].got.map(x => x.id), g.sides[1].got.map(x => x.id), m).gapPct);
         return { m, label, med: median(gaps), fairShare: gaps.filter(x => x <= st.fair).length / gaps.length };
       }).sort((a, b) => a.med - b.med);
-      return { n: usable.length, best: best.k, bestMed: best.med, ktcMed: at(1), offMed: at(0), curMed: at(Math.round(st.adj * 20) / 20), sources };
+      return { n: usable.length, uneven, bestK, bestF, best: best.k, bestMed: best.med, ktcMed: at(1), offMed: at(0), curMed: at(Math.round(st.adj * 20) / 20), sources };
     }
 
     function renderTradeHistory() {
@@ -2512,6 +2537,7 @@
         : `<div class="p-2.5 rounded-xl bg-blue-500/5 border border-blue-500/25 text-xs space-y-1">
             <div><strong>Value adjustment vs. your league’s real trades</strong> <span class="text-[#5d6672] dark:text-[#98a2ae]">(${cal.n} recent two-team trades)</span></div>
             <div>Median gap between sides: <strong>${cal.ktcMed.toFixed(1)}%</strong> at KTC’s setting (×1.00) · <strong>${cal.offMed.toFixed(1)}%</strong> with no adjustment · best fit <strong>×${cal.best.toFixed(2)}</strong> (${cal.bestMed.toFixed(1)}%).</div>
+            <div class="text-[#5d6672] dark:text-[#98a2ae]">Only uneven trades (like 1-for-2) move with this setting: <strong>${cal.uneven}</strong> of the ${cal.n}${cal.uneven < 10 ? ' — too few to pin the setting down; treat the best fit as rough' : ''}. Graded on each source alone, KTC fits best at ×${cal.bestK.toFixed(2)} and FantasyCalc at ×${cal.bestF.toFixed(2)}.</div>
             <div class="text-[#5d6672] dark:text-[#98a2ae]">${Math.abs(cal.best - 1) <= 0.15 ? 'Your league trades about the way KTC’s adjustment expects.' : cal.best < 1 ? 'Your league pays less of a premium for studs than KTC assumes.' : 'Your league pays more of a premium for studs than KTC assumes.'} Accepted trades aren’t all fair, so treat this as a sanity check — a small sample can swing it.
               ${Math.abs(cal.best - st.adj) > 0.001 ? `<button type="button" data-useadj="${cal.best}" class="ml-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Use ×${cal.best.toFixed(2)}</button>` : ''}
               ${Math.abs(st.adj - 1) > 0.001 ? `<button type="button" data-useadj="1" class="ml-1 px-2 py-0.5 rounded-md text-[11px] font-bold border border-blue-500/40 text-blue-700 dark:text-blue-300 cursor-pointer">Back to KTC ×1.00</button>` : ''}</div>

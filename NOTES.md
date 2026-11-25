@@ -148,7 +148,10 @@ Daily workflow safety:
 
 - **Fixed Nov 25 — Blend outside KTC and FC.** There were two causes:
     1. `evalValues` gave the value adjustment to whichever side led on the raw curve. When that lead flipped, the stud side's premium dropped from about +3,000 to 0, so a near-even stud-for-package verdict could swing about 30 points. Now the side with the best player always gets the adjustment, sized continuously. KTC reference trades are unchanged.
-    2. Blend mixed asset values with FC rescaled onto KTC's curve, which changes how players compare to each other. Now `evalIds(aIds, bIds, mode)` grades Blend as KTC's and FC's own results mixed by the blend weight (`mixEvals`), so a Blend verdict always lies between them: 0 of 3,921 random test trades fall outside.
+    2. Blend mixed asset values with FC rescaled onto KTC's curve, which changes how players compare to each other. Now `evalIds(aIds, bIds, mode)` grades Blend from KTC's and FC's own results: `mixEvals` mixes each side's SHARE of the trade by the blend weight. That's a convex mix, so Blend always lies between them (0 of 3,941 random test trades fall outside) and each source gets exactly its weight. Normalizing by each source's top value instead had tilted the mix toward KTC's flatter curve.
+    3. The adjustment is signed: it's credited to the stud side, or to the other side when that side is the more consolidated package, so |effA − effB| = X everywhere. On blowouts, the inverse search widens instead of capping at 2× the top value.
+    - The verdict is steep near even (about 0.12 points per value point against a 3,000 + 2,900 package) but has no jumps. That steepness is KTC's own model, the same one that matches the reference trades.
+    - Calibration now shows how many trades are uneven (only those move with the setting) and the best fit for KTC and FC separately.
     - Every trade grade now goes through `evalIds`: calculator, offer check, league trades, calibration, Trade ideas. Asset-level Blend values (`valueFor`) are still used for the chart, totals and "add X" suggestions.
 - **Next: player comparison** — goes inside the Profile Buckets tab (`bucket-explorer.html`), per the owner. Pick two players; independent of trade values. Show:
     - Rookies: Weeks 1–4 odds (TE: Games 1–8), plus the typical best PPG in Years 1–3.
