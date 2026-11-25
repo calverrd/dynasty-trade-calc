@@ -32,7 +32,14 @@ jobs:
           npm install --no-save --no-package-lock playwright@1
           npx playwright install --with-deps chromium
 
-      - name: Save FantasyCalc snapshot (fc-history.json)
+      # FantasyCalc terms: cache responses and reuse them across users (each query refreshed at most every 3 hours).
+      # Visitors' browsers read data/fc/ instead of calling the API. 36 GETs a day, 0.75 s apart.
+      - name: Refresh the FantasyCalc cache (data/fc/)
+        id: fccache
+        continue-on-error: true
+        run: node scripts/fetch-fc-cache.mjs
+
+      - name: Save FantasyCalc snapshot (fc-history.json, from the cache)
         id: fc
         continue-on-error: true
         run: node scripts/update-fc.mjs
@@ -47,6 +54,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ktc.json ktc-history.json depth.json draft_latest.json
           if [ -f fc-history.json ] && node -e "JSON.parse(require('fs').readFileSync('fc-history.json','utf8'))"; then git add fc-history.json; fi
+          for f in data/fc/*.json; do
+            if [ -f "$f" ] && node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$f"; then git add "$f"; fi
+          done
           if git diff --cached --quiet; then
             echo "Data unchanged - nothing to commit."
             exit 0
@@ -56,7 +66,7 @@ jobs:
           git push origin HEAD:main
 
       - name: Flag a FantasyCalc failure (after KTC data is saved)
-        if: ${{ !cancelled() && steps.fc.outcome == 'failure' }}
+        if: ${{ !cancelled() && (steps.fc.outcome == 'failure' || steps.fccache.outcome == 'failure') }}
         run: |
-          echo "::error::FantasyCalc snapshot failed today; KTC data was still saved."
+          echo "::error::FantasyCalc cache (${{ steps.fccache.outcome }}) or snapshot (${{ steps.fc.outcome }}) failed today; KTC data was still saved and any failed cache file kept yesterday's version."
           exit 1
