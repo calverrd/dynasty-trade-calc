@@ -32,6 +32,7 @@ from sklearn.linear_model import LogisticRegression
 SITE, DP, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 FIRST = int(sys.argv[4]) if len(sys.argv) > 4 else 2020
 LAST = int(sys.argv[5]) if len(sys.argv) > 5 else 2025
+MIN_GAP = float(sys.argv[6]) if len(sys.argv) > 6 else 500  # the site's KTC-scale floor; 0 = rank gap + 15% only
 DATA_RE = re.compile(r"^\s*const DATA = (.*);\s*$", re.M)
 DP_FILE = "files/values-players.csv"
 rng = np.random.default_rng(7)
@@ -126,7 +127,7 @@ for y in range(FIRST, LAST + 1):
             for i, r in by_hp.iterrows():
                 hr, kr = i + 1, vrank[r.key]
                 v_at = by_v.v0.iloc[hr - 1]
-                big = abs(r.v0 - v_at) >= max(500, 0.15 * r.v0)
+                big = abs(r.v0 - v_at) >= max(MIN_GAP, 0.15 * r.v0)
                 gap = kr - hr
                 flag = ("CHEAP" if gap >= th else "PRICEY" if gap <= -th else "FAIR") if big else "FAIR"
                 recs.append(dict(cls=y, when=label, pos=pos, n=r.n, hp=round(float(r.hp), 3), v0=r.v0,
@@ -135,7 +136,7 @@ for y in range(FIRST, LAST + 1):
 
 B = pd.DataFrame(recs)
 out = ["# CHEAP / PRICEY vs DynastyProcess market values", "",
-       f"Classes {FIRST}-{LAST}. Value = DynastyProcess `value_2qb` (superflex). Run {dt.date.today()}.", ""]
+       f"Classes {FIRST}-{LAST}. Value = DynastyProcess `value_2qb` (superflex). Minimum value gap {MIN_GAP:g} points (plus 15%). Run {dt.date.today()}.", ""]
 if B.empty:
     out += ["**No players matched.** Snapshot notes:", ""] + [f"- {x}" for x in notes]
     open(OUT, "w").write("\n".join(out) + "\n")
