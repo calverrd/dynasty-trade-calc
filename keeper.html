@@ -898,14 +898,14 @@ function renderDraftBoard() {
         : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
       const left = p && (isKeeper || boardOpts.mock) ? `border-l-4 ${posColor[p.pos] || 'border-l-slate-400'}` : '';
       const title = `${r}.${String(pos).padStart(2, '0')} (#${overall}) · ${teamName(owner)}${owner !== orig ? ' via ' + teamName(orig) : ''}${p && (isKeeper || boardOpts.mock) ? ' · ' + p.name + (isKeeper ? ' (keeper)' : ' (projected)') : ''}${isKeeper && RES.notes.get(keeperPid) ? ' · ' + RES.notes.get(keeperPid) : ''}`;
-      cells += `<td class="p-0.5 align-top"><div title="${esc(title)}" class="h-[3.4rem] w-[7.5rem] rounded border ${cls} ${left} px-1.5 py-1 text-[11px] leading-tight ${mine ? 'ring-2 ring-violet-500' : ''}">
+      cells += `<td class="p-0.5 align-top"><div title="${esc(title)}" class="h-[3.4rem] w-[6.75rem] rounded border ${cls} ${left} px-1.5 py-1 text-[11px] leading-tight ${mine ? 'ring-2 ring-violet-500' : ''}">
         <div class="text-[9px] text-slate-400 num">${r}.${String(pos).padStart(2, '0')}</div>${body}${via}</div></td>`;
     }
     rows += `<tr><td class="pr-2 text-xs font-semibold text-slate-500 align-middle whitespace-nowrap">Rd ${r} ${r % 2 === 1 ? '→' : '←'}</td>${cells}</tr>`;
   }
   const head = Array.from({ length: N }, (_, i) => {
     const rid = slotTeam[i + 1];
-    return `<th class="p-0.5 text-[10px] font-semibold text-slate-500 text-left align-bottom"><div class="w-[7.5rem] truncate" title="${esc(teamName(rid))}">${i + 1}. ${esc(short(teamName(rid), 15))}</div></th>`;
+    return `<th class="p-0.5 text-[10px] font-semibold text-slate-500 text-left align-bottom"><div class="w-[6.75rem] truncate" title="${esc(teamName(rid))}">${i + 1}. ${esc(short(teamName(rid), 15))}</div></th>`;
   }).join('');
   el.innerHTML = `<div class="${card} p-4">
     <div class="flex flex-wrap items-center gap-3 mb-2">
