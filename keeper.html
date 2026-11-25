@@ -134,6 +134,7 @@
         <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
           <h2 class="text-lg font-bold mb-2">Season phase</h2>
           <p>Values shift through the year. <b>In-Season</b> leans on this season's points, <b>Trade Deadline</b> blends the two, and <b>Offseason</b> counts only keeper value, so rentals drop to 0. It's set automatically, and you can change it in League rules.</p>
+          <p class="mt-2">The "this season" part also shrinks as the season goes on. It only counts the weeks left, playoffs included, so a player's value for this season fades week by week while picks hold their value.</p>
         </div>
         <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
           <h2 class="text-lg font-bold mb-2">Good to know</h2>
@@ -480,6 +481,13 @@ function buildCtx() {
   const r = { ...DEFAULT_RULES, ...rules };
   const K = r.K || detK;
   const modeKey = r.seasonMode === 'auto' ? detectMode(L) : r.seasonMode;
+  // Current-season value only counts for the weeks that are left (incl. playoffs)
+  const ls = L.settings || {};
+  const totalWeeks = (ls.playoff_week_start || 15) + Math.max(1, Math.ceil(Math.log2(ls.playoff_teams || 6))) - 1;
+  const leg = ls.leg || 1;
+  const remainFrac = L.status === 'in_season' ? Math.max(0, Math.min(1, (totalWeeks - leg + 1) / totalWeeks)) : 0;
+  const weights = { ...MODES[modeKey], wNowBase: MODES[modeKey].wNow, remainFrac, weeksLeft: Math.max(0, totalWeeks - leg + 1), totalWeeks };
+  weights.wNow = weights.wNowBase * remainFrac;
 
   // Players universe
   const byId = new Map();
@@ -561,7 +569,7 @@ function buildCtx() {
   };
 
   return {
-    N, T, K, detK, kPerRoster, rules: r, modeKey, weights: MODES[modeKey], byId, universe, extraPlayers, teams, rosterOf,
+    N, T, K, detK, kPerRoster, rules: r, modeKey, weights, byId, universe, extraPlayers, teams, rosterOf,
     teamSlot, standRank, owned, ownedBySeason, nextSeason: R.nextSeason, clocks, seqOf, locks,
     rosterPositions: L.roster_positions || [],
   };
@@ -627,7 +635,7 @@ function renderRules() {
         ${['auto', 'inseason', 'deadline', 'offseason'].map(m => `<option value="${m}" ${c.rules.seasonMode === m ? 'selected' : ''}>${m === 'auto' ? 'Auto (' + MODES[detectMode(L)].label + ')' : MODES[m].label}</option>`).join('')}
       </select></label>
     <label class="flex items-center gap-2 mt-5"><input data-rule="dropReset" type="checkbox" ${c.rules.dropReset ? 'checked' : ''}> <span>Drafted-then-dropped players reset to waiver cost</span></label>
-    <div class="text-xs text-slate-500 mt-1">Weights now: current season ×${c.weights.wNow}, Yr+1 surplus ×${c.weights.d1}, Yr+2 ×${c.weights.d2}, picks ×${c.weights.dp}.
+    <div class="text-xs text-slate-500 mt-1">Weights now: current season ×${c.weights.wNow.toFixed(2)} (${c.weights.wNowBase} × ${c.weights.weeksLeft} of ${c.weights.totalWeeks} weeks left), Yr+1 surplus ×${c.weights.d1}, Yr+2 ×${c.weights.d2}, picks ×${c.weights.dp}.
       <button id="resetRules" class="ml-1 underline text-emerald-600 dark:text-emerald-400">Reset rules</button>
       <button id="resetOv" class="ml-1 underline text-emerald-600 dark:text-emerald-400">Clear overrides & locks</button></div>`;
   const byRound = {}; keeperRounds.forEach(r => byRound[r] = (byRound[r] || 0) + 1);
