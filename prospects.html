@@ -87,12 +87,13 @@
               <th class="sortable text-left py-2 px-2" data-k="tierRank">Tier</th>
               <th class="sortable text-left py-2 px-2" data-k="type">Type</th>
               <th class="sortable text-left py-2 pl-2" data-k="hit">Loose <span class="oddsLbl">upside</span> odds (tier + type)</th>
+              <th class="sortable text-right py-2 pl-3" data-k="dc" title="Odds from draft position alone: projected pick before the draft, real pick after">Draft-capital odds</th>
             </tr>
           </thead>
           <tbody id="rows" class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
         </table>
       </div>
-      <p class="text-[11px] text-slate-500 dark:text-slate-400">Tap a prospect to see the past players in his bucket, grouped by how they turned out. Board source: your prospects board export, Nov 18, 2026.</p>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400">Tap a prospect to see the past players in his bucket, grouped by how they turned out. <strong>Draft-capital odds</strong> come from draft position alone, which out-predicted every college stat we tested (target share, yards per team pass attempt, breakout age, Combine speed, and more). WRs use their rank among WRs drafted (WR1, WR2…), everyone else the overall pick. Before the draft the pick is the consensus big-board rank (NFL Mock Draft Database, top 100, Nov 24, 2026); players outside it get the historical rate for picks 101+. After the April draft it switches to the real picks automatically. Projected picks are rough, so treat pre-draft odds as a range. Where the two columns disagree is worth a look: a high bucket with weak draft capital, or the reverse. Board source: your prospects board export, Nov 18, 2026.</p>
     </section>
   </main>
 
@@ -111,6 +112,53 @@
     }));
     Object.values(TW).forEach(a => { if (a.n) { a.l1 = Math.round(a.a1 / a.n); a.l2 = Math.round(a.a2 / a.n); a.l3 = Math.round(a.a3 / a.n); } });
     const MIN_CELL = 5;
+
+    // ---- Draft-capital odds (validated: draft position beat every college stat we tested) ----
+    // Logistic fits on 2015-2024 drafted players with your Hit Rates tiers: WRs use rank among WRs drafted
+    // that year (WR1, WR2...), everyone else the overall pick. Before the draft, the pick is the consensus
+    // big-board rank (NFL Mock Draft Database, top 100 only, Nov 24, 2026); players outside it use the
+    // historical rate for picks 101+. After the draft, draft_latest.json (written daily) supplies real picks.
+    const DC = {"QB": {"x": "pick", "n": 113, "safe": [2.2237, -0.8225], "safe_101": [8, 58], "up": [2.1183, -0.9153], "up_101": [4, 58]}, "RB": {"x": "pick", "n": 208, "safe": [9.5608, -2.2346], "safe_101": [21, 144], "up": [6.5536, -1.7726], "up_101": [11, 144]}, "WR": {"x": "crank", "n": 326, "safe": [4.1782, -2.1174], "safe_101": [11, 190], "up": [3.1347, -1.9377], "up_101": [6, 190]}, "TE": {"x": "pick", "n": 144, "safe": [7.7239, -2.1095], "safe_101": [5, 96], "up": [5.7687, -1.8134], "up_101": [2, 96]}};
+    const BOARD = {"jeremiah smith": 1, "drew mestemaker": 3, "cj carr": 7, "charlie becker": 8, "darian mensah": 9, "arch manning": 16, "cam coleman": 17, "nick marsh": 19, "trinidad chambliss": 21, "dante moore": 23, "jadan baugh": 25, "treydez green": 26, "jamari johnson": 29, "jackson harris": 30, "lanorris sellers": 32, "ryan coleman williams": 36, "reed harris": 40, "kj duff": 41, "luke reynolds": 48, "kewan lacy": 57, "jayden maiava": 64, "deuce alexander": 65, "ryan wingo": 71, "wyatt young": 76, "brendan sorsby": 85, "ahmad hardy": 86, "junior sherrill": 87, "bryant wesco": 91, "isaac brown": 92, "dylan riley": 95, "amare thomas": 96, "wayshawn parker": 97, "mario craver": 99};
+    const BOARD_DATE = 'Nov 24, 2026';
+    let DRAFT = null;
+    const nn = s => String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/['’.]/g, '').replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+    function computeDC() {
+      const pick = {};
+      D.pros.forEach(p => {
+        const a = DRAFT && DRAFT.picks[nn(p.n) + '|' + p.pos];
+        if (a) { p.dcPick = a.pick; p.dcSrc = 'drafted'; }
+        else if (DRAFT) { p.dcPick = null; p.dcSrc = 'undrafted'; }
+        else if (BOARD[nn(p.n)]) { p.dcPick = BOARD[nn(p.n)]; p.dcSrc = 'proj'; }
+        else { p.dcPick = null; p.dcSrc = 'out'; }
+      });
+      // WR class rank among WRs with a pick (projected or real), plus real-draft WRs not on the board
+      const wrs = D.pros.filter(p => p.pos === 'WR' && p.dcPick).map(p => p.dcPick);
+      if (DRAFT) Object.entries(DRAFT.picks).forEach(([k, v]) => { if (k.endsWith('|WR') && !D.pros.some(p => p.pos === 'WR' && nn(p.n) + '|WR' === k)) wrs.push(v.pick); });
+      wrs.sort((a, b) => a - b);
+      D.pros.forEach(p => {
+        const m = DC[p.pos];
+        p.dcRank = p.pos === 'WR' && p.dcPick ? wrs.indexOf(p.dcPick) + 1 : null;
+        if (!m) { p.dc = null; return; }
+        const key = ODDS === 'safe' ? 'safe' : 'up';
+        if (p.dcPick) {
+          const x = Math.log(p.pos === 'WR' ? p.dcRank + 2 : p.dcPick);
+          p.dc = Math.round(100 * Math.min(0.95, Math.max(0.03, 1 / (1 + Math.exp(-(m[key][0] + m[key][1] * x))))));
+        } else {
+          const [k, n] = m[key + '_101'];
+          p.dc = p.dcSrc === 'undrafted' ? 1 : Math.round(100 * k / n);
+        }
+      });
+    }
+    function dcCell(p) {
+      if (p.dc == null) return '<span class="text-slate-400">—</span>';
+      const cls = p.dc >= 50 ? 'text-emerald-700 dark:text-emerald-300' : p.dc >= 25 ? 'text-amber-700 dark:text-amber-300' : 'text-rose-600 dark:text-rose-400';
+      const where = p.dcSrc === 'drafted' ? `Drafted #${p.dcPick}${p.dcRank ? ` · WR${p.dcRank}` : ''}`
+        : p.dcSrc === 'proj' ? `Proj. #${p.dcPick}${p.dcRank ? ` · WR${p.dcRank}` : ''}`
+        : p.dcSrc === 'undrafted' ? 'Undrafted' : 'Outside top 100';
+      const tip = p.dcSrc === 'proj' ? `Consensus big-board rank (NFL Mock Draft Database, ${BOARD_DATE}) used as his projected pick` : p.dcSrc === 'out' ? `Not in the consensus top 100: historical rate for ${p.pos}s picked 101 or later (${DC[p.pos][(ODDS === 'safe' ? 'safe' : 'up') + '_101'].join(' of ')})` : p.dcSrc === 'drafted' ? 'Actual NFL draft pick' : 'Not drafted';
+      return `<div class="font-bold tabular-nums ${cls}">${p.dc}%</div><div class="text-[10px] text-slate-400 whitespace-nowrap" title="${tip}">${where}</div>`;
+    }
     // Safe = 12+ PPG (QB 16+); Upside = a "hit": WR/TE 14+, RB 15+, QB 20+ (your bucket thresholds)
     let ODDS = 'upside';
     const hitOf = s => (ODDS === 'safe' ? s.l1 : s.l2);
@@ -172,7 +220,7 @@
         ${grp(2, lB, 'text-emerald-600 dark:text-emerald-400')}
         ${grp(1, lC, p.pos === 'TE' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-300')}
         ${busts.length ? `<details><summary class="cursor-pointer text-[11px] font-bold text-rose-600 dark:text-rose-400">Busts (${busts.length})</summary><div class="flex flex-wrap gap-1 mt-1">${busts.map(x => `<span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] text-slate-500">${esc(x[0])} '${String(x[1]).slice(2)}</span>`).join('')}</div></details>` : ''}` : '<div class="text-[11px] text-slate-500">No past players in this exact bucket yet.</div>';
-      return `<tr class="bg-slate-50 dark:bg-slate-800/40"><td colspan="5" class="px-3 py-3"><div class="text-[11px] text-slate-500 dark:text-slate-400 mb-2">Past <strong>${esc(p.tier)} ${esc(p.type)}</strong> ${p.pos}s in your Profile Buckets, best result first (rookies not yet counted).${p.fallback === 'tier' ? ` This bucket has fewer than ${MIN_CELL} players, so his odds above use every ${esc(p.tier)}-tier ${p.pos}.` : p.fallback === 'type' ? ' This bucket is small, so his odds above use the whole type.' : ''}</div><div class="space-y-2">${body}</div></td></tr>`;
+      return `<tr class="bg-slate-50 dark:bg-slate-800/40"><td colspan="6" class="px-3 py-3"><div class="text-[11px] text-slate-500 dark:text-slate-400 mb-2">Past <strong>${esc(p.tier)} ${esc(p.type)}</strong> ${p.pos}s in your Profile Buckets, best result first (rookies not yet counted).${p.fallback === 'tier' ? ` This bucket has fewer than ${MIN_CELL} players, so his odds above use every ${esc(p.tier)}-tier ${p.pos}.` : p.fallback === 'type' ? ' This bucket is small, so his odds above use the whole type.' : ''}</div><div class="space-y-2">${body}</div></td></tr>`;
     }
     D.pros.forEach(p => {
       const s = S[p.pos + '|' + p.type];
@@ -194,6 +242,7 @@
     });
     function render() {
       D.pros.forEach(p => { p.hit = p.s ? hitOf(p.s) : null; });
+      computeDC();
       const rows = D.pros.filter(p => (!st.pos || p.pos === st.pos) && (!st.tier || p.tier === st.tier) && (!st.type || p.pos + '|' + p.type === st.type) && (!st.q || p.n.toLowerCase().includes(st.q)))
         .sort((a, b) => {
           const va = a[st.k], vb = b[st.k];
@@ -207,7 +256,8 @@
         <td class="py-2 px-2">${posTag(p.pos)}</td>
         <td class="py-2 px-2 whitespace-nowrap">${tierPill(p.tier)}</td>
         <td class="py-2 px-2 whitespace-nowrap">${esc(p.type)}</td>
-        <td class="py-2 pl-2 min-w-[10rem]" title="${esc(p.src || '')}">${p.s ? `<div class="flex items-center gap-2"><div class="flex-1">${bar(p.s)}</div><span class="text-[11px] font-bold tabular-nums w-9 text-right">${p.hit}%</span></div><div class="text-[10px] ${p.fallback ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'} mt-0.5">${esc(p.src)}</div>` : '<span class="text-slate-400">no history</span>'}</td></tr>${st.open.has(p.n) ? detail(p) : ''}`).join('');
+        <td class="py-2 pl-2 min-w-[10rem]" title="${esc(p.src || '')}">${p.s ? `<div class="flex items-center gap-2"><div class="flex-1">${bar(p.s)}</div><span class="text-[11px] font-bold tabular-nums w-9 text-right">${p.hit}%</span></div><div class="text-[10px] ${p.fallback ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'} mt-0.5">${esc(p.src)}</div>` : '<span class="text-slate-400">no history</span>'}</td>
+        <td class="py-2 pl-3 text-right">${dcCell(p)}</td></tr>${st.open.has(p.n) ? detail(p) : ''}`).join('');
     }
     document.querySelectorAll('.pos-btn').forEach(b => b.addEventListener('click', () => {
       st.pos = b.dataset.pos;
@@ -225,7 +275,7 @@
     });
     document.getElementById('search').addEventListener('input', e => { st.q = e.target.value.trim().toLowerCase(); render(); });
     document.querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => {
-      const k = th.dataset.k; st.dir = st.k === k ? -st.dir : (k === 'hit' ? -1 : 1); st.k = k; render();
+      const k = th.dataset.k; st.dir = st.k === k ? -st.dir : (k === 'hit' || k === 'dc' ? -1 : 1); st.k = k; render();
     }));
     function setOdds(m) {
       ODDS = m;
@@ -238,6 +288,9 @@
     }
     document.querySelectorAll('.odds-btn').forEach(b => b.addEventListener('click', () => setOdds(b.dataset.odds)));
     setOdds('upside');
+    fetch(`./draft_latest.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
+      if (d && d.season === Math.max(...D.pros.map(p => p.yr)) && d.picks) { DRAFT = d; render(); }
+    }).catch(() => {});
 
     // embedded in the hub: theme + height
     const EMBEDDED = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
