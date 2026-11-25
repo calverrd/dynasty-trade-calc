@@ -18,32 +18,38 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           ref: main
 
       - name: Set up Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "20"
 
       - name: Install Playwright (Chromium) for the browser fallback
         run: |
           npm install --no-save --no-package-lock playwright@1
           npx playwright install --with-deps chromium
 
+      - name: Save FantasyCalc snapshot (fc-history.json)
+        continue-on-error: true
+        run: node scripts/update-fc.mjs
+
       - name: Scrape KeepTradeCut into ktc.json
         run: node scripts/update-ktc.mjs
 
       - name: Commit and push ktc.json + history
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add ktc.json ktc-history.json depth.json draft_latest.json
+          git add ktc.json ktc-history.json
+          [ -f fc-history.json ] && git add fc-history.json
           if git diff --cached --quiet; then
-            echo "KTC data unchanged - nothing to commit."
+            echo "Data unchanged - nothing to commit."
             exit 0
           fi
-          git commit -m "Update KTC values $(date -u +%Y-%m-%d)"
+          git commit -m "Update KTC/FC values $(date -u +%Y-%m-%d)"
           git pull --rebase origin main
           git push origin HEAD:main
