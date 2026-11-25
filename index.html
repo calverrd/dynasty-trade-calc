@@ -3129,70 +3129,80 @@
         ...(T[key].pk || []).filter(([id]) => P[id] && (V[id] || 0) >= 700).map(([id, via]) => ({ id, via }))
       ].sort((x, y) => (V[y.id] || 0) - (V[x.id] || 0)).slice(0, 30);
       const mine = assetsOf(meKey), theirs = assetsOf(partner);
-      const tol = Math.max(6, st.fair * 1.6);
+      const rejectAt = Math.max(12, st.fair * 2);
+      const SRC = ['ktc', 'fc', 'blend'], SRC_L = { ktc: 'KTC', fc: 'FantasyCalc', blend: 'Blend' };
+      const MV = SRC.map(m => modeValues(m));
+      const curI = Math.max(0, SRC.indexOf(st.src));
+      // Signed gap per source (+ = meKey receives more), with the value adjustment applied
+      const gapsOf = (send, recv) => MV.map(mv => {
+        const ev = evalValues(send.map(y => mv.vals[y.id] || 0), recv.map(y => mv.vals[y.id] || 0), null, mv.max);
+        return (ev.effB - ev.effA) / Math.max(ev.effA, ev.effB, 1) * 100;
+      });
+      const outBy = g => g < -st.fair ? -st.fair - g : g > rejectAt ? g - rejectAt : 0;   // distance outside the sendable window
       const ideas = [];
       const sum = arr => arr.reduce((a, x) => a + (V[x.id] || 0), 0);
-      const push = (send, recv, type) => {
+      const fitsOf = (send, recv) => ({
+        my: recv.reduce((a, x) => a + fitFor(x.id, meKey, partner), 0),
+        their: send.reduce((a, x) => a + fitFor(x.id, partner, meKey), 0)
+      });
+      const keep = (send, recv, type, g) => {
         if (posF !== 'ALL' && !recv.some(x => (posF === 'PICK' ? P[x.id].pick : P[x.id].pos === posF && !P[x.id].pick))) return;
-        const rs = sum(send), rr = sum(recv);
-        if (rr < rs * 0.6 || rr > rs * 1.67) return;                                  // cheap prefilter
-        if (Math.max(rr, rs) < 1500) return;                                            // skip trivial swaps
-        const ev = evalTrade(send, recv);
-        const gap = ((ev.effB - ev.effA) / Math.max(ev.effA, ev.effB, 1)) * 100;       // + = meKey receives more
-        if (gap < -st.fair || gap > Math.min(tol, Math.max(12, st.fair * 2))) return;   // never a loss on the selected source
-        const myFit = recv.reduce((a, x) => a + fitFor(x.id, meKey, partner), 0);
-        const theirFit = send.reduce((a, x) => a + fitFor(x.id, partner, meKey), 0);
-        if (myFit < 0 || theirFit < 0 || myFit + theirFit < 3) return;                  // must help, and hurt neither side
         if ([...send, ...recv].every(x => P[x.id].pick)) return;                        // picks-for-picks only: not a real idea
-        const size = 6 * Math.max(0, Math.min(1.2, Math.log10(Math.max(rr, rs) / 1500)));   // meaningful deals rank higher
-        const score = 40 + 1.2 * Math.min(myFit, theirFit) + 0.6 * (myFit + theirFit) + size - Math.abs(gap) * 1.5 - (send.length + recv.length - 2) * 2;
-        ideas.push({ partner, type, send, recv, gapPct: gap, score, myFit, theirFit });
+        const f = fitsOf(send, recv);
+        if (f.my < 0 || f.their < 0 || f.my + f.their < 3) return;                      // must help, and hurt neither side
+        const off = Math.max(...g.map(outBy));
+        const rr = sum(recv), rs = sum(send);
+        const size = 6 * Math.max(0, Math.min(1.2, Math.log10(Math.max(rr, rs) / 1500)));
+        const score = 40 + 1.2 * Math.min(f.my, f.their) + 0.6 * (f.my + f.their) + size
+          - Math.abs(g[curI]) * 1.2 - off * 3 - (send.length + recv.length - 2) * 2;
+        const warn = [];
+        g.forEach((v, i) => {
+          if (v < -st.fair) warn.push(`${SRC_L[SRC[i]]} says you lose by ${(-v).toFixed(0)}%`);
+          else if (v > rejectAt) warn.push(`${SRC_L[SRC[i]]} says you win by ${v.toFixed(0)}% (may be rejected)`);
+        });
+        ideas.push({ partner, type, send, recv, gapPct: g[curI], score, myFit: f.my, theirFit: f.their, warn });
       };
-      mine.forEach(a => theirs.forEach(b => push([{ ...a }], [{ ...b }], '1-for-1')));
+      // Try a package; if it's close but off on the selected source, add the one sweetener from the short
+      // side (a pick or depth piece) that brings all three sources closest to the sendable window.
+      const tryPkg = (send, recv, type) => {
+        const rs = sum(send), rr = sum(recv);
+        if (Math.max(rr, rs) < 1500) return;                                            // skip trivial swaps
+        if (rr < rs * 0.45 || rr > rs * 2.2) return;                                    // cheap prefilter
+        const g = gapsOf(send, recv);
+        if (outBy(g[curI]) === 0) { keep(send, recv, type, g); return; }
+        if (send.length + recv.length >= 3) return;
+        const iGetMore = g[curI] > 0;
+        const pool = (iGetMore ? mine : theirs).filter(x => ![...send, ...recv].some(y => y.id === x.id) && (V[x.id] || 0) <= 0.7 * Math.max(rs, rr));
+        const need = Math.abs(rr - rs);
+        const cands = pool.slice().sort((x, y) => Math.abs((V[x.id] || 0) - need) - Math.abs((V[y.id] || 0) - need)).slice(0, 6);
+        let best = null;
+        cands.forEach(c => {
+          const s2 = iGetMore ? [...send, { ...c }] : send, r2 = iGetMore ? recv : [...recv, { ...c }];
+          const g2 = gapsOf(s2, r2);
+          if (outBy(g2[curI]) > 0) return;
+          const d = Math.max(...g2.map(outBy)) * 3 + Math.abs(g2[curI]);
+          if (!best || d < best.d) best = { d, s2, r2, g2 };
+        });
+        if (best) keep(best.s2, best.r2, iGetMore ? `${type} + your sweetener` : `${type} + their sweetener`, best.g2);
+      };
+      mine.forEach(a => theirs.forEach(b => tryPkg([{ ...a }], [{ ...b }], '1-for-1')));
       for (let i = 0; i < mine.length; i++) for (let j = i + 1; j < mine.length; j++) theirs.forEach(b => {
         const t = P[mine[i].id].pick || P[mine[j].id].pick ? 'Player + pick' : '2-for-1';
-        push([{ ...mine[i] }, { ...mine[j] }], [{ ...b }], t);
+        tryPkg([{ ...mine[i] }, { ...mine[j] }], [{ ...b }], t);
       });
       for (let i = 0; i < theirs.length; i++) for (let j = i + 1; j < theirs.length; j++) mine.forEach(a => {
         const t = P[theirs[i].id].pick || P[theirs[j].id].pick ? 'Get player + pick' : '1-for-2';
-        push([{ ...a }], [{ ...theirs[i] }, { ...theirs[j] }], t);
+        tryPkg([{ ...a }], [{ ...theirs[i] }, { ...theirs[j] }], t);
       });
-      ideas.sort((a, b) => b.score - a.score);
-      // Offer check: every source (KTC, FC, Blend) must agree it's sendable: you don't lose by more
-      // than the fair range, and you don't win by so much it will likely be rejected
-      const rejectAt = Math.max(12, st.fair * 2);
-      const MV = ['ktc', 'fc', 'blend'].map(m => modeValues(m));
-      const SRC_L = { ktc: 'KTC', fc: 'FantasyCalc', blend: 'Blend' };
-      const checkAll = x => {
-        const bad = [];
-        ['ktc', 'fc', 'blend'].forEach((m, i) => {
-          const mv = MV[i];
-          const ev = evalValues(x.send.map(y => mv.vals[y.id] || 0), x.recv.map(y => mv.vals[y.id] || 0), null, mv.max);
-          const g = (ev.effB - ev.effA) / Math.max(ev.effA, ev.effB, 1) * 100;
-          if (g < -st.fair) bad.push(`${SRC_L[m]} says you lose by ${(-g).toFixed(0)}%`);
-          else if (g > rejectAt) bad.push(`${SRC_L[m]} says you win by ${g.toFixed(0)}% (may be rejected)`);
-        });
-        return bad;
-      };
-      // Ideas that pass the offer check under every source come first; if fewer than 12 do, the list is
-      // topped up with ones that pass on the selected source, each labeled with the source that disagrees.
-      // Variety: each asset at most twice, no repeated package.
-      const used = {}, seen = new Set(), top = [], flagged = [];
+      ideas.sort((a, b) => (a.warn.length > 0) - (b.warn.length > 0) || b.score - a.score);   // passes-all first
+      // Variety: each asset at most twice, no repeated package
+      const used = {}, seen = new Set(), top = [];
       for (const x of ideas) {
         const ids = [...x.send, ...x.recv].map(y => y.id);
         const k = ids.slice().sort().join('_');
-        if (seen.has(k)) continue;
-        x.warn = checkAll(x);
-        if (x.warn.length) { flagged.push(x); continue; }
-        if (ids.some(id => (used[id] || 0) >= 2)) continue;
+        if (seen.has(k) || ids.some(id => (used[id] || 0) >= 2)) continue;
         seen.add(k); ids.forEach(id => { used[id] = (used[id] || 0) + 1; }); top.push(x);
         if (top.length >= 12) break;
-      }
-      for (const x of flagged) {
-        if (top.length >= 12) break;
-        const ids = [...x.send, ...x.recv].map(y => y.id);
-        if (ids.some(id => (used[id] || 0) >= 2)) continue;
-        ids.forEach(id => { used[id] = (used[id] || 0) + 1; }); top.push(x);
       }
       // Plain-language reasons for each side
       const posRkTxt = (key, pos) => `#${posRanks[pos][key] || '?'} of ${n} at ${pos}`;
