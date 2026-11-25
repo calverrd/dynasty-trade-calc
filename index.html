@@ -86,6 +86,10 @@
           <a href="#league" data-tab="league" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">League</a>
           <a href="#scout" data-tab="scout" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Scout &amp; Waivers</a>
           <a href="#buckets" data-tab="buckets" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Profile Buckets</a>
+          <a href="#rookies" data-tab="rookies" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookie WRs</a>
+          <a href="#rbs" data-tab="rbs" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookie RBs</a>
+          <a href="#tes" data-tab="tes" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookie TEs</a>
+          <a href="#pros" data-tab="pros" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Prospects</a>
           <a href="#about" data-tab="about" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">How it works</a>
         </nav>
 
@@ -117,6 +121,16 @@
 
     <!-- ==================== TAB 1: TRADE CHART ==================== -->
     <section id="view-chart" class="hidden space-y-3">
+      <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
+        <summary class="cursor-pointer font-bold">How to use this tab</summary>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Values:</strong> each player's value blends KeepTradeCut and FantasyCalc. Use Blend / KTC / FC and the KTC % slider at the top to change the mix; it updates every tab.</li><li><strong>Find a player:</strong> search, filter by position or Pick, or set the owner menu to one team to see just their roster.</li><li><strong>Badges:</strong> the bucket badge shows that player's profile bucket with its hit % and repeat %. A <strong>SELL WINDOW</strong> or <strong>SELL NOW</strong> tag means he's at the age where players like him usually decline, with his odds to post 12+ PPG again next season.</li><li><strong>Build a trade:</strong> tap +A or +B to drop a player or pick into the trade calculator. Tap a name for his value history and next-year odds.</li><li><strong>Rookie picks:</strong> open “What a rookie pick usually becomes” above the list for elite / starter / bust odds by draft slot.</li></ul>
+      </details>
+      <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4">
+        <summary class="cursor-pointer text-sm font-extrabold">What a rookie pick usually becomes</summary>
+        <p class="text-xs text-[#5d6672] dark:text-[#98a2ae] mt-1 mb-3">2015–2023 rookie QBs, WRs, RBs and TEs in a 12-team superflex draft order. There's no historical rookie ADP here, so the order is NFL draft slot with RBs moved up 18 picks (fantasy drafts take Round 2 RBs like Breece Hall and Jonathan Taylor in the 1st). That puts about two QBs in each class's top four. Elite = QB 20+, WR 14+, RB 15+, TE 17+ PPG in a completed season; Starter = QB 16+, others 12+; Bust = neither. The same odds show under every pick in the trade calculator. Samples are small: about 36 players in each 1st-round group (9 classes × 4 picks), 54 in each 2nd-round group. Raw, picks 5–8 hit 12+ slightly less often than 9–12 (64% vs 67%, a two-player difference), so those two are averaged to 65% to keep the odds from rising later in the round; their Elite rates are left as measured.</p>
+        <div class="flex gap-3 text-[11px] text-[#5d6672] dark:text-[#98a2ae] mb-2"><span><span class="inline-block w-2 h-2 rounded-sm bg-emerald-600 mr-1"></span>Elite</span><span><span class="inline-block w-2 h-2 rounded-sm bg-amber-400 mr-1"></span>Starter</span><span><span class="inline-block w-2 h-2 rounded-sm bg-rose-500 mr-1"></span>Bust</span></div>
+        <div class="grid sm:grid-cols-2 gap-x-6 gap-y-2.5"><div><div class="flex justify-between text-xs mb-1"><span><strong>Early 1st</strong> <span class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]">rookie picks 1–4</span></span><span class="text-[#5d6672] dark:text-[#98a2ae]">87% hit</span></div><div class="flex h-[14px] rounded overflow-hidden text-[10px] font-bold"><div class="bg-emerald-600 text-white flex items-center justify-center" style="width:56%">56%</div><div class="bg-amber-400 text-amber-950 flex items-center justify-center" style="width:31%">31%</div><div class="bg-rose-500 text-white flex items-center justify-center" style="width:14%">14%</div></div></div><div><div class="flex justify-between text-xs mb-1"><span><strong>Mid 1st</strong> <span class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]">rookie picks 5–8</span></span><span class="text-[#5d6672] dark:text-[#98a2ae]">65% hit</span></div><div class="flex h-[14px] rounded overflow-hidden text-[10px] font-bold"><div class="bg-emerald-600 text-white flex items-center justify-center" style="width:50%">50%</div><div class="bg-amber-400 text-amber-950 flex items-center justify-center" style="width:15%">15%</div><div class="bg-rose-500 text-white flex items-center justify-center" style="width:35%">35%</div></div></div><div><div class="flex justify-between text-xs mb-1"><span><strong>Late 1st</strong> <span class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]">rookie picks 9–12</span></span><span class="text-[#5d6672] dark:text-[#98a2ae]">65% hit</span></div><div class="flex h-[14px] rounded overflow-hidden text-[10px] font-bold"><div class="bg-emerald-600 text-white flex items-center justify-center" style="width:36%">36%</div><div class="bg-amber-400 text-amber-950 flex items-center justify-center" style="width:29%">29%</div><div class="bg-rose-500 text-white flex items-center justify-center" style="width:35%">35%</div></div></div><div><div class="flex justify-between text-xs mb-1"><span><strong>Early 2nd</strong> <span class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]">rookie picks 13–18</span></span><span class="text-[#5d6672] dark:text-[#98a2ae]">54% hit</span></div><div class="flex h-[14px] rounded overflow-hidden text-[10px] font-bold"><div class="bg-emerald-600 text-white flex items-center justify-center" style="width:30%">30%</div><div class="bg-amber-400 text-amber-950 flex items-center justify-center" style="width:24%">24%</div><div class="bg-rose-500 text-white flex items-center justify-center" style="width:46%">46%</div></div></div><div><div class="flex justify-between text-xs mb-1"><span><strong>Late 2nd</strong> <span class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]">rookie picks 19–24</span></span><span class="text-[#5d6672] dark:text-[#98a2ae]">35% hit</span></div><div class="flex h-[14px] rounded overflow-hidden text-[10px] font-bold"><div class="bg-emerald-600 text-white flex items-center justify-center" style="width:24%">24%</div><div class="bg-amber-400 text-amber-950 flex items-center justify-center" style="width:11%">11%</div><div class="bg-rose-500 text-white flex items-center justify-center" style="width:65%">65%</div></div></div><div><div class="flex justify-between text-xs mb-1"><span><strong>3rd</strong> <span class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]">rookie picks 25–36</span></span><span class="text-[#5d6672] dark:text-[#98a2ae]">23% hit</span></div><div class="flex h-[14px] rounded overflow-hidden text-[10px] font-bold"><div class="bg-emerald-600 text-white flex items-center justify-center" style="width:10%">10%</div><div class="bg-amber-400 text-amber-950 flex items-center justify-center" style="width:13%">13%</div><div class="bg-rose-500 text-white flex items-center justify-center" style="width:77%">77%</div></div></div><div><div class="flex justify-between text-xs mb-1"><span><strong>4th</strong> <span class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]">rookie picks 37–48</span></span><span class="text-[#5d6672] dark:text-[#98a2ae]">12% hit</span></div><div class="flex h-[14px] rounded overflow-hidden text-[10px] font-bold"><div class="bg-emerald-600 text-white flex items-center justify-center" style="width:6%"></div><div class="bg-amber-400 text-amber-950 flex items-center justify-center" style="width:6%"></div><div class="bg-rose-500 text-white flex items-center justify-center" style="width:88%">88%</div></div></div></div>
+      </details>
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
           <div class="flex flex-wrap items-center gap-2">
@@ -160,6 +174,10 @@
 
     <!-- ==================== TAB 2: TRADE CALCULATOR ==================== -->
     <section id="view-calc" class="space-y-4">
+      <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
+        <summary class="cursor-pointer font-bold">How to use this tab</summary>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Pick the two teams</strong> at the top (your team is usually side A), then add players or picks to each side with the search boxes or the roster quick-add.</li><li><strong>Read the verdict:</strong> it compares the two sides after the value adjustment (which accounts for getting the best player). Within the Fair ±% slider counts as fair; otherwise the suggestions show what to add to the short side.</li><li><strong>Before → after ranks:</strong> the table shows how each team's QB / RB / WR / TE ranks, starting lineup, win-now and total value would move. Tap <strong>Copy DM pitch</strong> under it for a ready-to-send Sleeper message.</li><li><strong>Picks</strong> show their elite / starter / bust odds under the name, based on where that pick is projected to land. Players in a sell window are tagged.</li><li><strong>Trade ideas:</strong> pick one of your players in the idea finder for fair offers from teams whose needs fit yours. To go after a specific player, tap <strong>Offer</strong> on a rookie or bucket tab, or <strong>Find offers for him</strong> on his player card, and the Trade Finder loads the best-fitting package.</li></ul>
+      </details>
       <!-- Top Action Bar -->
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="text-xs text-[#5d6672] dark:text-[#98a2ae]">
@@ -282,7 +300,7 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div>
             <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">💡 Player Trade Idea Finder</h2>
-            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Pick any player to generate fair 1-for-1, player + pick, and 2-for-1 upgrade offers using live league rosters.</p>
+            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Pick any player to generate fair 1-for-1, player + pick, and 2-for-1 upgrade offers using live league rosters. When you're shopping your own player, partners whose needs fit yours rank higher. To go after a specific player, tap <strong>Offer</strong> next to him on the Rookie WR, RB or TE tabs, in a Profile Bucket, or in his player card.</p>
           </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
@@ -309,21 +327,40 @@
 
     <!-- ==================== TAB 3: LEAGUE (POWER RANKINGS & PARTNER MATCHER) ==================== -->
     <section id="view-league" class="hidden space-y-4">
+      <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
+        <summary class="cursor-pointer font-bold">How to use this tab</summary>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Draft order:</strong> the strip projects next year's rookie draft. Choose whether your league orders it by standings or by Max PF; it's saved per league and sets every pick's Early / Mid / Late value and odds.</li><li><strong>Sell windows on your roster:</strong> your starters at the age where production usually drops, with the contenders weakest at that position as likely buyers.</li><li><strong>Power rankings:</strong> click any column to sort. Position columns rank each team's value at that spot; Fit scores how well a team's surpluses match your needs; Max PF and Win Now show who's actually strong this season.</li><li><strong>Find a partner:</strong> filter to Contenders, Rebuilders or teams with next year's 1st, then tap <strong>Trade →</strong> to open the calculator against that team.</li><li><strong>Playoff odds:</strong> simulates the rest of the regular season. Bubble teams (25–75%) are the likeliest buyers for veterans; unlucky teams with a strong lineup but poor odds may sell theirs.</li><li><strong>Team timeline:</strong> ages every team's Win Now lineup 1 and 2 years forward on historical production curves, to show whose window is closing and who is a year away (current rosters only).</li><li><strong>Pick ownership:</strong> who holds extra or missing picks for the next three drafts.</li><li><strong>Handcuffs:</strong> backups for your RB1s held elsewhere, and backups you hold that another team's RB1 needs (easy throw-ins).</li><li><strong>Trade history</strong> at the bottom grades every trade in the league at today's values, so you can see who tends to win deals.</li></ul>
+      </details>
       <!-- 2027 Draft Order Strip -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5">
-        <div>
-          <h2 class="text-sm font-bold">Projected <span class="draft-yr">2027</span> Draft Order</h2>
-          <p id="draftOrderSub" class="text-xs text-[#5d6672] dark:text-[#98a2ae]"></p>
+        <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+          <div>
+            <h2 class="text-sm font-bold">Projected <span class="draft-yr">2027</span> Draft Order</h2>
+            <p id="draftOrderSub" class="text-xs text-[#5d6672] dark:text-[#98a2ae]"></p>
+          </div>
+          <div class="shrink-0 flex items-center gap-2 text-xs">
+            <span class="text-[#5d6672] dark:text-[#98a2ae]">This league orders by</span>
+            <div class="inline-flex rounded-lg border border-[#d6dbe3] dark:border-[#2e3540] overflow-hidden bg-[#f6f7f9] dark:bg-[#0f1216]">
+              <button type="button" data-dorder="standings" class="dorder-btn px-2.5 py-1.5 font-semibold cursor-pointer">Standings</button>
+              <button type="button" data-dorder="maxpf" class="dorder-btn px-2.5 py-1.5 font-semibold cursor-pointer border-l border-[#d6dbe3] dark:border-[#2e3540]">Max PF</button>
+            </div>
+          </div>
         </div>
         <div id="draftOrderStrip" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
       </div>
+
+      <!-- Sell windows on my roster -->
+      <div id="sellCard" class="hidden bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5"></div>
+
+      <!-- Playoff odds + bubble buyers -->
+      <div id="playoffCard" class="hidden bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5"></div>
 
       <!-- League Power Rankings Table -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
           <div>
             <h2 class="text-sm font-bold">League Power Rankings &amp; Trade Partner Matcher</h2>
-            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Auto-tagged by Contender/Rebuild status, weakest starting position, and next-draft 1st ownership. Click any row to expand.</p>
+            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Auto-tagged by Contender/Rebuild status, weakest starting position, and next-draft 1st ownership. QB–TE columns rank each team's value at that position (green = top quarter, red = bottom quarter). Age is value-weighted (blue = youngest quarter, amber = oldest). Fit (0–100) scores how well a team's surpluses and needs complement yours; "you→WR" means you can send them WR value they lack. Max PF is what each team's best possible lineup scored; it shows true strength better than record. Win Now ranks each team's best lineup by FantasyCalc redraft (this-season) value, so rosters stacked with future value don't look like contenders. Click a column header to sort, or a row to expand.</p>
           </div>
           <div id="leagueFilterBar" class="inline-flex flex-wrap rounded-lg border border-[#d6dbe3] dark:border-[#2e3540] overflow-hidden text-xs bg-[#f6f7f9] dark:bg-[#0f1216]">
             <button type="button" data-lfilter="ALL" class="lfilter-btn px-2.5 py-1.5 font-semibold cursor-pointer">All</button>
@@ -336,14 +373,22 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs sm:text-sm">
             <thead>
-              <tr class="border-b border-[#e3e6eb] dark:border-[#2a3039] text-[11px] uppercase tracking-wider text-[#5d6672] dark:text-[#98a2ae]">
-                <th class="py-2 pr-2">#</th>
-                <th class="py-2 pr-2">Team</th>
-                <th class="py-2 pr-2">Partner Profile &amp; Needs</th>
-                <th class="py-2 pr-2">Record</th>
-                <th class="py-2 pr-2 text-right">Start Value</th>
-                <th class="py-2 pr-2 text-right hidden sm:table-cell">Picks</th>
-                <th class="py-2 pr-2 text-right">Total Value</th>
+              <tr id="leagueHead" class="border-b border-[#e3e6eb] dark:border-[#2a3039] text-[11px] uppercase tracking-wider text-[#5d6672] dark:text-[#98a2ae]">
+                <th class="py-2 pr-2 cursor-pointer select-none hover:text-blue-600" data-lsort="rank" title="Sort by power rank">#<span class="lsort-arrow"></span></th>
+                <th class="py-2 pr-2 cursor-pointer select-none hover:text-blue-600" data-lsort="team" title="Sort by team name">Team<span class="lsort-arrow"></span></th>
+                <th class="py-2 pr-2 cursor-pointer select-none hover:text-blue-600" data-lsort="profile" title="Group by Contender / Retool / Rebuild">Partner Profile &amp; Needs<span class="lsort-arrow"></span></th>
+                <th class="py-2 pr-2 cursor-pointer select-none hover:text-blue-600" data-lsort="record" title="Sort by win % (points for breaks ties)">Record<span class="lsort-arrow"></span></th>
+                <th class="py-2 px-1.5 text-right cursor-pointer select-none hover:text-blue-600" data-lsort="mpf" title="Max PF: points the best possible lineup would have scored. Shows true weekly strength better than record.">Max PF<span class="lsort-arrow"></span></th>
+                <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="posQB" title="Sort by QB rank (value of QBs on roster)">QB<span class="lsort-arrow"></span></th>
+                <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="posRB" title="Sort by RB rank (value of RBs on roster)">RB<span class="lsort-arrow"></span></th>
+                <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="posWR" title="Sort by WR rank (value of WRs on roster)">WR<span class="lsort-arrow"></span></th>
+                <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="posTE" title="Sort by TE rank (value of TEs on roster)">TE<span class="lsort-arrow"></span></th>
+                <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="age" title="Value-weighted roster age (players only)">Age<span class="lsort-arrow"></span></th>
+                <th class="py-2 px-1.5 text-center cursor-pointer select-none hover:text-blue-600" data-lsort="fit" title="How well this team's needs and surpluses complement yours (0-100)">Fit<span class="lsort-arrow"></span></th>
+                <th class="py-2 px-1.5 text-right cursor-pointer select-none hover:text-blue-600" data-lsort="now" title="Win-now: best starting lineup by FantasyCalc redraft (this-season) value. Separates real contenders from rosters full of future value.">Win Now<span class="lsort-arrow"></span></th>
+                <th class="py-2 pr-2 text-right cursor-pointer select-none hover:text-blue-600" data-lsort="start" title="Sort by starting lineup value">Start Value<span class="lsort-arrow"></span></th>
+                <th class="py-2 pr-2 text-right hidden sm:table-cell cursor-pointer select-none hover:text-blue-600" data-lsort="picks" title="Sort by draft pick value">Picks<span class="lsort-arrow"></span></th>
+                <th class="py-2 pr-2 text-right cursor-pointer select-none hover:text-blue-600" data-lsort="total" title="Sort by total value">Total Value<span class="lsort-arrow"></span></th>
                 <th class="py-2 pl-2 text-right">Action</th>
               </tr>
             </thead>
@@ -351,6 +396,11 @@
           </table>
         </div>
       </div>
+
+      <!-- Team timeline, pick ownership, handcuffs -->
+      <div id="timelineCard" class="hidden bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5"></div>
+      <div id="pickGridCard" class="hidden bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5"></div>
+      <div id="handcuffCard" class="hidden bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5"></div>
 
       <!-- League Trade History (graded at today's values) -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
@@ -364,6 +414,10 @@
 
     <!-- ==================== TAB 4: SCOUT & WAIVERS (RADAR + FREE AGENTS) ==================== -->
     <section id="view-scout" class="hidden space-y-4">
+      <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
+        <summary class="cursor-pointer font-bold">How to use this tab</summary>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Sell-High Radar:</strong> your players whose value is ahead of their profile: low repeat-rate spikes, big KTC-vs-FantasyCalc gaps, and aging players. Shop these first.</li><li><strong>Buy-Low Targets:</strong> high repeat-rate players on other rosters that the market is discounting.</li><li><strong>Rookie Buy Targets:</strong> rookies and second-year players on other teams with a BUY, Year 2 JUMPED or CHEAP flag from the rookie tabs.</li><li><strong>Risers and Fallers:</strong> the biggest recent value moves on rostered players in your league.</li><li><strong>Backfield Stash Alerts:</strong> free-agent RB2s behind aging starters, worth a bench spot before the starter gets hurt or falls off.</li><li><strong>Best Available:</strong> the most valuable unrostered players in your league, with Sleeper add trends. Check it before waivers run.</li><li>Tap any name for his value history and odds; everything follows the value mix you set at the top.</li></ul>
+      </details>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <!-- Sell-High Radar -->
         <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
@@ -387,6 +441,15 @@
         </div>
       </div>
 
+      <!-- Rookie buy targets -->
+      <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5">
+        <div>
+          <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">🌱 Rookie Buy Targets (Other Rosters)</h2>
+          <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Rookies and second-year players on other teams with a BUY tag (role ahead of points), a Year 2 JUMPED tag, or CHEAP pricing (KTC ranks them well below their hit odds). From the rookie tabs, refreshed every Tuesday. Offer loads the best-fitting package.</p>
+        </div>
+        <div id="rookieTargetsList" class="space-y-2"></div>
+      </div>
+
       <!-- Risers & Fallers -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
@@ -403,6 +466,15 @@
           <div><div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 mb-1.5">Risers</div><div id="risersList" class="space-y-1.5"></div></div>
           <div><div class="text-[11px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400 mb-1.5">Fallers</div><div id="fallersList" class="space-y-1.5"></div></div>
         </div>
+      </div>
+
+      <!-- Backfield stash alerts -->
+      <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5">
+        <div>
+          <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">🧲 Backfield Stash Alerts</h2>
+          <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Unrostered RB2s behind starters aged 27+ (the age RBs usually fall off). Next-man-up is ranked by value, not the official depth chart.</p>
+        </div>
+        <div id="stashList"></div>
       </div>
 
       <!-- Best Available Free Agents / Waiver Scanner -->
@@ -446,6 +518,30 @@
     <section id="view-buckets" class="hidden">
       <iframe id="buckets-frame" data-src="./bucket-explorer.html" title="Dynasty Profile Bucket Explorer"
         class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1400px;" loading="lazy"></iframe>
+    </section>
+
+    <!-- ==================== TAB: ROOKIE WR WEEKS 1-4 (rookie-wr-tracker.html, lazy iframe) ==================== -->
+    <section id="view-rookies" class="hidden">
+      <iframe id="rookies-frame" data-src="./rookie-wr-tracker.html" title="Rookie WR Weeks 1-4 Tracker"
+        class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1400px;"></iframe>
+    </section>
+
+    <!-- ==================== TAB: ROOKIE RB USAGE (rookie-rb-tracker.html, lazy iframe) ==================== -->
+    <section id="view-rbs" class="hidden">
+      <iframe id="rbs-frame" data-src="./rookie-rb-tracker.html" title="Rookie RB Usage Tracker"
+        class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1400px;"></iframe>
+    </section>
+
+    <!-- ==================== TAB: 2027 PROSPECTS (prospects.html, lazy iframe) ==================== -->
+    <section id="view-pros" class="hidden">
+      <iframe id="pros-frame" data-src="./prospects.html" title="2027 Prospects"
+        class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1400px;"></iframe>
+    </section>
+
+    <!-- ==================== TAB: ROOKIE TE USAGE (rookie-te-tracker.html, lazy iframe) ==================== -->
+    <section id="view-tes" class="hidden">
+      <iframe id="tes-frame" data-src="./rookie-te-tracker.html" title="Rookie TE Usage Tracker"
+        class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1400px;"></iframe>
     </section>
 
     <!-- ==================== TAB 6: HOW IT WORKS ==================== -->
@@ -839,6 +935,66 @@
       return { name: bName, ...(BUCKET_STATS[bName] || { hit: 15, rep2: 7, cond: 46, tier: 'mid' }) };
     }
 
+    // ---- Rookie pick odds: what a pick at this slot usually becomes (2015-2023 QB/WR/RB/TE classes; RBs moved up 18 NFL picks to mimic superflex rookie drafts) ----
+    const PICK_ODDS = [[1, 4, 56, 31, 14], [5, 8, 50, 15, 35], [9, 12, 36, 29, 35], [13, 18, 30, 24, 46], [19, 24, 24, 11, 65], [25, 36, 10, 13, 77], [37, 48, 6, 6, 88], [49, 9999, 4, 2, 94]];
+    function pickOverall(p) {
+      const n = activeLeague.numTeams || 12;
+      const rd = p.rd || 1;
+      const slot = p.slot || (p.tier === 'Early' ? Math.ceil(n / 6) : p.tier === 'Late' ? Math.ceil(5 * n / 6) : Math.ceil(n / 2));
+      return (rd - 1) * n + Math.min(slot, n);
+    }
+    function pickOddsHtml(p) {
+      if (!p || !p.pick || !p.rd) return '';
+      const o = pickOverall(p);
+      const b = PICK_ODDS.find(r => o >= r[0] && o <= r[1]);
+      if (!b) return '';
+      const [, , e, s, bu] = b;
+      const est = !p.slot ? (p.tier ? ` (${p.tier.toLowerCase()} estimate)` : ' (mid-round estimate)') : '';
+      return `<span class="inline-flex items-center gap-1.5 align-middle" title="Rookie pick ~#${o} overall${est}. Historically: ${e}% elite, ${s}% starter, ${bu}% bust (2015-2023 QB/WR/RB/TE classes)">
+        <span class="inline-flex w-14 h-2 rounded-sm overflow-hidden"><span class="bg-emerald-600" style="width:${e}%"></span><span class="bg-amber-400" style="width:${s}%"></span><span class="bg-rose-500" style="width:${bu}%"></span></span>
+        <span class="text-[10px]"><span class="font-bold text-emerald-700 dark:text-emerald-400">${e}% elite</span> · <span class="font-bold text-amber-600 dark:text-amber-400">${s}% starter</span> · <span class="font-bold text-rose-600 dark:text-rose-400">${bu}% bust</span></span></span>`;
+    }
+
+    // ---- Veteran sell windows (2015-2024 study: seasons of 12+ PPG, next season 2016-2025, all complete) ----
+    // Odds a current starter posts 12+ PPG again next season (8+ games), by position, age band and whether
+    // his PPG is above that position's median. Cells are [hits, players]. Age bands with under 10 players
+    // are pooled with the next-younger band, and bands are pooled so odds never rise with age.
+    let PPG = {};
+    const SELL = {
+      RB: { med: 14.9, ages: [24, 26, 27, 28, 29], top: [[35,40],[31,40],[19,25],[19,25],[6,16],[6,16]], bot: [[21,41],[21,47],[21,47],[9,35],[9,35],[9,35]] },
+      WR: { med: 15.0, ages: [25, 27, 29, 30, 31], top: [[119,157],[119,157],[119,157],[119,157],[119,157],[5,13]], bot: [[41,70],[22,38],[13,30],[7,23],[7,23],[1,11]] },
+      TE: { med: 14.4, ages: [26, 28, 30, 31, 32], top: [[26,34],[26,34],[16,23],[16,23],[16,23],[16,23]], bot: [[11,24],[9,21],[9,21],[9,21],[2,12],[2,12]] }
+    };
+    function sellInfo(p) {
+      if (!p || p.pick || !p.age) return null;
+      const r = PPG[normName(p.name)];
+      const cfg = SELL[p.pos];
+      if (!r || !cfg || r.pos !== p.pos || r.ppg < 12) return null;
+      const age = Number(p.age);
+      const i = cfg.ages.filter(a => age >= a).length;
+      const [k, n] = (r.ppg >= cfg.med ? cfg.top : cfg.bot)[i];
+      const odds = Math.round(100 * k / n);
+      let flag = null;
+      if (p.pos === 'RB') flag = age >= 28 ? 'now' : age >= 27 ? 'window' : null;
+      if (p.pos === 'WR') flag = age >= 31 ? 'now' : (age >= 29 && r.ppg < cfg.med) ? 'window' : null;
+      if (p.pos === 'TE' && r.ppg < cfg.med) flag = age >= 32 ? 'now' : age >= 31 ? 'window' : null;
+      return { odds, k, n, flag, ppg: r.ppg, season: r.s, gp: r.gp, age };
+    }
+    function sellBadge(p) {
+      const x = sellInfo(p);
+      if (!x || !x.flag) return '';
+      const cls = x.flag === 'now' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : 'bg-amber-400/20 text-amber-800 dark:text-amber-300';
+      return `<span class="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap ${cls}" title="${p.pos}, age ${x.age.toFixed(1)}, ${x.ppg} PPG in ${x.season}: historically ${x.odds}% of players like this (${x.k} of ${x.n}) posted 12+ PPG again the next season">${x.flag === 'now' ? 'SELL NOW' : 'SELL WINDOW'} · ${x.odds}%</span>`;
+    }
+    function sellLine(p) {
+      const x = sellInfo(p);
+      if (!x) return '';
+      return ` · <span title="Share of similar players (position, age, PPG) who posted 12+ PPG again the next season, 2015-2024">Next-year odds: <strong>${x.odds}%</strong> to repeat 12+ (${x.k} of ${x.n} similar players; ${x.ppg} PPG in ${x.season})</span>`;
+    }
+    fetch(`./ppg.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
+      if (d && d.players) { PPG = d.players; try { all(); } catch (e) { /* app not ready yet; next render picks it up */ } }
+    }).catch(() => {});
+
     function bucketBadge(p) {
       const b = getBucket(p);
       if (b.tier === 'pick') {
@@ -862,7 +1018,7 @@
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
     function normName(s) {
-      return String(s || '').toLowerCase()
+      return String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
         .replace(/['’.]/g, '')
         .replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '')
         .replace(/[^a-z0-9]+/g, ' ')
@@ -906,7 +1062,7 @@
       if (!fr || fr.getAttribute('src')) return;
       fr.addEventListener('load', onBucketsFrameLoad);
       fr.removeAttribute('loading'); // src is already deferred until the tab is opened; don't let native lazy-loading stall it
-      fr.src = fr.dataset.src;
+      fr.src = freshSrc(fr.dataset.src);
     }
 
     function syncBucketsFrameTheme() {
@@ -931,6 +1087,7 @@
 
     function onBucketsFrameLoad() {
       syncBucketsFrameTheme();
+      sendLeagueToFrames();
       const fr = document.getElementById('buckets-frame');
       try {
         const d = fr.contentDocument;
@@ -942,9 +1099,119 @@
       } catch (e) { /* cross-origin: rely on postMessage height below */ }
     }
 
-    // Optional: bucket-explorer.html may post { type: 'dtc-height', height } itself
+    // ---- Rookie WRs iframe: same lazy load / theme / height pattern ----
+    function loadRookiesFrame() {
+      const fr = document.getElementById('rookies-frame');
+      if (!fr || fr.getAttribute('src')) return;
+      fr.addEventListener('load', () => { syncRookiesFrameTheme(); sendLeagueToFrames(); });
+      fr.src = freshSrc(fr.dataset.src);
+    }
+    function syncRookiesFrameTheme() {
+      const fr = document.getElementById('rookies-frame');
+      if (!fr || !fr.getAttribute('src')) return;
+      const dark = document.documentElement.classList.contains('dark');
+      try { fr.contentWindow.postMessage({ type: 'dtc-theme', theme: dark ? 'dark' : 'light' }, '*'); } catch (e) {}
+      try { fr.contentDocument.documentElement.classList.toggle('dark', dark); } catch (e) {}
+    }
+    // ---- Rookie RBs iframe ----
+    function loadRbsFrame() {
+      const fr = document.getElementById('rbs-frame');
+      if (!fr || fr.getAttribute('src')) return;
+      fr.addEventListener('load', () => { syncRbsFrameTheme(); sendLeagueToFrames(); });
+      fr.src = freshSrc(fr.dataset.src);
+    }
+    function syncRbsFrameTheme() {
+      const fr = document.getElementById('rbs-frame');
+      if (!fr || !fr.getAttribute('src')) return;
+      const dark = document.documentElement.classList.contains('dark');
+      try { fr.contentWindow.postMessage({ type: 'dtc-theme', theme: dark ? 'dark' : 'light' }, '*'); } catch (e) {}
+      try { fr.contentDocument.documentElement.classList.toggle('dark', dark); } catch (e) {}
+    }
+    function resizeRbsFrame(h) {
+      const fr = document.getElementById('rbs-frame');
+      const n = Math.ceil(Number(h) || 0);
+      if (fr && n > 200 && Math.abs(parseFloat(fr.style.height) - n) > 1) fr.style.height = `${n}px`;
+    }
+    // Embedded pages update often; a per-visit token stops browsers from showing a stale cached copy
+    var FRAME_TOKEN = Date.now().toString(36);
+    function freshSrc(u) { return u + (u.includes('?') ? '&' : '?') + 'v=' + FRAME_TOKEN; }
+
+    // ---- Prospects iframe ----
+    function loadProsFrame() {
+      const fr = document.getElementById('pros-frame');
+      if (!fr || fr.getAttribute('src')) return;
+      fr.addEventListener('load', syncProsFrameTheme);
+      fr.src = freshSrc(fr.dataset.src);
+    }
+    function syncProsFrameTheme() {
+      const fr = document.getElementById('pros-frame');
+      if (!fr || !fr.getAttribute('src')) return;
+      const dark = document.documentElement.classList.contains('dark');
+      try { fr.contentWindow.postMessage({ type: 'dtc-theme', theme: dark ? 'dark' : 'light' }, '*'); } catch (e) {}
+      try { fr.contentDocument.documentElement.classList.toggle('dark', dark); } catch (e) {}
+    }
+
+    // ---- Rookie TEs iframe ----
+    function loadTesFrame() {
+      const fr = document.getElementById('tes-frame');
+      if (!fr || fr.getAttribute('src')) return;
+      fr.addEventListener('load', () => { syncTesFrameTheme(); sendLeagueToFrames(); });
+      fr.src = freshSrc(fr.dataset.src);
+    }
+    function syncTesFrameTheme() {
+      const fr = document.getElementById('tes-frame');
+      if (!fr || !fr.getAttribute('src')) return;
+      const dark = document.documentElement.classList.contains('dark');
+      try { fr.contentWindow.postMessage({ type: 'dtc-theme', theme: dark ? 'dark' : 'light' }, '*'); } catch (e) {}
+      try { fr.contentDocument.documentElement.classList.toggle('dark', dark); } catch (e) {}
+    }
+    function resizeTesFrame(h) {
+      const fr = document.getElementById('tes-frame');
+      const n = Math.ceil(Number(h) || 0);
+      if (fr && n > 200 && Math.abs(parseFloat(fr.style.height) - n) > 1) fr.style.height = `${n}px`;
+    }
+    function resizeRookiesFrame(h) {
+      const fr = document.getElementById('rookies-frame');
+      const n = Math.ceil(Number(h) || 0);
+      if (fr && n > 200 && Math.abs(parseFloat(fr.style.height) - n) > 1) fr.style.height = `${n}px`;
+    }
+
+    // Embedded pages ask for league data ('dtc-ready') or a pre-loaded offer ('dtc-build-offer', name)
     window.addEventListener('message', e => {
-      if (e.origin === location.origin && e.data && e.data.type === 'dtc-height') resizeBucketsFrame(e.data.height);
+      if (e.origin !== location.origin || !e.data) return;
+      if (e.data.type === 'dtc-ready') { sendLeagueToFrames(); return; }
+      if (e.data.type !== 'dtc-build-offer') return;
+      const key = normName(e.data.name);
+      const pid = Object.keys(OWN).find(id => P[id] && !P[id].pick && normName(P[id].name) === key);
+      if (pid === undefined) { toast(`${e.data.name} isn't on a roster in this league`); return; }
+      startAcquire(pid);
+    });
+
+    function startAcquire(pid) {
+      const o = OWN[pid];
+      if (o === undefined) { toast(`${P[pid].name} isn't on a roster in this league`); return; }
+      if (o === ME) { toast(`${P[pid].name} is already on your roster`); return; }
+      st.tA = T[ME] ? ME : (owners[0] || '');
+      st.tB = o;
+      st.acquire = Number(pid);
+      const best = acquireIdeas(pid)[0];
+      st.A = best ? best.send.map(x => ({ ...x })) : [];
+      st.B = [{ id: Number(pid) }];
+      populateDropdowns();
+      all();
+      switchTab('calc');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      toast(best ? `Best-fit offer for ${P[pid].name} loaded. More packages in the Trade Finder below.` : `Offer started for ${P[pid].name}. No fair package found; add assets yourself.`);
+    }
+
+    // Embedded pages may post { type: 'dtc-height', height }; the rookie tracker adds frame: 'rookies'
+    window.addEventListener('message', e => {
+      if (e.origin !== location.origin || !e.data || e.data.type !== 'dtc-height') return;
+      if (e.data.frame === 'rookies') resizeRookiesFrame(e.data.height);
+      else if (e.data.frame === 'rbs') resizeRbsFrame(e.data.height);
+      else if (e.data.frame === 'tes') resizeTesFrame(e.data.height);
+      else if (e.data.frame === 'pros') { const fr = document.getElementById('pros-frame'); const n = Math.ceil(Number(e.data.height) || 0); if (fr && n > 200) fr.style.height = `${n}px`; }
+      else resizeBucketsFrame(e.data.height);
     });
 
     function applyTheme() {
@@ -955,6 +1222,10 @@
       } catch (e) {}
       root.classList.toggle('dark', dark);
       syncBucketsFrameTheme();
+      syncRookiesFrameTheme();
+      syncRbsFrameTheme();
+      syncTesFrameTheme();
+      syncProsFrameTheme();
     }
 
     function save() {
@@ -1241,14 +1512,15 @@
     // ============================================================================
     // 7. LINEUP SOLVER & TEAM ARCHETYPES
     // ============================================================================
-    function solveLineup(playerIds) {
+    function solveLineup(playerIds, valOf) {
+      const vf = valOf || (id => V[id] || 0);
       const slots = (activeLeague.slots && activeLeague.slots.length)
         ? activeLeague.slots
         : ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX'];
       const pool = (playerIds || [])
         .map(id => P[id])
         .filter(p => p && !p.pick)
-        .sort((a, b) => (V[b.id] || 0) - (V[a.id] || 0));
+        .sort((a, b) => vf(b.id) - vf(a.id));
 
       const used = new Set();
       const filled = [];
@@ -1268,7 +1540,7 @@
         const match = pool.find(p => !used.has(p.id) && canPlay(p.pos, slot));
         if (match) {
           used.add(match.id);
-          filled.push({ slot, id: match.id, val: V[match.id] || 0 });
+          filled.push({ slot, id: match.id, val: vf(match.id) });
         } else {
           filled.push({ slot, id: null, val: 0 });
         }
@@ -1298,6 +1570,58 @@
       return { archetype: 'retool', label: 'Retool', team: t };
     }
 
+    // FantasyCalc redraft (this-season) values are available only after a live FantasyCalc sync
+    function HAS_RDV() { return P.some(p => p && p.rdv > 0); }
+
+    // Fit with me: complementary surpluses/needs by position (value vs league average)
+    function computeFit(allRows) {
+      const FIT_POS = ['QB', 'RB', 'WR', 'TE'];
+      const fit = {};
+      try {
+        const avg = {};
+        FIT_POS.forEach(pos => { avg[pos] = allRows.reduce((a, x) => a + x.posTotals[pos], 0) / Math.max(1, allRows.length); });
+        const dev = x => Object.fromEntries(FIT_POS.map(pos => [pos, avg[pos] ? (x.posTotals[pos] - avg[pos]) / avg[pos] : 0]));
+        const meRow = allRows.find(x => x.o === ME);
+        if (meRow) {
+          const md = dev(meRow);
+          const raw = {};
+          allRows.forEach(x => {
+            if (x.o === ME) return;
+            const xd = dev(x);
+            const give = {}, get = {};
+            FIT_POS.forEach(pos => {
+              give[pos] = Math.max(0, md[pos]) * Math.max(0, -xd[pos]);   // my surplus fills their hole
+              get[pos] = Math.max(0, xd[pos]) * Math.max(0, -md[pos]);    // their surplus fills my hole
+            });
+            const G = Object.values(give).reduce((a, b) => a + b, 0), R = Object.values(get).reduce((a, b) => a + b, 0);
+            const best = o => { const e = Object.entries(o).sort((a, b) => b[1] - a[1])[0]; return e && e[1] > 0 ? e[0] : null; };
+            raw[x.o] = { v: G + R + Math.min(G, R), send: best(give), recv: best(get) };   // two-way deals get a bonus
+          });
+          const mx = Math.max(...Object.values(raw).map(z => z.v), 1e-9);
+          Object.entries(raw).forEach(([o, z]) => { fit[o] = { score: Math.round(100 * z.v / mx), send: z.send, recv: z.recv }; });
+        }
+      } catch (e) { /* fit unavailable */ }
+      return fit;
+    }
+
+    // Share league ownership with the embedded Rookie WR + Profile Buckets pages
+    function sendLeagueToFrames() {
+      try {
+        if (!owners.length) return;
+        const { rows } = getLeaguePartnerProfiles();
+        const fit = computeFit(rows);
+        const teams = {};
+        rows.forEach(r => { teams[r.o] = { n: r.t.n, me: r.o === ME, arch: r.arch.label, fit: fit[r.o] ? fit[r.o].score : null, send: fit[r.o]?.send || null, recv: fit[r.o]?.recv || null }; });
+        const players = {};
+        Object.entries(OWN).forEach(([pid, o]) => { const p = P[pid]; if (p && !p.pick) players[normName(p.name)] = o; });
+        const msg = { type: 'dtc-league', league: activeLeague.name || '', teams, players };
+        ['rookies-frame', 'rbs-frame', 'tes-frame', 'buckets-frame'].forEach(id => {
+          const fr = document.getElementById(id);
+          if (fr && fr.getAttribute('src') && fr.contentWindow) fr.contentWindow.postMessage(msg, location.origin);
+        });
+      } catch (e) { /* frames not ready */ }
+    }
+
     function getLeaguePartnerProfiles() {
       const rows = owners.map(o => {
         const t = T[o];
@@ -1314,7 +1638,15 @@
         });
         const totalVal = posTotals.QB + posTotals.RB + posTotals.WR + posTotals.TE + posTotals.PICK;
         const arch = teamArchetype(o);
-        return { o, t, startVal, posTotals, totalVal, count27First, arch };
+        // Value-weighted roster age (players only): stars count more than bench guys
+        let ageW = 0, ageV = 0;
+        (t.ids || []).forEach(id => {
+          const p = P[id], a = Number(p && p.age), v = V[id] || 0;
+          if (p && !p.pick && a > 0 && v > 0) { ageW += a * v; ageV += v; }
+        });
+        const age = ageV ? ageW / ageV : null;
+        const winNow = HAS_RDV() ? solveLineup(t.ids || [], id => (P[id] && P[id].rdv) || 0).total : null;
+        return { o, t, startVal, posTotals, totalVal, count27First, arch, age, winNow };
       }).sort((a, b) => b.totalVal - a.totalVal);
 
       const posRanks = { QB: {}, RB: {}, WR: {}, TE: {}, PICK: {} };
@@ -1435,6 +1767,7 @@
     let DRAFT_YEARS = [2027, 2028, 2029];
     let SLOT_BY_RID = {};
     let RID_TO_KEY = {};
+    let SID_OWNER = {};          // Sleeper id -> roster key, for every rostered player (incl. ones outside KTC's top 500)
     let TRENDING = new Map();   // sleeperId -> adds in last 24h
     let FC_CAPPED = false;
     const ORD_NAME = ['', '1st', '2nd', '3rd', '4th', '5th'];
@@ -1455,6 +1788,9 @@
         ppr: typeof sc.rec === 'number' ? sc.rec : 1,
         tep: typeof sc.bonus_rec_te === 'number' ? sc.bonus_rec_te : 0,
         rounds: Number(d.settings?.draft_rounds) || 4,
+        playoffWeekStart: Number(d.settings?.playoff_week_start) || 15,
+        playoffTeams: Number(d.settings?.playoff_teams) || 6,
+        median: Number(d.settings?.league_average_match) === 1,
         season: Number(d.season) || null,
         prevId: d.previous_league_id ? String(d.previous_league_id) : '',
         slots: slots.length ? slots : ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX']
@@ -1542,6 +1878,7 @@
             fRaw: Number(row.value) || 0,
             fcKey: `${pl.name || ''}|${pos}`,
             fcTrend30: Number(row.trend30Day) || 0,
+            rdv: Number(row.redraftValue) || 0,
             k: 0,
             pick: false
           });
@@ -1619,10 +1956,17 @@
 
         const newT = {};
         const newOWN = {};
+        const newSidOwner = {};
         const rosterIdToKey = {};
 
-        // Sort rosters for projected 2027 draft order (worst wins first, then lowest PF)
+        // Sort rosters for projected draft order: by standings (worst wins first, then lowest PF)
+        // or, for leagues that set it that way, by lowest Max PF (best possible lineup points)
+        const maxPf = r => (r.settings?.ppts || 0) + (r.settings?.ppts_decimal || 0) / 100;
         const sortedForDraft = (rosters || []).slice().sort((a, b) => {
+          if (activeLeague.draftOrder === 'maxpf') {
+            const d = maxPf(a) - maxPf(b);
+            if (d) return d;
+          }
           const wa = a.settings?.wins || 0, wb = b.settings?.wins || 0;
           if (wa !== wb) return wa - wb;
           const pfa = (a.settings?.fpts || 0) + (a.settings?.fpts_decimal || 0) / 100;
@@ -1642,6 +1986,7 @@
 
           const ids = [];
           (r.players || []).forEach(sid => {
+            newSidOwner[String(sid)] = key;
             const pid = sleeperIdToPid.get(String(sid));
             if (pid !== undefined) {
               ids.push(pid);
@@ -1652,6 +1997,7 @@
           const w = r.settings?.wins || 0;
           const l = r.settings?.losses || 0;
           const pf = Math.round((r.settings?.fpts || 0) + (r.settings?.fpts_decimal || 0) / 100);
+          const mpf = Math.round((r.settings?.ppts || 0) + (r.settings?.ppts_decimal || 0) / 100);
 
           newT[key] = {
             n: teamName,
@@ -1659,6 +2005,7 @@
             rid: r.roster_id,
             r: `${w}-${l}`,
             pf,
+            mpf,
             slot: slotByRosterId[r.roster_id] || 1,
             ids,
             pk: []
@@ -1694,6 +2041,7 @@
         P = newP;
         T = newT;
         OWN = newOWN;
+        SID_OWNER = newSidOwner;
         SLEEPER_TO_PID = sleeperIdToPid;
         PICK_LOOKUP = pickLookup;
         SLOT_BY_RID = slotByRosterId;
@@ -1935,8 +2283,8 @@
       if (vt) vt.textContent = `${gName} value`;
       const posLbl = p.pick ? 'Pick' : p.pos;
       document.getElementById('pmHeader').innerHTML = `
-        <div class="flex items-center gap-2 flex-wrap">${posTag(p.pos)}<h3 class="text-base sm:text-lg font-extrabold">${esc(p.name)}</h3>${p.pick ? '' : bucketBadge(p)}</div>
-        <div class="text-xs text-[#5d6672] dark:text-[#98a2ae] mt-0.5">${p.pick ? `Projected ${esc(p.tier || 'mid')} pick · KTC history uses its “${esc((p.ktcKey || '').split('|')[0])}” value` : `${esc(p.team || 'FA')}${p.age ? ` · Age ${Number(p.age).toFixed(1)}` : ''}`} · ${esc(ownTxt(p.id))}</div>`;
+        <div class="flex items-center gap-2 flex-wrap">${posTag(p.pos)}<h3 class="text-base sm:text-lg font-extrabold">${esc(p.name)}</h3>${p.pick ? pickOddsHtml(p) : bucketBadge(p) + sellBadge(p)}${!p.pick && OWN[p.id] !== undefined && OWN[p.id] !== ME && T[ME] ? `<button type="button" data-findpkg="${p.id}" class="ml-auto px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Find offers for him →</button>` : ''}</div>
+        <div class="text-xs text-[#5d6672] dark:text-[#98a2ae] mt-0.5">${p.pick ? `Projected ${esc(p.tier || 'mid')} pick · KTC history uses its “${esc((p.ktcKey || '').split('|')[0])}” value` : `${esc(p.team || 'FA')}${p.age ? ` · Age ${Number(p.age).toFixed(1)}` : ''}${sellLine(p)}`} · ${esc(ownTxt(p.id))}</div>`;
       const t7 = trendWindow(p, 7, gm), t30 = trendWindow(p, 30, gm);
       const chg = (t, lbl) => {
         if (!t) return `<div class="text-sm font-extrabold text-[#5d6672] dark:text-[#98a2ae]">—</div><div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">${lbl}: not enough history yet</div>`;
@@ -2238,7 +2586,7 @@
             </div>
           </td>
           <td class="py-2 pr-2 hidden sm:table-cell text-xs text-[#5d6672] dark:text-[#98a2ae] truncate max-w-[140px]">${esc(ownTxt(p.id))}</td>
-          <td class="py-2 pr-2 hidden md:table-cell">${bucketBadge(p)}</td>
+          <td class="py-2 pr-2 hidden md:table-cell">${bucketBadge(p)}${sellBadge(p)}</td>
           <td class="py-2 pr-2 text-right hidden lg:table-cell text-[11px] text-[#5d6672] dark:text-[#98a2ae]">${p.k ? fmt(p.k) : '—'} / ${p.fRaw ? fmt(p.fRaw) : '—'}</td>
           <td class="py-2 pr-2 text-right font-extrabold">${fmt(V[p.id])}</td>
           <td class="py-2 pl-2 text-right whitespace-nowrap">
@@ -2264,7 +2612,7 @@
             ${posTag(p.pos)}
             <div class="min-w-0">
               <div class="text-xs font-bold truncate"><button type="button" data-player="${p.id}" class="hover:underline cursor-pointer">${esc(p.name)}</button>${item.via && item.via !== 'own' ? ` <span class="font-normal text-[#5d6672]">(${esc(item.via)})</span>` : ''}${trendBadge(p)}</div>
-              <div class="mt-0.5">${bucketBadge(p)}</div>
+              <div class="mt-0.5">${p.pick ? pickOddsHtml(p) || bucketBadge(p) : bucketBadge(p) + sellBadge(p)}</div>
             </div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
@@ -2417,7 +2765,7 @@
           <span><strong>Start-${startN} Impact:</strong></span>
           <span>${esc(nA)}: <strong class="${dA >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${dA >= 0 ? '+' : ''}${fmt(dA)}</strong></span>
           <span>${esc(nB)}: <strong class="${dB >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${dB >= 0 ? '+' : ''}${fmt(dB)}</strong></span>
-        </div>${impact}`;
+        </div>${impact}<div class="pt-2 flex flex-wrap items-center gap-2"><button type="button" data-copypitch="1" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Copy DM pitch</button><span class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">A short Sleeper message: what each side gets, how their position ranks improve, and why it fits their window. Your internal tags stay out of it.</span></div>`;
       } else {
         lineupBox.classList.add('hidden');
       }
@@ -2518,12 +2866,14 @@
     function teamStrength(ids, pickIds) {
       // Position strength = value of the players who actually start at that position in the
       // optimal lineup (so a TE or QB filling a FLEX / SUPER_FLEX spot counts for his position).
+      // Same basis as the League tab's QB/RB/WR/TE columns: total value at each position
       const lu = solveLineup(ids);
       const out = { QB: 0, RB: 0, WR: 0, TE: 0 };
-      lu.filled.forEach(f => { if (f.id != null && P[f.id] && out[P[f.id].pos] !== undefined) out[P[f.id].pos] += f.val; });
+      ids.forEach(id => { const p = P[id]; if (p && !p.pick && out[p.pos] !== undefined) out[p.pos] += V[id] || 0; });
       out.PICK = pickIds.reduce((s, id) => s + (V[id] || 0), 0);
       out.START = lu.total;
       out.TOTAL = ids.reduce((s, id) => s + (V[id] || 0), 0) + out.PICK;
+      out.NOW = solveLineup(ids, id => (P[id] && P[id].rdv) || 0).total;
       return out;
     }
     function tradeRankImpact() {
@@ -2547,13 +2897,14 @@
         const ra = rosterAfter(o);
         after[o] = teamStrength(ra.ids, ra.pks);
       });
-      const cats = [['QB', 'QB'], ['RB', 'RB'], ['WR', 'WR'], ['TE', 'TE'], ['START', 'Starting lineup'], ['PICK', 'Draft capital'], ['TOTAL', 'Total value']];
+      const cats = [['QB', 'QB'], ['RB', 'RB'], ['WR', 'WR'], ['TE', 'TE'], ['START', 'Starting lineup'], ...(HAS_RDV() ? [['NOW', 'Win now']] : []), ['PICK', 'Draft capital'], ['TOTAL', 'Total value']];
       const rankOf = (map, key, cat) => 1 + owners.filter(o => (map[o][cat] || 0) > (map[key][cat] || 0)).length;
       const n = owners.length;
       const cell = (key, cat) => {
         const r0 = rankOf(before, key, cat), r1 = rankOf(after, key, cat);
         const cls = r1 < r0 ? 'text-emerald-600 dark:text-emerald-400' : r1 > r0 ? 'text-rose-600 dark:text-rose-400' : 'text-[#5d6672] dark:text-[#98a2ae]';
-        return `<td class="py-1 px-1.5 text-center whitespace-nowrap ${cls}">${r0 === r1 ? `#${r0}` : `#${r0} → <strong>#${r1}</strong>`}</td>`;
+        const arrow = r1 < r0 ? '▲' : '▼';
+        return `<td class="py-1 px-1.5 text-center whitespace-nowrap ${cls}">${r0 === r1 ? `#${r0}` : `#${r0} → <strong>${arrow} #${r1}</strong>`}</td>`;
       };
       const row = key => `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1 pr-2 font-semibold whitespace-nowrap">${esc(T[key].n)}${key === ME ? ' <span class="text-[10px] px-1 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td>${cats.map(([c]) => cell(key, c)).join('')}</tr>`;
       return `<div class="pt-1">
@@ -2562,7 +2913,7 @@
           <thead><tr class="text-[10px] uppercase tracking-wider text-[#5d6672] dark:text-[#98a2ae]"><th class="text-left py-1 pr-2">Team</th>${cats.map(([, l]) => `<th class="py-1 px-1.5 text-center font-semibold">${l}</th>`).join('')}</tr></thead>
           <tbody>${row(st.tA)}${row(st.tB)}</tbody>
         </table></div>
-        <div class="text-[10px] mt-1 text-[#5d6672] dark:text-[#98a2ae]">Position ranks use the value of the players who would start at that position in each team’s best lineup (a TE or QB starting at FLEX / SUPER_FLEX counts for his position), so bench depth doesn’t inflate a position.</div>
+        <div class="text-[10px] mt-1 text-[#5d6672] dark:text-[#98a2ae]">Position ranks match the League tab (total value at each position). Starting lineup ranks each team's best lineup by dynasty value${HAS_RDV() ? '; Win now uses FantasyCalc redraft (this-season) value' : ''}. Screenshot this to pitch the deal.</div>
       </div>`;
     }
 
@@ -2661,8 +3012,89 @@
     // ============================================================================
     // 10B. PLAYER TRADE IDEA FINDER
     // ============================================================================
+    // Trade Finder (acquire mode): packages from my roster for one target player, ranked by value
+    // fit and by whether what I send fills the partner's weak positions without opening holes on my side.
+    function acquireIdeas(targetId) {
+      const o = OWN[targetId];
+      if (o === undefined || o === ME || !T[ME] || !T[o]) return [];
+      const tV = V[targetId] || 0;
+      if (tV <= 0) return [];
+      const { rows } = getLeaguePartnerProfiles();
+      const FIT_POS = ['QB', 'RB', 'WR', 'TE'];
+      const avg = {};
+      FIT_POS.forEach(pos => { avg[pos] = rows.reduce((a, x) => a + x.posTotals[pos], 0) / Math.max(1, rows.length); });
+      const devOf = key => { const r = rows.find(x => x.o === key); return Object.fromEntries(FIT_POS.map(pos => [pos, r && avg[pos] ? (r.posTotals[pos] - avg[pos]) / avg[pos] : 0])); };
+      const md = devOf(ME), td = devOf(o);
+      const tPos = P[targetId].pos;
+      const posBonus = id => {
+        const p = P[id];
+        if (!p) return 0;
+        if (p.pick) return 2;                                             // picks are neutral-positive
+        let b = 0;
+        if (td[p.pos] < 0) b += 10 * Math.min(1, -td[p.pos] * 2);         // fills their hole
+        if (md[p.pos] < 0) b -= 10 * Math.min(1, -md[p.pos] * 2);         // opens a hole for me
+        if (p.pos === tPos) b -= 3;                                       // sending the same position back is a weaker pitch
+        return b;
+      };
+      const mine = [
+        ...(T[ME].ids || []).filter(id => P[id] && (V[id] || 0) > 0).map(id => ({ id, via: '' })),
+        ...(T[ME].pk || []).filter(([id]) => P[id] && (V[id] || 0) > 0).map(([id, via]) => ({ id, via }))
+      ].filter(a => (V[a.id] || 0) <= tV * 1.35 && (V[a.id] || 0) >= tV * 0.12)
+        .sort((a, b) => (V[b.id] || 0) - (V[a.id] || 0))
+        .slice(0, 28);
+      const recv = [{ id: Number(targetId) }];
+      const tol = Math.max(6, st.fair * 2.2);
+      const ideas = [];
+      const push = (send, type) => {
+        const ev = evalTrade(send, recv);
+        const gap = ((ev.effB - ev.effA) / Math.max(ev.effA, ev.effB, 1)) * 100;   // + means I receive more
+        if (Math.abs(gap) > tol) return;
+        const score = 60 - Math.abs(gap) * 2 + send.reduce((a, x) => a + posBonus(x.id), 0) - (send.length - 1) * 3;
+        ideas.push({ partner: o, type, send, recv, gapPct: gap, score });
+      };
+      mine.forEach(a => push([{ ...a }], '1-for-1'));
+      for (let i = 0; i < mine.length; i++) for (let j = i + 1; j < mine.length; j++) {
+        if ((V[mine[i].id] || 0) + (V[mine[j].id] || 0) < tV * 0.8) continue;
+        push([{ ...mine[i] }, { ...mine[j] }], '2-for-1');
+      }
+      ideas.sort((a, b) => b.score - a.score);
+      const seen = new Set(), top = [];
+      for (const x of ideas) {
+        const k = x.send.map(y => y.id).sort().join('_');
+        if (seen.has(k)) continue;
+        seen.add(k); top.push(x);
+        if (top.length >= 6) break;
+      }
+      return top;
+    }
+
     function renderTradeIdeas() {
       const listEl = document.getElementById('ideaList');
+      if (listEl && st.acquire != null && P[st.acquire] && OWN[st.acquire] !== undefined && OWN[st.acquire] !== ME) {
+        const tp = P[st.acquire], o = OWN[st.acquire];
+        const top = acquireIdeas(st.acquire);
+        listEl._ideas = { tKey: ME, top };
+        const head = `<div class="col-span-full flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/25 text-xs">
+          <span><strong>Trade Finder:</strong> packages from your roster for <strong>${esc(tp.name)}</strong> (${esc(T[o].n)}). Ranked by value match, then by whether you send positions they're short on without weakening your own thin spots.</span>
+          <button type="button" data-clearacquire="1" class="px-2 py-1 rounded-md font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-500/15 cursor-pointer">✕ Back to idea finder</button>
+        </div>`;
+        listEl.innerHTML = head + (top.length ? top.map((idea, idx) => {
+          const g = idea.gapPct;
+          const gCls = Math.abs(g) <= st.fair ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400';
+          return `<div class="p-3 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] flex flex-col justify-between gap-2">
+            <div class="space-y-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">${esc(idea.type)} · ${esc(T[o].n)}</span>
+                <span class="text-[11px] font-bold ${gCls}" title="+ means you receive more value">${g >= 0 ? '+' : ''}${g.toFixed(1)}%</span>
+              </div>
+              <div class="text-xs"><strong>Send:</strong> ${esc(idea.send.map(x => `${P[x.id].name}${x.via && x.via !== 'own' ? ` (${x.via})` : ''}`).join(' + '))}</div>
+              <div class="text-xs"><strong>Get:</strong> ${esc(tp.name)}</div>
+            </div>
+            <button type="button" data-loadidea="${idx}" class="w-full py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Load in calculator →</button>
+          </div>`;
+        }).join('') : `<div class="col-span-full text-xs text-[#5d6672] dark:text-[#98a2ae] py-3">No fair 1-for-1 or 2-for-1 packages from your roster for ${esc(tp.name)}. Try adding a pick in the calculator.</div>`);
+        return;
+      }
       const tKey = document.getElementById('ideaTeamSel')?.value;
       const pId = Number(document.getElementById('ideaPlayerSel')?.value);
       const goal = document.getElementById('ideaGoalSel')?.value || 'repeater';
@@ -2775,6 +3207,10 @@
         });
       });
 
+      if (tKey === ME) {
+        const fitMap = computeFit(getLeaguePartnerProfiles().rows);
+        ideas.forEach(x => { x.score += (fitMap[x.partner]?.score || 0) * 0.15; });   // favor partners whose needs fit yours
+      }
       ideas.sort((a, b) => b.score - a.score);
       // Deduplicate by partner + primary target
       const seen = new Set();
@@ -2827,10 +3263,14 @@
         const scaleNote = nTeams !== 12
           ? ` In a ${nTeams}-team league each pick is valued by its overall pick number (e.g. 1.${nTeams} = overall #${nTeams}, priced like a 12-team ${Math.ceil(nTeams / 12)}.${String(nTeams - (Math.ceil(nTeams / 12) - 1) * 12).padStart(2, '0')}).`
           : '';
-        draftSub.textContent = `Worst record picks first (lower PF breaks ties). Sets Early (1–${earlyCut}), Mid (${earlyCut + 1}–${midCut}), and Late (${midCut + 1}–${nTeams}) ${DRAFT_YEARS[0]} pick tiers. ${DRAFT_YEARS[0]} picks are valued at their projected slot (e.g. 1.03).${scaleNote}`;
+        draftSub.textContent = `${activeLeague.draftOrder === 'maxpf' ? 'Lowest Max PF picks first (Max PF = what the best possible lineup would have scored each week).' : 'Worst record picks first (lower PF breaks ties).'} Saved per league. Sets Early (1–${earlyCut}), Mid (${earlyCut + 1}–${midCut}), and Late (${midCut + 1}–${nTeams}) ${DRAFT_YEARS[0]} pick tiers. ${DRAFT_YEARS[0]} picks are valued at their projected slot (e.g. 1.03).${scaleNote}`;
       }
 
       document.querySelectorAll('.draft-yr').forEach(el => { el.textContent = DRAFT_YEARS[0]; });
+      document.querySelectorAll('.dorder-btn').forEach(b => {
+        const on = (activeLeague.draftOrder || 'standings') === b.dataset.dorder;
+        b.classList.toggle('bg-blue-600', on); b.classList.toggle('text-white', on);
+      });
       document.getElementById('draftOrderStrip').innerHTML = bySlot.map((o, idx) => {
         const slot = T[o].slot || (idx + 1);
         const tier = slot <= earlyCut ? 'Early' : slot <= midCut ? 'Mid' : 'Late';
@@ -2841,7 +3281,7 @@
             <span class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">${tier}</span>
           </div>
           <div class="truncate font-semibold mt-0.5">${esc(T[o].n)}</div>
-          <div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">${esc(T[o].r || '0-0')} · ${fmt(T[o].pf)} PF</div>
+          <div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">${esc(T[o].r || '0-0')} · ${activeLeague.draftOrder === 'maxpf' ? `${fmt(T[o].mpf || 0)} Max PF` : `${fmt(T[o].pf)} PF`}</div>
         </div>`;
       }).join('');
 
@@ -2851,6 +3291,60 @@
         if (st.leagueFilter === 'has27') return r.count27First > 0;
         return r.arch.archetype === st.leagueFilter;
       });
+
+      const fit = computeFit(allRows);
+      const hasRdv = allRows.some(x => x.winNow > 0);
+      const mpfRank = {}, nowRank = {};
+      allRows.slice().sort((a, b) => (b.t.mpf || 0) - (a.t.mpf || 0)).forEach((x, i) => { mpfRank[x.o] = i + 1; });
+      allRows.slice().sort((a, b) => (b.winNow || 0) - (a.winNow || 0)).forEach((x, i) => { nowRank[x.o] = i + 1; });
+      const ages = allRows.map(x => x.age).filter(a => a != null).sort((a, b) => a - b);
+      const youngCut = ages[Math.max(0, Math.ceil(ages.length * 0.25) - 1)];
+      const oldCut = ages[Math.min(ages.length - 1, Math.floor(ages.length * 0.75))];
+
+      // Column sorting (click a header). Any failure falls back to the default power-rank order.
+      try {
+        const ls = st.leagueSort || { k: 'rank', dir: 1 };
+        const rec = r => {
+          const [w = 0, l = 0, t = 0] = String(r.t.r || '0-0').split('-').map(x => Number(x) || 0);
+          const g = w + l + t;
+          return g ? (w + 0.5 * t) / g : 0;
+        };
+        const archOrder = { contender: 0, retool: 1, rebuild: 2, neutral: 3 };
+        const keyFn = {
+          rank: r => allRows.indexOf(r),
+          team: r => String(r.t.n || '').toLowerCase(),
+          profile: r => archOrder[r.arch.archetype] ?? 9,
+          record: r => rec(r),
+          start: r => r.startVal || 0,
+          picks: r => (r.posTotals && r.posTotals.PICK) || 0,
+          total: r => r.totalVal || 0,
+          posQB: r => posRanks.QB[r.o] ?? 99,
+          posRB: r => posRanks.RB[r.o] ?? 99,
+          posWR: r => posRanks.WR[r.o] ?? 99,
+          posTE: r => posRanks.TE[r.o] ?? 99,
+          age: r => r.age ?? 99,
+          fit: r => (fit[r.o] ? fit[r.o].score : -1),
+          mpf: r => r.t.mpf || 0,
+          now: r => r.winNow || 0
+        }[ls.k];
+        if (keyFn && ls.k !== 'rank') {
+          rows.sort((a, b) => {
+            const x = keyFn(a), y = keyFn(b);
+            if (x < y) return -1 * ls.dir;
+            if (x > y) return 1 * ls.dir;
+            if (ls.k === 'record') return ((b.t.pf || 0) - (a.t.pf || 0));      // PF breaks record ties
+            return (b.totalVal || 0) - (a.totalVal || 0);                       // then total value
+          });
+        } else if (ls.k === 'rank' && ls.dir === -1) {
+          rows.reverse();
+        }
+        document.querySelectorAll('#leagueHead [data-lsort]').forEach(th => {
+          const on = th.dataset.lsort === ls.k;
+          th.classList.toggle('text-blue-600', on);
+          th.classList.toggle('dark:text-blue-400', on);
+          th.querySelector('.lsort-arrow').textContent = on ? (ls.dir === 1 ? ' ▲' : ' ▼') : '';
+        });
+      } catch (e) { /* keep default order */ }
 
       const topQ = Math.max(1, Math.ceil(nTeams * 0.25));
       const botQ = Math.floor(nTeams * 0.75) + 1;
@@ -2864,7 +3358,7 @@
 
       const tbody = document.getElementById('leagueBody');
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="8" class="py-6 text-center text-xs text-[#5d6672] dark:text-[#98a2ae]">No teams match this filter.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="16" class="py-6 text-center text-xs text-[#5d6672] dark:text-[#98a2ae]">No teams match this filter.</td></tr>`;
         return;
       }
 
@@ -2890,7 +3384,7 @@
           }).join('');
 
           detail = `<tr class="bg-[#f6f7f9]/80 dark:bg-[#0f1216]/70">
-            <td colspan="8" class="p-3 space-y-3">
+            <td colspan="16" class="p-3 space-y-3">
               <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">${posCards}</div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                 <div>
@@ -2926,6 +3420,15 @@
             </div>
           </td>
           <td class="py-2.5 pr-2 text-xs text-[#5d6672] dark:text-[#98a2ae] whitespace-nowrap">${esc(r.t.r || '0-0')}</td>
+          <td class="py-2.5 px-1.5 text-right text-xs tabular-nums whitespace-nowrap" title="Max PF ${fmt(r.t.mpf || 0)} (best possible lineup every week) · actual PF ${fmt(r.t.pf || 0)}${r.t.mpf ? ` · ${Math.round(100 * (r.t.pf || 0) / r.t.mpf)}% of max` : ''}">${r.t.mpf ? `<span class="font-semibold ${mpfRank[r.o] <= topQ ? 'text-emerald-600 dark:text-emerald-400' : mpfRank[r.o] >= botQ ? 'text-rose-600 dark:text-rose-400' : ''}">${fmt(r.t.mpf)}</span><div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">#${mpfRank[r.o]}</div>` : '—'}</td>
+          ${['QB', 'RB', 'WR', 'TE'].map(pos => {
+            const rk = posRanks[pos][r.o];
+            const c = rk <= topQ ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : rk >= botQ ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : 'text-[#5d6672] dark:text-[#98a2ae]';
+            return `<td class="py-2.5 px-1.5 text-center"><span class="inline-block min-w-[2.2rem] px-1.5 py-0.5 rounded-md text-xs font-bold tabular-nums ${c}" title="${pos}: ${fmt(r.posTotals[pos])} value · #${rk} of ${nTeams}">#${rk}</span></td>`;
+          }).join('')}
+          <td class="py-2.5 px-1.5 text-center text-xs tabular-nums ${r.age == null ? '' : r.age <= youngCut ? 'text-sky-600 dark:text-sky-400 font-bold' : r.age >= oldCut ? 'text-amber-600 dark:text-amber-400 font-bold' : ''}" title="Value-weighted roster age${r.age <= youngCut ? ' · one of the youngest rosters' : r.age >= oldCut ? ' · one of the oldest rosters' : ''}">${r.age == null ? '—' : r.age.toFixed(1)}</td>
+          <td class="py-2.5 px-1.5 text-center">${r.o === ME ? '<span class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">you</span>' : fit[r.o] ? `<div class="inline-block min-w-[2.2rem] px-1.5 py-0.5 rounded-md text-xs font-extrabold tabular-nums ${fit[r.o].score >= 70 ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300' : fit[r.o].score >= 40 ? 'text-blue-700 dark:text-blue-300' : 'text-[#5d6672] dark:text-[#98a2ae]'}" title="Fit with your roster (0-100, best partner = 100)">${fit[r.o].score}</div><div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae] whitespace-nowrap mt-0.5">${fit[r.o].send ? `you→${fit[r.o].send}` : ''}${fit[r.o].send && fit[r.o].recv ? ' · ' : ''}${fit[r.o].recv ? `${fit[r.o].recv}→you` : ''}</div>` : '—'}</td>
+          <td class="py-2.5 px-1.5 text-right text-xs tabular-nums whitespace-nowrap" title="Best lineup by FantasyCalc redraft (this-season) value">${hasRdv && r.winNow != null ? `<span class="font-semibold ${nowRank[r.o] <= topQ ? 'text-emerald-600 dark:text-emerald-400' : nowRank[r.o] >= botQ ? 'text-rose-600 dark:text-rose-400' : ''}">${fmt(r.winNow)}</span><div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">#${nowRank[r.o]}</div>` : '—'}</td>
           <td class="py-2.5 pr-2 text-right font-semibold">${fmt(r.startVal)}</td>
           <td class="py-2.5 pr-2 text-right hidden sm:table-cell text-[#5d6672] dark:text-[#98a2ae]">${fmt(r.posTotals.PICK)}</td>
           <td class="py-2.5 pr-2 text-right font-extrabold">${fmt(r.totalVal)}</td>
@@ -3142,6 +3645,7 @@
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
             <button type="button" data-qbtoggle="${esc(lg.id)}" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-600/12 text-blue-700 dark:text-blue-300 cursor-pointer">${qbTxt}</button>
+            <button type="button" data-dordertoggle="${esc(lg.id)}" title="How this league sets rookie draft order" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-600/12 text-blue-700 dark:text-blue-300 cursor-pointer">Draft: ${lg.draftOrder === 'maxpf' ? 'Max PF' : 'Standings'}</button>
             ${savedLeagues.length > 1 ? `<button type="button" data-delleague="${esc(lg.id)}" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-500/12 text-rose-600 dark:text-rose-400 cursor-pointer">✕</button>` : ''}
           </div>
         </div>`;
@@ -3191,13 +3695,433 @@
       });
     }
 
+    function renderSellCard() {
+      const el = document.getElementById('sellCard');
+      if (!el) return;
+      if (!owners.length || !T[ME]) { el.classList.add('hidden'); return; }
+      const mine = (T[ME].ids || []).map(id => P[id]).filter(p => p && sellInfo(p) && sellInfo(p).flag)
+        .sort((a, b) => sellInfo(a).odds - sellInfo(b).odds);
+      el.classList.remove('hidden');
+      const head = `<div><h2 class="text-sm font-bold">Sell windows on your roster</h2>
+        <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Starters at the age where production usually drops. The % is how often similar players (position, age, PPG) posted 12+ PPG again the next season, 2015–2024. RBs fall off at 27; WRs under 15 PPG at 29 and everyone at 31; TEs under 14.4 PPG at 31. QBs don't show an age cliff. Buyers = contenders weakest at that position.</p></div>`;
+      if (!mine.length) { el.innerHTML = head + `<div class="text-xs text-[#5d6672] dark:text-[#98a2ae]">No starters on your roster are in a sell window right now.</div>`; return; }
+      const { rows } = getLeaguePartnerProfiles();
+      const buyers = pos => rows.filter(r => r.o !== ME && r.arch.label === 'Contender').sort((a, b) => a.posTotals[pos] - b.posTotals[pos]).slice(0, 2).map(r => r.t.n);
+      el.innerHTML = head + `<div class="grid sm:grid-cols-2 gap-2">${mine.map(p => {
+        const x = sellInfo(p);
+        const b = buyers(p.pos);
+        return `<div class="p-2.5 rounded-lg bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] text-xs">
+          <div class="flex items-center gap-2 flex-wrap">${posTag(p.pos)}<button type="button" data-player="${p.id}" class="font-bold hover:underline cursor-pointer">${esc(p.name)}</button>${sellBadge(p)}<span class="ml-auto font-extrabold">${fmt(V[p.id])}</span></div>
+          <div class="mt-1 text-[#5d6672] dark:text-[#98a2ae]">Age ${x.age.toFixed(1)} · ${x.ppg} PPG in ${x.season} (${x.gp} games) · ${x.odds}% repeat odds (${x.k} of ${x.n})${b.length ? ` · Buyers: ${esc(b.join(', '))}` : ''}</div>
+        </div>`;
+      }).join('')}</div>`;
+    }
+
+    // ============================================================================
+    // 11C. LEAGUE EXTRAS: PLAYOFF ODDS, TEAM TIMELINE, PICK GRID, HANDCUFFS (+ Scout: rookie targets, stashes)
+    // ============================================================================
+    const cardHead = (title, sub) => `<div><h2 class="text-sm font-bold">${title}</h2>${sub ? `<p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">${sub}</p>` : ''}</div>`;
+    const MUTED = 'text-[#5d6672] dark:text-[#98a2ae]';
+
+    // ---- Rookie signals from the weekly refresh (signals.json): hit odds + BUY / JUMPED tags ----
+    let SIGNALS = null;
+    fetch(`./signals.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
+      if (d && d.players) { SIGNALS = d; try { all(); } catch (e) { /* app not ready yet */ } }
+    }).catch(() => {});
+    function signalPlayers() {
+      if (!SIGNALS || !P.length) return [];
+      const byName = new Map();
+      P.forEach(p => { if (!p.pick) byName.set(`${normName(p.name)}|${p.pos}`, p); });
+      const out = SIGNALS.players.map(s => ({ s, p: byName.get(`${normName(s.n)}|${s.pos}`) })).filter(x => x.p);
+      // Model vs market, same rule as the rookie tabs: odds rank vs KTC rank among unsettled rookies at the position
+      ['WR', 'RB', 'TE'].forEach(pos => {
+        const key = '8';
+        // current rookie class only, same rule as the rookie tabs (rank gap + a real value gap)
+        const pool = out.filter(x => x.s.pos === pos && x.s.yr === SIGNALS.season && x.s.hp && x.s.hp[key] != null && x.p.k > 0);
+        const n = pool.length;
+        if (n < 6) return;
+        const th = Math.max(3, Math.round(n * 0.2));
+        const byK = pool.slice().sort((a, b) => b.p.k - a.p.k);
+        pool.slice().sort((a, b) => b.s.hp[key] - a.s.hp[key] || b.p.k - a.p.k).forEach((x, i) => {
+          const kr = byK.indexOf(x) + 1, gap = kr - (i + 1);
+          const kAt = byK[i].p.k, big = Math.abs(x.p.k - kAt) >= Math.max(500, 0.15 * x.p.k);
+          x.mv = { hp: x.s.hp[key], hr: i + 1, kr, n, flag: big ? (gap >= th ? 'cheap' : gap <= -th ? 'pricey' : '') : '' };
+        });
+      });
+      return out;
+    }
+
+    function renderRookieTargets() {
+      const el = document.getElementById('rookieTargetsList');
+      if (!el) return;
+      const xs = signalPlayers().filter(x => OWN[x.p.id] !== ME && (x.s.sig.includes('buy') || x.s.sig.includes('jump') || (x.mv && x.mv.flag === 'cheap')));
+      if (!SIGNALS) { el.innerHTML = `<div class="text-xs ${MUTED} py-2">Rookie signals load from the weekly refresh (signals.json).</div>`; return; }
+      if (!xs.length) { el.innerHTML = `<div class="text-xs ${MUTED} py-2">No BUY, JUMPED or CHEAP rookies on other rosters right now.</div>`; return; }
+      const score = x => (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 3 : 0) + (x.s.sig.includes('buy') ? 2 : 0) + (x.s.sig.includes('jump') ? 1.5 : 0) + (x.mv && x.mv.flag === 'cheap' ? 1 : 0) + (x.mv ? x.mv.hp / 100 : 0);
+      xs.sort((a, b) => score(b) - score(a));
+      const why = x => {
+        const r = [];
+        if (x.s.sig.includes('buy')) r.push('WR BUY: role ahead of his points (13 of 21 historical BUYs hit)');
+        if (x.s.sig.includes('jump')) r.push(`Y2 ${x.s.pos} JUMPED (${x.s.pos === 'RB' ? '79%' : x.s.pos === 'TE' ? '33%' : '31%'} hit historically)`);
+        if (x.mv && x.mv.flag === 'cheap') r.push(`${x.s.yr} CHEAP: ${x.mv.hp}% odds (#${x.mv.hr} of ${x.mv.n} in his class) but KTC #${x.mv.kr}`);
+        else if (x.mv) r.push(`${x.mv.hp}% odds`);
+        return r.join(' · ');
+      };
+      el.innerHTML = xs.slice(0, 10).map(x => {
+        const o = OWN[x.p.id];
+        return `<div class="p-2.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">${posTag(x.p.pos)}<button type="button" data-player="${x.p.id}" class="text-xs font-bold truncate hover:underline cursor-pointer">${esc(x.p.name)}</button><span class="text-[11px] font-bold ${MUTED}">${fmt(V[x.p.id])}</span><span class="text-[10px] ${MUTED}">'${String(x.s.yr).slice(2)}${x.s.rd ? ` R${x.s.rd}` : ' UDFA'}</span></div>
+            <div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium mt-0.5">${o ? `On ${esc(T[o]?.n || o)}` : 'Free agent'} · ${esc(why(x))}</div>
+          </div>
+          ${o ? `<button type="button" data-acquire="${x.p.id}" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white shrink-0 cursor-pointer">Offer →</button>` : `<span class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 shrink-0">Add him</span>`}
+        </div>`;
+      }).join('');
+    }
+
+    // ---- Team timeline: project each team's Win Now (this-season) lineup 1 and 2 years out ----
+    // Ages FantasyCalc redraft values, not dynasty values (dynasty values already price age).
+    // Age curves (nflverse 2015-2024, players with 8+ games and a starter-level PPG): median next-season
+    // PPG / this-season PPG among players with 8+ games both years, times the share who played 8+ games
+    // next season. 3-year age windows; forced non-increasing after the peak. Only ranks and changes
+    // relative to the league are shown, since every curve sits below 1 (regression to the mean).
+    const AGE_R = {
+      start: 21,
+      QB: [0.85, 0.839, 0.863, 0.855, 0.827, 0.773, 0.691, 0.681, 0.675, 0.675, 0.675, 0.675, 0.675, 0.675, 0.675, 0.621, 0.519],
+      RB: [0.891, 0.814, 0.781, 0.732, 0.71, 0.69, 0.684, 0.567, 0.567, 0.477, 0.477, 0.477, 0.477, 0.477, 0.477, 0.477, 0.477],
+      WR: [0.981, 0.856, 0.838, 0.796, 0.796, 0.776, 0.773, 0.741, 0.723, 0.643, 0.596, 0.496, 0.496, 0.496, 0.496, 0.496, 0.496],
+      TE: [0.837, 0.936, 0.858, 0.815, 0.768, 0.768, 0.768, 0.739, 0.653, 0.645, 0.593, 0.593, 0.593, 0.593, 0.593, 0.593, 0.593]
+    };
+    function ageRet(pos, age) {
+      const arr = AGE_R[pos];
+      if (!arr || !age) return 1;
+      const i = Math.max(0, Math.min(arr.length - 1, Math.floor(age) - AGE_R.start));
+      return arr[i];
+    }
+    function projWinNow(id, years) {
+      const p = P[id];
+      if (!p || p.pick) return 0;
+      let v = p.rdv || 0;
+      for (let j = 0; j < years; j++) v *= ageRet(p.pos, p.age ? Number(p.age) + j : null);
+      return v;
+    }
+    function renderTimeline() {
+      const el = document.getElementById('timelineCard');
+      if (!el) return;
+      if (owners.length < 4) { el.classList.add('hidden'); return; }
+      el.classList.remove('hidden');
+      if (!HAS_RDV()) { el.innerHTML = cardHead('Team timeline', 'Needs FantasyCalc redraft (Win Now) values, which didn\'t load. Try Sync.'); return; }
+      const rows = owners.map(o => ({ o, s: [0, 1, 2].map(y => solveLineup(T[o].ids || [], id => projWinNow(id, y)).total) }));
+      const avg = y => rows.reduce((a, r) => a + r.s[y], 0) / rows.length;
+      const lg = [avg(0), avg(1), avg(2)];
+      const rk = y => { const m = {}; rows.slice().sort((a, b) => b.s[y] - a.s[y]).forEach((r, i) => { m[r.o] = i + 1; }); return m; };
+      const r0 = rk(0), r1 = rk(1), r2 = rk(2);
+      const n = rows.length;
+      const label = r => {
+        const d = r0[r.o] - r2[r.o];
+        if (r0[r.o] <= Math.ceil(n / 3) && d <= -3) return ['Window closing', 'bg-rose-500/15 text-rose-700 dark:text-rose-300'];
+        if (r0[r.o] > Math.ceil(n / 2) && d >= 3) return ['Rising', 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'];
+        if (d <= -3) return ['Aging', 'bg-amber-500/15 text-amber-800 dark:text-amber-300'];
+        if (d >= 3) return ['Getting better', 'bg-sky-500/15 text-sky-700 dark:text-sky-300'];
+        return ['', ''];
+      };
+      // change vs the league average change, so a team that ages like the league reads 0%
+      const rel = (r, y) => { const x = Math.round(100 * ((r.s[y] / r.s[0]) / (lg[y] / lg[0]) - 1)); return `<span class="${x >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${x >= 0 ? '+' : ''}${x}%</span>`; };
+      const cell = (r, y) => `<td class="py-1.5 px-1.5 text-right tabular-nums whitespace-nowrap"><span class="font-semibold">#${[r0, r1, r2][y][r.o]}</span>${y ? ` <span class="text-[10px]">${rel(r, y)}</span>` : ` <span class="text-[10px] ${MUTED}">${fmt(r.s[0])}</span>`}</td>`;
+      el.innerHTML = cardHead('Team timeline', 'Each team\'s best Win Now lineup (FantasyCalc redraft values), projected 1 and 2 years out by aging every rostered player along historical production curves. % = change relative to the league as a whole. Current rosters only: future picks and rookies aren\'t included, so rebuilding teams with lots of picks will look weaker than they are. A rough guide to whose window is closing, not a forecast.') +
+        `<div class="overflow-x-auto"><table class="w-full text-xs border-collapse">
+          <thead><tr class="text-[10px] uppercase tracking-wider ${MUTED}"><th class="text-left py-1 pr-2">Team</th><th class="text-right px-1.5">Now</th><th class="text-right px-1.5">${(activeLeague.season || 2026) + 1}</th><th class="text-right px-1.5">${(activeLeague.season || 2026) + 2}</th><th class="text-left pl-2">Trend</th></tr></thead>
+          <tbody>${rows.sort((a, b) => r0[a.o] - r0[b.o]).map(r => { const [lab, cls] = label(r); return `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1.5 pr-2 font-semibold whitespace-nowrap">${esc(T[r.o].n)}${r.o === ME ? ' <span class="text-[10px] px-1 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td>${cell(r, 0)}${cell(r, 1)}${cell(r, 2)}<td class="pl-2">${lab ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${cls}">${lab}</span>` : ''}</td></tr>`; }).join('')}</tbody>
+        </table></div>`;
+    }
+
+    // ---- Pick ownership grid (Sleeper traded picks, next three drafts) ----
+    function renderPickGrid() {
+      const el = document.getElementById('pickGridCard');
+      if (!el) return;
+      if (owners.length < 4) { el.classList.add('hidden'); return; }
+      el.classList.remove('hidden');
+      const maxRd = Math.min(3, Math.max(2, activeLeague.rounds || 4));
+      const cols = [];
+      DRAFT_YEARS.forEach((y, i) => { for (let rd = 1; rd <= (i === 0 ? maxRd : 2); rd++) cols.push([y, rd]); });
+      const grid = {};
+      owners.forEach(o => {
+        grid[o] = {};
+        (T[o].pk || []).forEach(([id, via]) => {
+          const p = P[id];
+          if (!p || !p.pick) return;
+          const k = `${p.year}_${p.rd}`;
+          (grid[o][k] = grid[o][k] || []).push(via === 'own' ? 'own' : via);
+        });
+      });
+      const firsts = o => DRAFT_YEARS.reduce((s, y) => s + ((grid[o][`${y}_1`] || []).length), 0);
+      const byFirsts = owners.slice().sort((a, b) => firsts(b) - firsts(a) || (T[a].slot || 99) - (T[b].slot || 99));
+      const cell = (o, y, rd) => {
+        const v = grid[o][`${y}_${rd}`] || [];
+        const n = v.length, others = v.filter(x => x !== 'own');
+        const cls = n === 0 ? 'bg-rose-500/12 text-rose-700 dark:text-rose-300' : n >= 2 ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 font-extrabold' : '';
+        const tip = n ? v.map(x => (x === 'own' ? 'own pick' : `via ${x}`)).join(', ') : 'traded away';
+        return `<td class="py-1 px-1 text-center tabular-nums ${cls}" title="${esc(tip)}">${n || '–'}${others.length ? '<sup>*</sup>' : ''}</td>`;
+      };
+      el.innerHTML = cardHead('Pick ownership', `How many of each future pick every team holds (from Sleeper's traded picks). Green = extra picks, red = traded away, * = includes a pick acquired from another team (hover for whose). Sorted by total 1sts.`) +
+        `<div class="overflow-x-auto"><table class="w-full text-xs border-collapse">
+          <thead><tr class="text-[10px] uppercase tracking-wider ${MUTED}"><th class="text-left py-1 pr-2">Team</th>${cols.map(([y, rd]) => `<th class="px-1 text-center">'${String(y).slice(2)} ${ORD_NAME[rd]}</th>`).join('')}<th class="px-1 text-center">1sts</th></tr></thead>
+          <tbody>${byFirsts.map(o => `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1 pr-2 font-semibold whitespace-nowrap">${esc(T[o].n)}${o === ME ? ' <span class="text-[10px] px-1 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td>${cols.map(([y, rd]) => cell(o, y, rd)).join('')}<td class="px-1 text-center font-extrabold">${firsts(o)}</td></tr>`).join('')}</tbody>
+        </table></div>`;
+    }
+
+    // ---- Handcuffs + stash alerts: RB1 / RB2 on each NFL team ----
+    // depth.json (daily, from Sleeper's players file): RBs in depth-chart order with injury status.
+    // bf.json (weekly, from nflverse): each RB's share of his team's RB work over its last 4 games.
+    // Without a fresh depth.json, RB1 / RB2 fall back to value order.
+    let DEPTH = null, BFSH = null;
+    fetch(`./depth.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
+      if (d && d.teams && Date.now() - Date.parse(d.updatedAt) < 4 * 864e5) { DEPTH = d; try { all(); } catch (e) { /* not ready */ } }
+    }).catch(() => {});
+    fetch(`./bf.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
+      if (d && d.players) { BFSH = d.players; try { all(); } catch (e) { /* not ready */ } }
+    }).catch(() => {});
+    const INJ_BAD = /^(Questionable|Doubtful|Out|IR|PUP|Sus|NA|COV)/i;
+    function injTag(x) {
+      if (!x.inj) return '';
+      const bad = /^(Out|IR|PUP|Sus|Doubtful)/i.test(x.inj);
+      return ` <span class="px-1 rounded text-[10px] font-bold ${bad ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : 'bg-amber-400/20 text-amber-800 dark:text-amber-300'}">${esc(x.inj)}</span>`;
+    }
+    function bfOf(x, tm) {
+      const v = BFSH && BFSH[`${normName(x.name)}|${tm}`];
+      return v != null ? ` · ${Math.round(100 * v)}% of the backfield (last 4)` : '';
+    }
+    function backfields() {
+      const rb = (sid, name, age, inj) => {
+        const pid = sid ? SLEEPER_TO_PID.get(String(sid)) : undefined;
+        const p = pid !== undefined ? P[pid] : null;
+        return { sid: String(sid || ''), pid, name: p ? p.name : name, age: p && p.age ? Number(p.age) : (age ? Number(age) : null), inj: inj || null, own: sid ? SID_OWNER[String(sid)] : (pid !== undefined ? OWN[pid] : undefined) };
+      };
+      const out = [];
+      if (DEPTH) {
+        Object.entries(DEPTH.teams).forEach(([tm, list]) => {
+          const d = list.filter(x => x.o < 99);
+          if (d.length < 2) return;
+          // RB1 = depth-chart #1 (even if hurt: that's when his backup matters). RB2 = the next healthy back
+          // (no IR / PUP / Out), unless one further down has clearly more of the work lately (+10 pts of share).
+          const share = x => (BFSH && BFSH[`${normName(x.n)}|${tm}`]) || 0;
+          const healthy = d.slice(1).filter(x => !/^(IR|PUP|Out|Sus)/i.test(x.inj || ''));
+          if (!healthy.length) return;
+          let pick = healthy[0];
+          healthy.slice(1).forEach(x => { if (share(x) >= share(pick) + 0.10) pick = x; });
+          const a = rb(d[0].sid, d[0].n, d[0].age, d[0].inj), b = rb(pick.sid, pick.n, pick.age, pick.inj);
+          if (a.pid === undefined) return;       // starter isn't fantasy-relevant
+          out.push({ tm, rb1: a, rb2: b, src: 'depth' });
+        });
+        return out;
+      }
+      const val = p => (HAS_RDV() ? (p.rdv || 0) : (V[p.id] || 0));
+      const teams = {};
+      P.forEach(p => { if (!p.pick && p.pos === 'RB' && p.team && p.team !== 'FA') (teams[p.team] = teams[p.team] || []).push(p); });
+      Object.entries(teams).forEach(([tm, rbs]) => {
+        rbs.sort((a, b) => val(b) - val(a));
+        if (rbs.length < 2 || val(rbs[0]) <= 0) return;
+        out.push({ tm, rb1: rb(rbs[0].sleeperId, rbs[0].name, rbs[0].age), rb2: rb(rbs[1].sleeperId, rbs[1].name, rbs[1].age), src: 'value' });
+      });
+      return out;
+    }
+    const whoOwns = o => (o ? (o === ME ? 'you' : T[o]?.n || o) : 'free agent');
+    const rbName = x => (x.pid !== undefined ? `<button type="button" data-player="${x.pid}" class="font-semibold hover:underline cursor-pointer">${esc(x.name)}</button>` : `<span class="font-semibold">${esc(x.name)}</span>`);
+    function renderHandcuffs() {
+      const el = document.getElementById('handcuffCard');
+      if (!el) return;
+      if (!owners.length || !T[ME]) { el.classList.add('hidden'); return; }
+      el.classList.remove('hidden');
+      const bfs = backfields().filter(b => b.rb1.own);
+      const src = bfs[0]?.src === 'depth' ? "Sleeper's depth charts (updated daily), with injury status" : `value order (${HAS_RDV() ? 'FantasyCalc redraft' : 'dynasty'}), since today's depth charts didn't load`;
+      const line = (b, txt) => `<div class="py-1 border-b border-[#eef0f4] dark:border-[#232933]">${rbName(b.rb2)}${injTag(b.rb2)} <span class="${MUTED}">(${esc(b.tm)} RB2${bfOf(b.rb2, b.tm)})</span> ${txt}</div>`;
+      const starter = b => `${esc(b.rb1.name)}${injTag(b.rb1)}`;
+      const mine = bfs.filter(b => b.rb1.own === ME && b.rb2.own !== ME);
+      const sweet = bfs.filter(b => b.rb2.own === ME && b.rb1.own !== ME);
+      const league = bfs.filter(b => b.rb1.own !== ME && b.rb2.own && b.rb2.own !== b.rb1.own && b.rb2.own !== ME);
+      el.innerHTML = cardHead('Handcuffs', `Each NFL team's RB1 and RB2 from ${src}. Backfield % is each back's share of his team's RB carries and targets over its last 4 games. Use it to find insurance and easy throw-ins.`) +
+        `<div class="grid md:grid-cols-3 gap-3 text-xs">
+          <div><div class="font-bold mb-1">Your RB1s without their backup</div>${mine.length ? mine.map(b => line(b, `behind your ${starter(b)} · held by <strong>${esc(whoOwns(b.rb2.own))}</strong>`)).join('') : `<div class="${MUTED}">Every RB1 you own has his backup on your roster.</div>`}</div>
+          <div><div class="font-bold mb-1">Sweeteners you hold</div>${sweet.length ? sweet.map(b => line(b, `backs up ${starter(b)} on <strong>${esc(whoOwns(b.rb1.own))}</strong>: an easy add-on when you trade with them`)).join('') : `<div class="${MUTED}">You don't hold another team's RB1 backup.</div>`}</div>
+          <div><div class="font-bold mb-1">Split around the league</div>${league.length ? league.slice(0, 8).map(b => line(b, `backs up ${starter(b)} (${esc(whoOwns(b.rb1.own))}) but is on <strong>${esc(whoOwns(b.rb2.own))}</strong>`)).join('') : `<div class="${MUTED}">No split backfields.</div>`}</div>
+        </div>`;
+    }
+    function renderStashAlerts() {
+      const el = document.getElementById('stashList');
+      if (!el) return;
+      if (!owners.length) { el.innerHTML = ''; return; }
+      const hurt = b => !!(b.rb1.inj && INJ_BAD.test(b.rb1.inj));
+      const xs = backfields().filter(b => !b.rb2.own && (hurt(b) || (b.rb1.age && b.rb1.age >= 26.5)))
+        .sort((a, b) => (hurt(b) - hurt(a)) || ((BFSH?.[`${normName(b.rb2.name)}|${b.tm}`] || 0) - (BFSH?.[`${normName(a.rb2.name)}|${a.tm}`] || 0)))
+        .slice(0, 10);
+      el.innerHTML = xs.length ? xs.map(b => `<div class="flex items-center justify-between gap-2 py-1.5 border-b border-[#eef0f4] dark:border-[#232933] text-xs">
+          <span class="min-w-0">${posTag('RB')} ${rbName(b.rb2)}${injTag(b.rb2)} <span class="${MUTED}">${esc(b.tm)} RB2 · behind ${esc(b.rb1.name)}${injTag(b.rb1)}${b.rb1.age ? ` (age ${b.rb1.age.toFixed(1)})` : ''}, ${esc(whoOwns(b.rb1.own))}${bfOf(b.rb2, b.tm)}</span></span>
+          <span class="font-bold shrink-0">${b.rb2.pid !== undefined ? fmt(V[b.rb2.pid]) : ''}</span></div>`).join('')
+        : `<div class="text-xs ${MUTED} py-2">No unrostered RB2s behind an injured or aging (27+) starter right now.</div>`;
+    }
+
+    // ---- Playoff odds (simulates the rest of the regular season) ----
+    let PLAYOFF = { key: '', data: null, loading: false };
+    async function loadPlayoffData() {
+      const lg = activeLeague;
+      const key = `${lg.id}|${owners.length}|${Object.values(T).map(t => t.r).join(',')}`;
+      if (!lg.id || PLAYOFF.loading || PLAYOFF.key === key) return;
+      PLAYOFF.loading = true;
+      try {
+        const regEnd = (Number(lg.playoffWeekStart) || 15) - 1;
+        const reqs = [];
+        for (let w = 1; w <= regEnd; w++) reqs.push(fetch(`https://api.sleeper.app/v1/league/${lg.id}/matchups/${w}`).then(r => (r.ok ? r.json() : [])).catch(() => []));
+        const weeks = await Promise.all(reqs);
+        const state = await fetch('https://api.sleeper.app/v1/state/nfl').then(r => (r.ok ? r.json() : null)).catch(() => null);
+        PLAYOFF = { key, data: { weeks, regEnd, state }, loading: false };
+        renderPlayoffCard();
+      } catch (e) {
+        PLAYOFF.loading = false;
+      }
+    }
+    function simulatePlayoffs() {
+      const d = PLAYOFF.data;
+      if (!d) return null;
+      const keys = owners.slice();
+      const n = keys.length;
+      const rec = k => { const [w = 0, l = 0, t = 0] = String(T[k].r || '0-0').split('-').map(Number); return { w, l, t, g: w + l + t }; };
+      // Weeks played = the last week with matchup points, minus the NFL week still in progress.
+      // (Wins + losses can't be used: leagues with a median game log two results a week.)
+      let G = 0;
+      d.weeks.forEach((wk, i) => { if ((wk || []).some(m => Number(m.points) > 0)) G = i + 1; });
+      const stw = d.state && String(d.state.season) === String(activeLeague.season) && d.state.season_type === 'regular' ? Number(d.state.week) : null;
+      if (stw && G >= stw) G = stw - 1;
+      G = Math.min(G, d.regEnd);
+      const keyByRid = {}; keys.forEach(k => { keyByRid[T[k].rid] = k; });
+      // scores from completed weeks
+      const scores = {}; keys.forEach(k => { scores[k] = []; });
+      for (let w = 1; w <= Math.min(G, d.regEnd); w++) (d.weeks[w - 1] || []).forEach(m => { const k = keyByRid[m.roster_id]; if (k && m.points != null) scores[k].push(Number(m.points) || 0); });
+      const all = Object.values(scores).flat();
+      const mean = all.length ? all.reduce((a, b) => a + b, 0) / all.length : 110;
+      let ss = 0, cnt = 0;
+      keys.forEach(k => { const s = scores[k], m = s.length ? s.reduce((a, b) => a + b, 0) / s.length : mean; s.forEach(x => { ss += (x - m) ** 2; cnt++; }); });
+      const sd = cnt > 10 ? Math.sqrt(ss / cnt) : 22;
+      const rows = getLeaguePartnerProfiles().rows;
+      const wn = {}; rows.forEach(r => { wn[r.o] = r.winNow || 0; });
+      const wnMean = keys.reduce((s, k) => s + (wn[k] || 0), 0) / n;
+      const mu = {}; const mpg = {};
+      keys.forEach(k => {
+        const s = scores[k];
+        const pfpg = s.length ? s.reduce((a, b) => a + b, 0) / s.length : mean;
+        const wPpg = G / (G + 8);   // early on lean on the Win Now lineup, later on actual scoring
+        mu[k] = wnMean > 0 ? wPpg * pfpg + (1 - wPpg) * mean * (wn[k] / wnMean) : pfpg;
+        mpg[k] = G ? (T[k].mpf || 0) / G : mean * 1.15;
+      });
+      const remaining = [];
+      for (let w = G + 1; w <= d.regEnd; w++) {
+        const byM = {};
+        (d.weeks[w - 1] || []).forEach(m => { if (m.matchup_id) (byM[m.matchup_id] = byM[m.matchup_id] || []).push(keyByRid[m.roster_id]); });
+        remaining.push(Object.values(byM).filter(p => p.length === 2 && p[0] && p[1]));
+      }
+      const pt = Math.min(n, Number(activeLeague.playoffTeams) || 6);
+      const byes = pt === 6 ? 2 : pt === 12 ? 4 : 0;
+      const N = 2000;
+      const res = {}; keys.forEach(k => { res[k] = { po: 0, bye: 0, last: 0 }; });
+      const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+      for (let i = 0; i < N; i++) {
+        const w = {}, pf = {}, mp = {};
+        keys.forEach(k => { const r = rec(k); w[k] = r.w + 0.5 * r.t; pf[k] = T[k].pf || 0; mp[k] = T[k].mpf || 0; });
+        remaining.forEach(week => {
+          const sc = {};
+          week.forEach(([a, b]) => {
+            const sa = mu[a] + sd * gauss(), sb = mu[b] + sd * gauss();
+            sc[a] = sa; sc[b] = sb;
+            pf[a] += sa; pf[b] += sb;
+            if (sa > sb) w[a]++; else w[b]++;
+          });
+          if (activeLeague.median) {   // extra game vs the league median each week
+            const v = Object.values(sc).sort((x, y) => x - y), mid = v.length % 2 ? v[(v.length - 1) / 2] : (v[v.length / 2 - 1] + v[v.length / 2]) / 2;
+            Object.entries(sc).forEach(([k, x]) => { if (x > mid) w[k]++; });
+          }
+          keys.forEach(k => { mp[k] += mpg[k] + 0.7 * sd * gauss(); });
+        });
+        const order = keys.slice().sort((a, b) => w[b] - w[a] || pf[b] - pf[a]);
+        order.forEach((k, idx) => { if (idx < pt) res[k].po++; if (idx < byes) res[k].bye++; });
+        const lastK = activeLeague.draftOrder === 'maxpf' ? keys.slice().sort((a, b) => mp[a] - mp[b])[0] : order[n - 1];
+        res[lastK].last++;
+      }
+      keys.forEach(k => { ['po', 'bye', 'last'].forEach(x => { res[k][x] = Math.round(100 * res[k][x] / N); }); });
+      return { res, G, regEnd: d.regEnd, pt, byes, left: remaining.length, sd: Math.round(sd), wn, wPpg: Math.round(100 * G / (G + 8)) };
+    }
+    function renderPlayoffCard() {
+      const el = document.getElementById('playoffCard');
+      if (!el) return;
+      if (owners.length < 4 || !activeLeague.id) { el.classList.add('hidden'); return; }
+      el.classList.remove('hidden');
+      if (!PLAYOFF.data || PLAYOFF.loading) {
+        el.innerHTML = cardHead('Playoff odds', 'Loading this season\'s matchups from Sleeper…');
+        loadPlayoffData();
+        return;
+      }
+      const sim = simulatePlayoffs();
+      if (!sim) return;
+      if (sim.left === 0) { el.innerHTML = cardHead('Playoff odds', `The regular season is over (${sim.G} weeks played).`); return; }
+      const n = owners.length;
+      const wnRank = {}; owners.slice().sort((a, b) => (sim.wn[b] || 0) - (sim.wn[a] || 0)).forEach((k, i) => { wnRank[k] = i + 1; });
+      const flag = k => {
+        const r = sim.res[k];
+        if (k === ME) return '';
+        if (r.po >= 25 && r.po <= 75) return ['Bubble: may pay for vets', 'bg-amber-500/15 text-amber-800 dark:text-amber-300'];
+        if (r.po < 15 && wnRank[k] <= 5) return ['Unlucky: may sell vets', 'bg-sky-500/15 text-sky-700 dark:text-sky-300'];
+        return '';
+      };
+      const lastLbl = activeLeague.draftOrder === 'maxpf' ? 'Lowest Max PF' : 'Worst record';
+      const bar = x => `<div class="flex items-center gap-1.5 justify-end"><span class="tabular-nums font-semibold w-8 text-right">${x}%</span><div class="w-12 h-1.5 rounded bg-[#e3e6eb] dark:bg-[#2a3039] overflow-hidden hidden sm:block"><div class="h-full bg-blue-600" style="width:${x}%"></div></div></div>`;
+      const keys = owners.slice().sort((a, b) => sim.res[b].po - sim.res[a].po || sim.res[b].bye - sim.res[a].bye);
+      el.innerHTML = cardHead('Playoff odds', `${sim.left} regular-season week${sim.left === 1 ? '' : 's'} left; top ${sim.pt} make the playoffs${sim.byes ? ` (top ${sim.byes} get byes)` : ''}. 2,000 simulations of the remaining Sleeper matchups. Each team's weekly score is drawn around a blend of its points per game so far (${sim.wPpg}% weight, growing each week) and its Win Now lineup, with this league's week-to-week spread (±${sim.sd})${activeLeague.median ? ', plus the weekly game against the league median' : ''}. ${lastLbl} % is the chance of the 1.01 under your draft-order setting. <strong>Bubble</strong> teams (25–75%) are the most likely to pay for veterans; <strong>unlucky</strong> teams (top-5 Win Now, under 15%) may sell theirs.`) +
+        `<div class="overflow-x-auto"><table class="w-full text-xs border-collapse">
+          <thead><tr class="text-[10px] uppercase tracking-wider ${MUTED}"><th class="text-left py-1 pr-2">Team</th><th class="px-1.5 text-left">Record</th><th class="px-1.5 text-right">Playoffs</th>${sim.byes ? '<th class="px-1.5 text-right">Bye</th>' : ''}<th class="px-1.5 text-right">${lastLbl}</th><th class="pl-2 text-left">Trade read</th></tr></thead>
+          <tbody>${keys.map(k => { const r = sim.res[k]; const f = flag(k); return `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1.5 pr-2 font-semibold whitespace-nowrap">${esc(T[k].n)}${k === ME ? ' <span class="text-[10px] px-1 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td><td class="px-1.5 ${MUTED} whitespace-nowrap">${esc(T[k].r)}</td><td class="px-1.5">${bar(r.po)}</td>${sim.byes ? `<td class="px-1.5 text-right tabular-nums">${r.bye}%</td>` : ''}<td class="px-1.5 text-right tabular-nums">${r.last}%</td><td class="pl-2">${f ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap ${f[1]}">${f[0]}</span>` : ''}</td></tr>`; }).join('')}</tbody>
+        </table></div>`;
+    }
+
+    // ---- Copy a short DM pitch for the trade in the calculator ----
+    function buildPitch() {
+      if (!st.tA || !st.tB || !T[st.tA] || !T[st.tB] || !st.A.length || !st.B.length) return '';
+      const mySide = st.tB === ME ? 'B' : 'A';
+      const them = mySide === 'A' ? st.tB : st.tA;
+      const theyGet = (mySide === 'A' ? st.A : st.B).map(x => P[x.id]?.name).filter(Boolean);
+      const iGet = (mySide === 'A' ? st.B : st.A).map(x => P[x.id]?.name).filter(Boolean);
+      const give = new Set((mySide === 'A' ? st.B : st.A).map(x => x.id));   // what THEY send
+      const recv = (mySide === 'A' ? st.A : st.B).map(x => x.id);            // what THEY receive
+      const t = T[them];
+      const idsAfter = (t.ids || []).filter(id => !give.has(id)).concat(recv.filter(id => !P[id]?.pick));
+      const pksAfter = (t.pk || []).map(([id]) => id).filter(id => !give.has(id)).concat(recv.filter(id => P[id]?.pick));
+      const before = {}, after = {};
+      owners.forEach(o => { before[o] = teamStrength(T[o].ids || [], (T[o].pk || []).map(([id]) => id)); after[o] = before[o]; });
+      after[them] = teamStrength(idsAfter, pksAfter);
+      const rank = (map, cat) => 1 + owners.filter(o => (map[o][cat] || 0) > (map[them][cat] || 0)).length;
+      const bullets = [];
+      const ups = ['QB', 'RB', 'WR', 'TE'].map(c => [c, rank(before, c), rank(after, c)]).filter(([, a, b]) => b < a).sort((x, y) => (x[2] - x[1]) - (y[2] - y[1]));
+      if (ups.length) bullets.push(`Your ${ups.slice(0, 2).map(([c, a, b]) => `${c} room goes from #${a} to #${b}`).join(' and ')} in the league`);
+      const nowGain = (after[them].NOW || 0) - (before[them].NOW || 0);
+      if (HAS_RDV() && nowGain > 0) bullets.push(`Your best lineup this season gets stronger (win-now #${rank(before, 'NOW')} → #${rank(after, 'NOW')})`);
+      const arch = teamArchetype(them).archetype;
+      const pickIn = recv.filter(id => P[id]?.pick).length;
+      const ageOf = ids => { let a = 0, v = 0; ids.forEach(id => { const p = P[id]; if (p && !p.pick && p.age) { a += p.age * (V[id] || 0); v += V[id] || 0; } }); return v ? a / v : null; };
+      const youngIn = ageOf(recv), oldOut = ageOf([...give]);
+      if (arch === 'contender' && !bullets.some(b => b.includes('this season'))) bullets.push('Adds help for a title run this year');
+      if (arch === 'rebuild' && (pickIn || (youngIn && oldOut && youngIn < oldOut - 1))) bullets.push(pickIn ? 'Adds draft capital for your rebuild' : 'Gets younger for your rebuild');
+      const first = t.u || (t.n || 'there').split(' ')[0];
+      return `Hey ${first}, trade idea for you:\n\nYou get: ${theyGet.join(', ')}\nI get: ${iGet.join(', ')}\n\n${bullets.slice(0, 3).map(b => `• ${b}`).join('\n')}${bullets.length ? '\n\n' : ''}Open to tweaks if you want to adjust it.`;
+    }
+
     function all() {
       syncControls();
       renderChart();
       renderCalc();
       renderTradeIdeas();
       renderLeague();
+      renderSellCard();
+      try { renderPlayoffCard(); renderTimeline(); renderPickGrid(); renderHandcuffs(); } catch (e) { console.error(e); }
+      sendLeagueToFrames();
       renderScout();
+      try { renderRookieTargets(); renderStashAlerts(); } catch (e) { console.error(e); }
       renderMovers();
       renderTradeHistory();
       if (st.pm && !document.getElementById('playerModal')?.classList.contains('hidden')) renderPlayerModal();
@@ -3205,9 +4129,9 @@
     }
 
     function switchTab(tab) {
-      if (!['chart', 'calc', 'league', 'scout', 'buckets', 'about'].includes(tab)) tab = 'calc';
+      if (!['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'pros', 'about'].includes(tab)) tab = 'calc';
       st.tab = tab;
-      ['chart', 'calc', 'league', 'scout', 'buckets', 'about'].forEach(t => {
+      ['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'pros', 'about'].forEach(t => {
         const sec = document.getElementById(`view-${t}`);
         if (sec) sec.classList.toggle('hidden', t !== tab);
       });
@@ -3215,6 +4139,10 @@
         a.classList.toggle('active', a.dataset.tab === tab);
       });
       if (tab === 'buckets') loadBucketsFrame();
+      if (tab === 'rookies') loadRookiesFrame();
+      if (tab === 'rbs') loadRbsFrame();
+      if (tab === 'tes') loadTesFrame();
+      if (tab === 'pros') loadProsFrame();
       if (tab === 'league') loadTradeHistory();
       try { history.replaceState(null, '', `#${tab}`); } catch (e) {}
     }
@@ -3295,7 +4223,11 @@
       document.querySelectorAll('.movers-btn').forEach(b => b.addEventListener('click', () => { st.moversDays = Number(b.dataset.movers); renderMovers(); }));
       const playerModal = document.getElementById('playerModal');
       document.getElementById('btnClosePlayer')?.addEventListener('click', () => playerModal.classList.add('hidden'));
-      playerModal?.addEventListener('click', e => { if (e.target === playerModal) playerModal.classList.add('hidden'); });
+      playerModal?.addEventListener('click', e => {
+        if (e.target === playerModal) { playerModal.classList.add('hidden'); return; }
+        const fb = e.target.closest('[data-findpkg]');
+        if (fb) { playerModal.classList.add('hidden'); startAcquire(Number(fb.dataset.findpkg)); }
+      });
       document.addEventListener('keydown', e => { if (e.key === 'Escape') playerModal?.classList.add('hidden'); });
       document.querySelectorAll('[data-pmrange]').forEach(b => b.addEventListener('click', () => { if (st.pm) { st.pm.range = b.dataset.pmrange === 'all' ? 'all' : Number(b.dataset.pmrange); renderPlayerModal(); } }));
 
@@ -3310,6 +4242,15 @@
       });
 
       document.getElementById('radarTeamSel')?.addEventListener('change', e => { st.radarTeam = e.target.value; renderScout(); });
+      document.getElementById('leagueHead')?.addEventListener('click', e => {
+        const th = e.target.closest('[data-lsort]');
+        if (!th) return;
+        const k = th.dataset.lsort;
+        const cur = st.leagueSort || { k: 'rank', dir: 1 };
+        // Numbers start high-to-low; rank and team start A-Z / 1-up. Click again to flip.
+        st.leagueSort = cur.k === k ? { k, dir: -cur.dir } : { k, dir: (k === 'rank' || k === 'team' || k === 'profile' || k === 'age' || k.startsWith('pos')) ? 1 : -1 };
+        renderLeague();
+      });
       document.getElementById('waiverSearch')?.addEventListener('input', e => { st.waiverQ = e.target.value; renderScout(); });
       document.querySelectorAll('.wpos-btn').forEach(btn => {
         btn.addEventListener('click', () => { st.waiverPos = btn.dataset.wpos; syncControls(); renderScout(); });
@@ -3335,10 +4276,8 @@
         copyText(`${activeLeague.name} Trade Summary\n${nA} sends: ${fmtSide(st.A)}\n${nB} sends: ${fmtSide(st.B)}\nVerdict: ${headline}${cons ? `\nConsensus: ${cons}` : ''}`);
       });
 
-      document.getElementById('ideaTeamSel')?.addEventListener('change', () => { populateIdeaSelectors(); renderTradeIdeas(); });
-      document.getElementById('ideaPlayerSel')?.addEventListener('change', renderTradeIdeas);
-      document.getElementById('ideaGoalSel')?.addEventListener('change', renderTradeIdeas);
-      document.getElementById('ideaPosSel')?.addEventListener('change', renderTradeIdeas);
+      document.getElementById('ideaTeamSel')?.addEventListener('change', () => { st.acquire = null; populateIdeaSelectors(); renderTradeIdeas(); });
+      ['ideaPlayerSel', 'ideaGoalSel', 'ideaPosSel'].forEach(id => document.getElementById(id)?.addEventListener('change', () => { st.acquire = null; renderTradeIdeas(); }));
 
       document.getElementById('leagueSel')?.addEventListener('change', e => {
         const found = savedLeagues.find(l => l.id === e.target.value);
@@ -3387,6 +4326,16 @@
       document.getElementById('btnOpenSync')?.addEventListener('click', () => syncModal.classList.remove('hidden'));
       document.getElementById('btnCloseSync')?.addEventListener('click', () => syncModal.classList.add('hidden'));
       document.getElementById('btnSyncLive')?.addEventListener('click', () => syncLiveSleeperAndFC(false));
+      document.querySelectorAll('.dorder-btn').forEach(b => b.addEventListener('click', () => {
+        const mode = b.dataset.dorder;
+        if ((activeLeague.draftOrder || 'standings') === mode) return;
+        activeLeague.draftOrder = mode;
+        const saved = savedLeagues.find(l => l.id === activeLeague.id);
+        if (saved) saved.draftOrder = mode;
+        saveLeaguesToStorage();
+        toast(mode === 'maxpf' ? 'Draft order now by lowest Max PF. Re-syncing picks…' : 'Draft order now by standings. Re-syncing picks…');
+        syncLiveSleeperAndFC(false);
+      }));
       document.getElementById('btnCopyKtcCmd')?.addEventListener('click', () => {
         copyText('copy(JSON.stringify(window.playersArray.map(p=>({playerName:p.playerName,position:p.position,team:p.team,age:p.age,superflexValues:p.superflexValues,oneQBValues:p.oneQBValues}))))');
       });
@@ -3473,6 +4422,7 @@
           addAssetToSide(fixBtn.dataset.fix, Number(fixBtn.dataset.id));
           return;
         }
+        if (e.target.closest('[data-clearacquire]')) { st.acquire = null; renderTradeIdeas(); return; }
         const loadIdeaBtn = e.target.closest('[data-loadidea]');
         if (loadIdeaBtn) {
           const listEl = document.getElementById('ideaList');
@@ -3522,6 +4472,10 @@
           document.getElementById('tradeIdeasSection')?.scrollIntoView({ behavior: 'smooth' });
           return;
         }
+        const pitchBtn = e.target.closest('[data-copypitch]');
+        if (pitchBtn) { const txt = buildPitch(); if (txt) copyText(txt); else toast('Add players to both sides first.'); return; }
+        const acqBtn = e.target.closest('[data-acquire]');
+        if (acqBtn) { startAcquire(Number(acqBtn.dataset.acquire)); return; }
         const buyOfferBtn = e.target.closest('[data-buyoffer]');
         if (buyOfferBtn) {
           const pId = Number(buyOfferBtn.dataset.buyoffer);
@@ -3535,6 +4489,20 @@
           switchTab('calc');
           window.scrollTo({ top: 0, behavior: 'smooth' });
           toast(`Loaded ${P[pId]?.name} on Side B!`);
+          return;
+        }
+        const doToggle = e.target.closest('[data-dordertoggle]');
+        if (doToggle) {
+          const lg = savedLeagues.find(l => l.id === doToggle.dataset.dordertoggle);
+          if (lg) {
+            lg.draftOrder = lg.draftOrder === 'maxpf' ? 'standings' : 'maxpf';
+            if (lg.id === activeLeague.id) {
+              activeLeague.draftOrder = lg.draftOrder;
+              syncLiveSleeperAndFC(false);
+            }
+            saveLeaguesToStorage();
+            renderSavedLeaguesModal();
+          }
           return;
         }
         const qbToggle = e.target.closest('[data-qbtoggle]');
@@ -3579,7 +4547,7 @@
       wireEvents();
       loadFallbackDataset();
       const initialHash = (location.hash || '').replace('#', '');
-      switchTab(['chart', 'calc', 'league', 'scout', 'buckets', 'about'].includes(initialHash) ? initialHash : 'calc');
+      switchTab(['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'pros', 'about'].includes(initialHash) ? initialHash : 'calc');
       syncLiveSleeperAndFC(true);
     });
   })();
