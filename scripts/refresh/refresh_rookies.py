@@ -78,6 +78,21 @@ ss["ppr"] /= ss.gp
 ss["tep"] /= ss.gp
 BEST_PPR = ss.groupby("player_id").ppr.max().to_dict()
 BEST_TEP = ss.groupby("player_id").tep.max().to_dict()
+SS_BY = {k: v for k, v in ss.groupby("player_id")}
+
+
+def add_best3(rows, pos):
+    """b3 = best completed-season PPG (8+ games) in his first 3 seasons. A fixed window, so older classes
+    aren't favoured over recent ones in the "typical best season" comps. Only for classes with 3 done seasons."""
+    col = "tep" if pos == "TE" else "ppr"
+    for o in rows:
+        o.pop("b3", None)
+        if o["yr"] + 2 > LAST_DONE:
+            continue
+        g = SS_BY.get(o.get("id"))
+        v = g[(g.season >= o["yr"]) & (g.season <= o["yr"] + 2)][col].max() if g is not None else None
+        o["b3"] = round(float(v), 1) if v is not None and v == v else 0.0
+    return rows
 
 # per-game player lines with snaps
 lines = wk[["player_id", "season", "week", "team"] + [c for c in num if c in wk]].rename(columns={"player_id": "gsis_id"})
@@ -174,19 +189,25 @@ def y2_cell(r, pos):
 def add_year2(rows, pos):
     q = pd.DataFrame([{"gsis_id": o["id"], "yr": o["yr"]} for o in rows if o.get("id") and o["yr"] + 1 <= CUR])
     for o in rows:
-        o.update(y2w=None, u2=None, g2=0, y2t=[])
+        o.update(y2w=None, u2=None, g2=0, y2t=[], y2w8=None, u28=None, g28=0)
     if q.empty:
         return
     q["tm2"] = q.gsis_id.map(season_team(q, 1))
     q = q.dropna(subset=["tm2"])
     L = usage_cols(team_games(q, 1, "tm2"), pos)
-    L = L[L.tg <= 4]
+    L = L[L.tg <= 8]
     by = {k: v for k, v in L.groupby("gsis_id")}
     cut = Y2[pos]
     for o in rows:
         g = by.get(o.get("id"))
         if g is None or o["yr"] + 1 > CUR:
             continue
+        g8 = g
+        c8 = g8[g8.done & g8.cnt]
+        o["y2w8"] = [y2_cell(r, pos) for r in g8.itertuples()]
+        o["g28"] = int(len(c8))
+        o["u28"] = round(float(c8.u.mean()), 2) if len(c8) else None
+        g = g[g.tg <= 4]
         c = g[g.done & g.cnt]
         o["y2w"] = [y2_cell(r, pos) for r in g.itertuples()]
         o["g2"] = int(len(c))
@@ -258,6 +279,8 @@ def build_rb_te(pos):
                  tags=tags, tags8=tags8)
         if pos == "RB":
             o.update(n15=n2, bf=bfs(g[g.tg <= 4]), bf8=bfs(g[g.tg <= 8]), bfL=bfs(cg))
+            if int(p.yr) == CUR:
+                o["tdn"] = int(g.done.sum())  # team games completed, to spot backs who have not played lately
         else:
             o.update(n14=n2)
         out.append(o)
@@ -492,6 +515,7 @@ for pos, fname in (("RB", "rookie-rb-tracker.html"), ("TE", "rookie-te-tracker.h
     rows = wr_update(rows) if pos == "WR" else build_rb_te(pos)
     rows = apply_sheet(rows, pos)
     rows = add_odds(rows, pos)
+    rows = add_best3(rows, pos)
     SIGNALS.extend(signals(rows, pos))
     write_data(path, s, rows, old)
     print(pos, len(rows), "rows;", sum(1 for o in rows if o["y2t"]), "Year 2 tags")
