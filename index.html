@@ -3151,7 +3151,7 @@
     // Partner mode: ideas between one team and one partner only, ranked by how well each side's
     // incoming assets fill its weak positions (value vs league average) without opening new holes,
     // and by each team's contend / rebuild timeline. Value-balanced with the current source + adjustment.
-    function partnerIdeas(meKey, partner, posF) {
+    function partnerIdeas(meKey, partner, posF, goal) {
       if (!T[meKey] || !T[partner] || meKey === partner) return [];
       const { rows, posRanks } = getLeaguePartnerProfiles();
       const FIT_POS = ['QB', 'RB', 'WR', 'TE'];
@@ -3198,6 +3198,23 @@
         my: recv.reduce((a, x) => a + fitFor(x.id, meKey, partner), 0),
         their: send.reduce((a, x) => a + fitFor(x.id, partner, meKey), 0)
       });
+      // The Goal box reshapes the ranking (what you GET vs what you SEND), as it does in one-player mode
+      const goalBonus = (send, recv) => {
+        let b = 0;
+        const age = x => Number(P[x.id].age) || 0;
+        if (goal === 'repeater') {
+          const cond = arr => arr.filter(x => !P[x.id].pick).map(x => getBucket(P[x.id]).cond).filter(c => c != null);
+          const cg = cond(recv), cs = cond(send);
+          if (cg.length) b += (Math.max(...cg) - (cs.length ? Math.max(...cs) : 50)) * 0.25;
+        } else if (goal === 'rebuild') {
+          recv.forEach(x => { if (P[x.id].pick) b += (P[x.id].rd || 9) <= 2 ? 8 : 3; else if (age(x) && age(x) <= 24.5) b += 6; else if (age(x) >= 28) b -= 8; });
+          send.forEach(x => { if (!P[x.id].pick && age(x) >= 27) b += 4; if (P[x.id].pick) b -= 4; });
+        } else if (goal === 'winnow') {
+          recv.forEach(x => { if (P[x.id].pick) b -= 8; else if ((V[x.id] || 0) >= 3500) b += 8; });
+          send.forEach(x => { if (P[x.id].pick) b += 3; else if (age(x) && age(x) <= 23 && (V[x.id] || 0) < 3500) b += 2; });
+        }
+        return b;
+      };
       const keep = (send, recv, type, g) => {
         if (posF !== 'ALL' && !recv.some(x => (posF === 'PICK' ? P[x.id].pick : P[x.id].pos === posF && !P[x.id].pick))) return;
         if ([...send, ...recv].every(x => P[x.id].pick)) return;                        // picks-for-picks only: not a real idea
@@ -3207,7 +3224,8 @@
         const rr = sum(recv), rs = sum(send);
         const size = 6 * Math.max(0, Math.min(1.2, Math.log10(Math.max(rr, rs) / 1500)));
         const score = 40 + 1.2 * Math.min(f.my, f.their) + 0.6 * (f.my + f.their) + size
-          - Math.abs(g[curI]) * 1.2 - off * 3 - (send.length + recv.length - 2) * 2;
+          - Math.abs(g[curI]) * (goal === 'closest' ? 4 : 1.2) - off * 3 - (send.length + recv.length - 2) * 2
+          + goalBonus(send, recv);
         const warn = [];
         g.forEach((v, i) => {
           if (v < -st.fair) warn.push(`${SRC_L[SRC[i]]} says you lose by ${(-v).toFixed(0)}%`);
@@ -3284,7 +3302,8 @@
         const tKey0 = document.getElementById('ideaTeamSel')?.value;
         const posF0 = document.getElementById('ideaPosSel')?.value || 'ALL';
         if (!tKey0 || !T[tKey0]) return;
-        const top = partnerIdeas(tKey0, partnerKey, posF0);
+        const goal0 = document.getElementById('ideaGoalSel')?.value || 'repeater';
+        const top = partnerIdeas(tKey0, partnerKey, posF0, goal0);
         listEl._ideas = { tKey: tKey0, top };
         const archL = k => teamArchetype(k).label;
         const head = `<div class="col-span-full flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/25 text-xs">

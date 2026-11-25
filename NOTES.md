@@ -167,6 +167,8 @@ Daily workflow safety:
     - Each Safe/Upside cell prints that player's PPG bar. The "+N" lead pill shows only on same-position pairs.
     - WR header shows within-class rank (WR1 = first WR drafted that year). Odds for older unsettled players are labeled "Rookie-yr odds"; each view needs 2+ games.
     - Deferred: next-season retention odds, until the sell-window curves are shared as a common JSON.
+- **Fixed Nov 25 — Year 2 preset counts:** a Year 2 bullet's % covers settled classes only (through the newest class − 3; 2023 now), but the filter also lists newer sophomores. The preset bar now says how many settled players the % is based on and how many newer ones are in the list (TE "9+ both years": 7 + 4 = the 11 rows). It doesn't print its own hit rate: the bullets count 12+ seasons in Year 2 or later, which needs season-level data the pages don't carry. Year 1 bars are unchanged.
+    - **Maintenance:** the Year 2 cutoff is pinned (`Y2_BULLET_CUTOFF = 2023` in all three rookie pages) to match the static Year 2 bullet text. When the Year 2 bullets are regenerated with newer classes, update that constant in the same push. Otherwise the bar's settled count won't match the bullets.
 - **Fixed Nov 25 — dead-looking presets:** four "best filter combination" bullets had no `data-preset`, so tapping did nothing: WR "Usage 8–15 · Day 3 or undrafted"; TE "Games 1–8 · Usage 9+ · Round 4 or later", "MISSED TIME · Round 1–3" and "Round 4 or later · Games 1–8 usage under 6". All 39 presets now load, and their settled-class numbers match the text.
 - **Done Nov 25 — ideas with one team** (`partnerIdeas`): owner asked for trade ideas with one chosen team, based on what each team needs.
     - Uses both full rosters (assets worth 700+): 1-for-1, 2-for-1 / player + pick, and 1-for-2 / get player + pick.
@@ -175,6 +177,11 @@ Daily workflow safety:
     - Need fit = filling positions below the league average without opening a hole on the other side, plus timeline (rebuild teams like early picks and youth; contenders don't want picks).
     - Shows up to 12, each with a reason for each side. Ideas passing the offer check under all three sources come first, marked ✓; the rest show which source disagrees.
     - Each asset appears at most twice.
+    - The Goal box reshapes the ranking (`goalBonus`):
+        - Hit & Repeater: favors receiving higher bucket hit/repeat rates.
+        - Rebuild: favors receiving picks (early more) and players ≤ 24.5; penalizes receiving players 28+.
+        - Win-Now: favors receiving starters (value ≥ 3,500); penalizes receiving picks.
+        - Closest: weights the value gap 4× instead of 1.2×.
     - Near-miss deals get one sweetener from the short side, picked to bring all three sources closest to the window.
     - First live result (before the Blend fix and loosening): 4 of 11 teams got only 1 idea. Sweeteners can now be added to 2-player packages too, up to 4 pieces.
 - **About Dec 25:** backtest which source (KTC, FC, Blend) best predicted later value moves, using `ktc-history.json` and `fc-history.json`.

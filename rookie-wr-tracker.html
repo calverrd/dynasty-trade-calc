@@ -723,9 +723,20 @@
       renderChips();
     }
     function presetSummary() {
-      const rows = DATA.filter(p => (!st.y2 || p.mY) && p.yr <= SETTLED && p.tier !== 'tbd' && passes(p));
+      // Year 2 views: a class is settled one year later (its Year 2 season must be done AND a full season after it)
+      // Pinned to the Year 2 bullets' tested classes (2015–2023) so the count can't drift when a new class loads.
+      // When the Year 2 bullets are regenerated, move Y2_BULLET_CUTOFF to their new last class.
+      const Y2_BULLET_CUTOFF = 2023;
+      const lim = st.y2 ? Math.min(SETTLED - 1, Y2_BULLET_CUTOFF) : SETTLED;
+      const rows = DATA.filter(p => (!st.y2 || p.mY) && p.yr <= lim && p.tier !== 'tbd' && passes(p));
+      if (st.y2) {
+        // The Year 2 bullets count 12+ seasons in Year 2 or later, which needs season-level data this page doesn't
+        // carry, so show the reconciliation (who the % is based on) rather than a second, different hit rate
+        const newer = DATA.filter(p => p.mY && (p.yr > lim || p.tier === 'tbd') && passes(p)).length;
+        return rows.length ? `The % in the guide is based on the ${rows.length} settled player${rows.length === 1 ? '' : 's'} here (classes through ${lim})${newer ? `; ${newer} newer player${newer === 1 ? "" : "s"} in this list haven't settled yet` : ''}.` : '';
+      }
       const hit = rows.filter(p => p.tier !== 'red').length, el = rows.filter(p => ELITE(p)).length;
-      return rows.length ? `Settled classes: ${Math.round(100 * hit / rows.length)}% hit 12+ (${Math.round(100 * el / rows.length)}% elite), ${rows.length} players` : '';
+      return rows.length ? `Settled classes (through ${lim}): ${Math.round(100 * hit / rows.length)}% hit 12+ (${Math.round(100 * el / rows.length)}% elite), ${rows.length} players` : '';
     }
     function applyPreset(pr) {
       clearFilters();
@@ -737,7 +748,7 @@
       setSel('usage', st.usage); setSel('draft', st.draft); setSel('tagf', st.tag); if (pr.bucket) setSel('bucketf', pr.bucket);
       render();
       document.getElementById('presetLbl').textContent = pr.label + (pr.u1 ? ` (rookie usage ${pr.u1.replace('ge:', '').replace('lt:', 'under ')}${pr.u1.startsWith('ge') ? '+' : ''})` : '');
-      document.getElementById('presetHit').textContent = pr.y2 ? '' : presetSummary();
+      document.getElementById('presetHit').textContent = presetSummary();
       const bar = document.getElementById('presetBar'); bar.classList.remove('hidden');
       bar.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
