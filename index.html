@@ -1431,16 +1431,43 @@
             if (ktcRaw(m, Math.max(t, m), Math.max(v, m)) < diff) lo = m; else hi = m;
           }
           needX = lo;
-          if (rA > rB) vaA = Math.max(0, rawB + needX - rawA) * k;
-          else vaB = Math.max(0, rawA + needX - rawB) * k;
         }
+        // The adjustment always goes to the side with the best player, sized so that its edge (or deficit)
+        // after adjustment equals X. This keeps the verdict continuous: before Nov 25 the bonus went to
+        // whichever side led on the raw curve, so a near-even stud-for-package trade could swing ~30 points
+        // when that lead flipped. Trades where the stud side leads (all KTC reference trades) are unchanged.
+        const studA = Math.max(...va) >= Math.max(...vb);
+        if (studA) vaA = Math.max(0, rawB - rawA + (rA >= rB ? needX : -needX)) * k;
+        else vaB = Math.max(0, rawA - rawB + (rB >= rA ? needX : -needX)) * k;
       }
       const effA = rawA + vaA, effB = rawB + vaB;
       const gapPct = Math.abs(effA - effB) / Math.max(effA, effB, 1) * 100;
       return { rawA, rawB, vaA, vaB, effA, effB, gapPct };
     }
+    // Grade a trade (asset ids per side) under one value source. KTC and FC are graded on their own
+    // scales. Blend grades the trade under KTC and under FC separately and mixes the two results by the
+    // blend weight (each normalized to its own top value), so a Blend verdict always lands between the
+    // KTC and FC verdicts. Mixing asset values first could put it outside them, because FC is
+    // rescaled onto KTC's curve and the value adjustment is non-linear.
+    function evalIds(aIds, bIds, mode, strength) {
+      mode = mode || st.src;
+      if (mode !== 'blend') {
+        const mv = modeValues(mode);
+        return evalValues(aIds.map(i => (i != null && mv.vals[i]) || 0), bIds.map(i => (i != null && mv.vals[i]) || 0), strength, mv.max);
+      }
+      return mixEvals(evalIds(aIds, bIds, 'ktc', strength), evalIds(aIds, bIds, 'fc', strength));
+    }
+    function mixEvals(K, F) {
+      const mk = modeValues('ktc').max, mf = modeValues('fc').max, mb = modeValues('blend').max;
+      const w = (Number(st.w) || 0) / 100;
+      const mix = (x, y) => (w * x / mk + (1 - w) * y / mf) * mb;
+      const rawA = mix(K.rawA, F.rawA), rawB = mix(K.rawB, F.rawB);
+      const effA = mix(K.effA, F.effA), effB = mix(K.effB, F.effB);
+      const gapPct = Math.abs(effA - effB) / Math.max(effA, effB, 1) * 100;
+      return { rawA, rawB, vaA: effA - rawA, vaB: effB - rawB, effA, effB, gapPct };
+    }
     function evalTrade(aItems, bItems) {
-      return evalValues(aItems.map(x => V[x.id] || 0), bItems.map(x => V[x.id] || 0));
+      return evalIds(aItems.map(x => x.id), bItems.map(x => x.id), st.src);
     }
 
     // ---- Draft pick values from KTC / FantasyCalc (anchors per year+round, interpolated by slot) ----
@@ -2422,7 +2449,7 @@
       });
       let verdict = null;
       if (sides.length === 2) {
-        const ev = evalValues(sides[0].got.map(x => x.v), sides[1].got.map(x => x.v));
+        const ev = evalIds(sides[0].got.map(x => x.id), sides[1].got.map(x => x.id), st.src);
         sides[0].eff = ev.effA; sides[1].eff = ev.effB;
         verdict = ev.gapPct <= st.fair ? { fair: true, gap: ev.gapPct } : { fair: false, winner: ev.effA > ev.effB ? 0 : 1, gap: ev.gapPct };
       } else {
@@ -2442,7 +2469,7 @@
       let best = null;
       const curve = [];
       for (let k = 0; k <= 1.5001; k += 0.05) {
-        const gaps = usable.map(g => evalValues(g.sides[0].got.map(x => x.v), g.sides[1].got.map(x => x.v), k).gapPct);
+        const gaps = usable.map(g => evalIds(g.sides[0].got.map(x => x.id), g.sides[1].got.map(x => x.id), st.src, k).gapPct);
         const med = median(gaps);
         curve.push([Math.round(k * 100) / 100, med]);
         if (!best || med < best.med - 1e-9) best = { k: Math.round(k * 100) / 100, med };
@@ -2452,7 +2479,7 @@
       const sources = [['ktc', 'KTC'], ['fc', 'FantasyCalc'], ['blend', `Blend (${st.w}% KTC)`]].map(([m, label]) => {
         const mv = modeValues(m);
         const vv = sd => sd.got.map(a => a.id != null ? (mv.vals[a.id] || 0) : 0);
-        const gaps = usable.map(g => evalValues(vv(g.sides[0]), vv(g.sides[1]), null, mv.max).gapPct);
+        const gaps = usable.map(g => evalIds(g.sides[0].got.map(x => x.id), g.sides[1].got.map(x => x.id), m).gapPct);
         return { m, label, med: median(gaps), fairShare: gaps.filter(x => x <= st.fair).length / gaps.length };
       }).sort((a, b) => a.med - b.med);
       return { n: usable.length, best: best.k, bestMed: best.med, ktcMed: at(1), offMed: at(0), curMed: at(Math.round(st.adj * 20) / 20), sources };
@@ -2805,7 +2832,7 @@
         const mv = modeValues(m);
         const a = st.A.map(x => mv.vals[x.id] || 0), b = st.B.map(x => mv.vals[x.id] || 0);
         if (!a.some(v => v > 0) || !b.some(v => v > 0)) return { m, label, nodata: true };
-        const ev = evalValues(a, b, null, mv.max);
+        const ev = evalIds(st.A.map(x => x.id), st.B.map(x => x.id), m);
         const fair = ev.gapPct <= st.fair;
         // "winner" = the side that comes out ahead = the side RECEIVING more (the other side sends more)
         const winner = fair ? null : (ev.effB > ev.effA ? 'A' : 'B');
@@ -3131,13 +3158,13 @@
       const mine = assetsOf(meKey), theirs = assetsOf(partner);
       const rejectAt = Math.max(12, st.fair * 2);
       const SRC = ['ktc', 'fc', 'blend'], SRC_L = { ktc: 'KTC', fc: 'FantasyCalc', blend: 'Blend' };
-      const MV = SRC.map(m => modeValues(m));
       const curI = Math.max(0, SRC.indexOf(st.src));
       // Signed gap per source (+ = meKey receives more), with the value adjustment applied
-      const gapsOf = (send, recv) => MV.map(mv => {
-        const ev = evalValues(send.map(y => mv.vals[y.id] || 0), recv.map(y => mv.vals[y.id] || 0), null, mv.max);
-        return (ev.effB - ev.effA) / Math.max(ev.effA, ev.effB, 1) * 100;
-      });
+      const gapsOf = (send, recv) => {
+        const a = send.map(y => y.id), b = recv.map(y => y.id);
+        const K = evalIds(a, b, 'ktc'), F = evalIds(a, b, 'fc');
+        return [K, F, mixEvals(K, F)].map(ev => (ev.effB - ev.effA) / Math.max(ev.effA, ev.effB, 1) * 100);
+      };
       const outBy = g => g < -st.fair ? -st.fair - g : g > rejectAt ? g - rejectAt : 0;   // distance outside the sendable window
       const ideas = [];
       const sum = arr => arr.reduce((a, x) => a + (V[x.id] || 0), 0);
@@ -3149,7 +3176,7 @@
         if (posF !== 'ALL' && !recv.some(x => (posF === 'PICK' ? P[x.id].pick : P[x.id].pos === posF && !P[x.id].pick))) return;
         if ([...send, ...recv].every(x => P[x.id].pick)) return;                        // picks-for-picks only: not a real idea
         const f = fitsOf(send, recv);
-        if (f.my < 0 || f.their < 0 || f.my + f.their < 3) return;                      // must help, and hurt neither side
+        if (f.my < 0 || f.their < -4 || f.my + f.their < 2) return;                     // must help you; only a small cost to them
         const off = Math.max(...g.map(outBy));
         const rr = sum(recv), rs = sum(send);
         const size = 6 * Math.max(0, Math.min(1.2, Math.log10(Math.max(rr, rs) / 1500)));
@@ -3170,7 +3197,7 @@
         if (rr < rs * 0.45 || rr > rs * 2.2) return;                                    // cheap prefilter
         const g = gapsOf(send, recv);
         if (outBy(g[curI]) === 0) { keep(send, recv, type, g); return; }
-        if (send.length + recv.length >= 3) return;
+        if (send.length + recv.length >= 4) return;
         const iGetMore = g[curI] > 0;
         const pool = (iGetMore ? mine : theirs).filter(x => ![...send, ...recv].some(y => y.id === x.id) && (V[x.id] || 0) <= 0.7 * Math.max(rs, rr));
         const need = Math.abs(rr - rs);

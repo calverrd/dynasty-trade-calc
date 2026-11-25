@@ -146,18 +146,24 @@ Daily workflow safety:
 
 ## 8. Open items
 
-- **Top priority — Blend can fall outside KTC and FC.** On real Apes data (Nov 25), one trade showed KTC and FantasyCalc both saying you win by more than 12%, while Blend said +5%. Blend should land between the two.
-    - Likely cause: "FantasyCalc" mode grades on FC's own scale (`fRaw`), while Blend mixes in FC mapped onto KTC's scale (`fK`, via `buildScaleMap`). The value adjustment isn't linear, so the two FC versions can disagree.
-    - Fix first, then re-check the offer check and Trade ideas: grade all three on one scale.
+- **Fixed Nov 25 — Blend outside KTC and FC.** There were two causes:
+    1. `evalValues` gave the value adjustment to whichever side led on the raw curve. When that lead flipped, the stud side's premium dropped from about +3,000 to 0, so a near-even stud-for-package verdict could swing about 30 points. Now the side with the best player always gets the adjustment, sized continuously. KTC reference trades are unchanged.
+    2. Blend mixed asset values with FC rescaled onto KTC's curve, which changes how players compare to each other. Now `evalIds(aIds, bIds, mode)` grades Blend as KTC's and FC's own results mixed by the blend weight (`mixEvals`), so a Blend verdict always lies between them: 0 of 3,921 random test trades fall outside.
+    - Every trade grade now goes through `evalIds`: calculator, offer check, league trades, calibration, Trade ideas. Asset-level Blend values (`valueFor`) are still used for the chart, totals and "add X" suggestions.
+- **Next: player comparison** — goes inside the Profile Buckets tab (`bucket-explorer.html`), per the owner. Pick two players; independent of trade values. Show:
+    - Rookies: Weeks 1–4 odds (TE: Games 1–8), plus the typical best PPG in Years 1–3.
+    - Year 2 players: the Year 2 read (Games 1–4, plus the 1–8 current-season note) beside the rookie read.
+    - Everyone: profile bucket hit and repeat rates.
+    - Veterans: actual career 12+ and elite PPG season counts and recent PPG (nflverse, `ppg.json`), so late-round breakouts aren't judged only by prospect tier.
 - **Done Nov 25 — ideas with one team** (`partnerIdeas`): owner asked for trade ideas with one chosen team, based on what each team needs.
     - Uses both full rosters (assets worth 700+): 1-for-1, 2-for-1 / player + pick, and 1-for-2 / get player + pick.
     - Keeps a deal only if, on the selected source, you don't lose by more than Fair and don't win by more than max(12%, 2 × Fair).
-    - A deal must help at least one side and hurt neither; picks-only swaps are dropped.
+    - It must help you (need score ≥ 0), cost them at most a little (≥ −4), and help overall. Picks-only swaps are dropped.
     - Need fit = filling positions below the league average without opening a hole on the other side, plus timeline (rebuild teams like early picks and youth; contenders don't want picks).
     - Shows up to 12, each with a reason for each side. Ideas passing the offer check under all three sources come first, marked ✓; the rest show which source disagrees.
     - Each asset appears at most twice.
     - Near-miss deals get one sweetener from the short side, picked to bring all three sources closest to the window.
-    - Live result in the Apes league (Nov 25): 7 of 11 teams get 6–12 ideas, but 4 get only 1, and almost none pass all three sources. Revisit after the Blend fix above. The "hurt neither side" rule may be too strict for a rebuilder trading with contenders (picks score negative for contenders).
+    - First live result (before the Blend fix and loosening): 4 of 11 teams got only 1 idea. Sweeteners can now be added to 2-player packages too, up to 4 pieces.
 - **About Dec 25:** backtest which source (KTC, FC, Blend) best predicted later value moves, using `ktc-history.json` and `fc-history.json`.
 - **Unresolved method differences** (decide, don't silently pick):
   - An older 24-team chat used a stud premium of `Σ 10000·(v/10000)^1.5`, calibrated to both sites' calculators. The site now uses the KTC-matched adjustment above. Compare the two on 24-team trades.
