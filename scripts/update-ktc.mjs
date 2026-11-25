@@ -19,6 +19,8 @@ const SLEEPER_PLAYERS = "https://api.sleeper.app/v1/players/nfl";
 const OUT = "ktc.json";
 const HISTORY = "ktc-history.json";
 const DEPTH = "depth.json";
+const DRAFT_OUT = "draft_latest.json";
+const DRAFT_CSV = "https://github.com/nflverse/nflverse-data/releases/download/draft_picks/draft_picks.csv";
 const HISTORY_DAYS = 120;
 const MIN_PLAYERS = 300;
 const UA =
@@ -238,6 +240,44 @@ async function viaPlaywright() {
   }
 }
 
+
+// draft_latest.json: QB/RB/WR/TE picks from the most recent NFL draft (nflverse), so the Prospects tab
+// switches from projected picks to real ones automatically after the draft.
+export function parseCsv(text) {
+  const rows = []; let row = [], cur = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"' && text[i + 1] === '"') { cur += '"'; i++; } else if (c === '"') q = false; else cur += c; }
+    else if (c === '"') q = true;
+    else if (c === ",") { row.push(cur); cur = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cur); rows.push(row); row = []; cur = ""; }
+    else cur += c;
+  }
+  if (cur || row.length) { row.push(cur); rows.push(row); }
+  return rows;
+}
+export const nnDraft = (s) => String(s || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+  .replace(/['’.]/g, "").replace(/\b(jr|sr|ii|iii|iv|v)\b/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+async function writeDraft() {
+  try {
+    const res = await fetch(DRAFT_CSV, { headers: { "User-Agent": UA } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rows = parseCsv(await res.text());
+    const h = rows[0], ix = (k) => h.indexOf(k);
+    const data = rows.slice(1).filter((r) => r.length >= h.length - 1);
+    const season = Math.max(...data.map((r) => Number(r[ix("season")]) || 0));
+    const picks = {};
+    for (const r of data) {
+      if (Number(r[ix("season")]) !== season || !["QB", "RB", "WR", "TE"].includes(r[ix("position")])) continue;
+      picks[`${nnDraft(r[ix("pfr_player_name")])}|${r[ix("position")]}`] = { pick: Number(r[ix("pick")]), rd: Number(r[ix("round")]) };
+    }
+    writeFileSync(DRAFT_OUT, JSON.stringify({ season, updatedAt: new Date().toISOString(), picks }) + "\n");
+    console.log(`Wrote ${DRAFT_OUT}: ${season} draft, ${Object.keys(picks).length} QB/RB/WR/TE picks`);
+  } catch (e) {
+    console.warn(`Draft picks download failed (${e.message}); keeping the old ${DRAFT_OUT}`);
+  }
+}
+
 async function main() {
   let raw = null;
   const errors = [];
@@ -253,6 +293,7 @@ async function main() {
   }
   if (!raw) throw new Error(`All KTC sources failed (${errors.join("; ")}). Not writing ${OUT}.`);
 
+  await writeDraft();
   const all = await sleeperPlayers();
   if (all) {
     const depth = buildDepth(all);
