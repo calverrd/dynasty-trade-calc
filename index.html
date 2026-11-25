@@ -555,7 +555,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="p-3.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] space-y-1.5">
             <h3 class="font-bold">1. Automatic Live Sync (Zero AI Cost)</h3>
-            <p class="text-[#5d6672] dark:text-[#98a2ae]">Every time you load the page, it automatically pulls live rosters, standings, and traded picks from the <strong>Sleeper API</strong> and live dynasty values from the <strong>FantasyCalc API</strong>. All trade verdicts, repeater analyses, and trade ideas run 100% locally in your browser.</p>
+            <p class="text-[#5d6672] dark:text-[#98a2ae]">Every time you load the page, it automatically pulls live rosters, standings, and traded picks from the <strong>Sleeper API</strong> and dynasty values from <a href="https://fantasycalc.com" target="_blank" rel="noopener" class="underline"><strong>FantasyCalc</strong></a> (a once-a-day cached copy, per FantasyCalc's API terms; 12-team values). All trade verdicts, repeater analyses, and trade ideas run 100% locally in your browser.</p>
           </div>
           <div class="p-3.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] space-y-1.5">
             <h3 class="font-bold">2. Multi-League &amp; 24-Team Scaling</h3>
@@ -571,7 +571,7 @@
           </div>
           <div class="p-3.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] space-y-1.5">
             <h3 class="font-bold">5. Values &amp; Blending</h3>
-            <p class="text-[#5d6672] dark:text-[#98a2ae]">KTC values come from <code>ktc.json</code> (updated daily by a GitHub Action). Players are matched to FantasyCalc by Sleeper ID, then name; KTC players FantasyCalc doesn't list are kept. Before blending, FantasyCalc values are rank-matched onto KTC's scale, and FC tight ends get the same TE-premium lift KTC gives that player. The Trade chart's KTC / FC column shows both as published. FantasyCalc supports at most 16 teams, so in bigger leagues FC values are 16-team values.</p>
+            <p class="text-[#5d6672] dark:text-[#98a2ae]">KTC values come from <code>ktc.json</code> (updated daily by a GitHub Action). Players are matched to FantasyCalc by Sleeper ID, then name; KTC players FantasyCalc doesn't list are kept. Before blending, FantasyCalc values are rank-matched onto KTC's scale, and FC tight ends get the same TE-premium lift KTC gives that player. The Trade chart's KTC / FC column shows both as published. FantasyCalc values come from a once-a-day cached copy at 12 teams, for every league size (FantasyCalc's terms ask that responses be cached and shared; 8–14-team values differ by about 1%, at most 3%).</p>
           </div>
           <div class="p-3.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] space-y-1.5">
             <h3 class="font-bold">6. Draft Picks</h3>
@@ -1860,6 +1860,20 @@
       recompute();
     }
 
+    // data/fc/*.json (compact rows) -> the FantasyCalc row shape the sync code reads
+    let FC_UPDATED = null;
+    function fcFromCache(f) {
+      if (!f || !Array.isArray(f.players) || !Array.isArray(f.fields)) throw new Error('FantasyCalc cache unreadable');
+      FC_UPDATED = f.updated || null;
+      const c = k => f.fields.indexOf(k), K = f.pickFields || ['name', 'val', 'fcId'];
+      const rows = f.players.map(r => ({
+        player: { sleeperId: r[c('sleeperId')] || null, name: r[c('name')], position: r[c('pos')], maybeTeam: r[c('team')] || null, maybeAge: r[c('age')] },
+        value: r[c('val')], redraftValue: r[c('rval')], trend30Day: r[c('t30')]
+      }));
+      (f.picks || []).forEach(r => rows.push({ player: { name: r[K.indexOf('name')], position: 'PICK', sleeperId: r[K.indexOf('fcId')] || null }, value: r[K.indexOf('val')] }));
+      return rows;
+    }
+
     async function syncLiveSleeperAndFC(isAuto = false) {
       const pill = document.getElementById('syncPill');
       const status = document.getElementById('syncStatus');
@@ -1878,13 +1892,14 @@
 
         // 2. Fetch FantasyCalc + Sleeper users/rosters/traded_picks in parallel
         const numQbs = useSfValues(activeLeague) ? 2 : 1;
-        const fcTeams = Math.min(16, Math.max(8, activeLeague.numTeams || 12));
         const fcPpr = activeLeague.ppr >= 0.75 ? 1 : activeLeague.ppr >= 0.25 ? 0.5 : 0;
-        const fcUrl = `https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=${numQbs}&numTeams=${fcTeams}&ppr=${fcPpr}`;
+        // FantasyCalc's terms: responses are cached and shared, never fetched per visitor. A daily GitHub Action
+        // writes data/fc/ (12-team values; other league sizes differ by about 1%). TE premium is applied below.
+        const fcUrl = `./data/fc/fc-${numQbs === 2 ? 'sf' : '1qb'}-ppr${fcPpr === 0.5 ? '05' : fcPpr}-none.json`;
 
-        FC_CAPPED = (activeLeague.numTeams || 12) > 16;
+        FC_CAPPED = false;
         const [fcRes, uRes, rRes, tpRes] = await Promise.all([
-          fetch(fcUrl),
+          fetch(fcUrl, { cache: 'no-cache' }),
           fetch(`https://api.sleeper.app/v1/league/${activeLeague.id}/users`),
           fetch(`https://api.sleeper.app/v1/league/${activeLeague.id}/rosters`),
           fetch(`https://api.sleeper.app/v1/league/${activeLeague.id}/traded_picks`),
@@ -1892,9 +1907,9 @@
           fetchTrending()
         ]);
 
-        if (!fcRes.ok) throw new Error('FantasyCalc API unavailable');
+        if (!fcRes.ok) throw new Error('FantasyCalc values unavailable');
         const [fcData, users, rosters, tradedPicks] = await Promise.all([
-          fcRes.json(),
+          fcRes.json().then(fcFromCache),
           uRes.ok ? uRes.json() : [],
           rRes.ok ? rRes.json() : [],
           tpRes.ok ? tpRes.json() : []
@@ -2116,13 +2131,17 @@
         const ktcDateStr = KTC_UPDATED_AT ? new Date(KTC_UPDATED_AT).toLocaleDateString([], { month: 'short', day: 'numeric' }) : '';
         const ktcAgeH = KTC_UPDATED_AT ? (Date.now() - new Date(KTC_UPDATED_AT).getTime()) / 36e5 : 0;
         const ktcStale = KTC_SOURCE === 'hosted' && ktcAgeH > 48;
+        const fcAgeH = FC_UPDATED ? (Date.now() - Date.parse(FC_UPDATED)) / 3.6e6 : 0;
+        const fcStale = fcAgeH > 48;
         if (pill) {
-          pill.textContent = ktcCount
+          pill.textContent = fcStale && !ktcStale ? `FC stale (${new Date(FC_UPDATED).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })})`
+            : ktcCount
             ? (ktcStale ? `KTC stale (${ktcDateStr})` : KTC_SOURCE === 'hosted' ? `Live + Auto KTC${ktcDateStr ? ` (${ktcDateStr})` : ''}` : `Live + KTC (${timeStr})`)
             : `Live FC + Sleeper (${timeStr})`;
           pill.title = (ktcStale ? `ktc.json was last updated ${Math.round(ktcAgeH / 24)} days ago — check the GitHub Action. ` : '')
-            + (FC_CAPPED ? `FantasyCalc only supports up to 16 teams, so FC values here are 16-team values (KTC is unaffected).` : '');
-          pill.className = ktcStale
+            + (fcStale ? `The FantasyCalc cache was last updated ${Math.round(fcAgeH / 24)} days ago — check the GitHub Action. ` : '')
+            + (FC_UPDATED ? `FantasyCalc values: daily cache from ${new Date(FC_UPDATED).toLocaleString()} (12-team).` : '');
+          pill.className = (ktcStale || fcStale)
             ? 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/25'
             : 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25';
         }

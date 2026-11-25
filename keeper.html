@@ -359,7 +359,6 @@ function lineupValue(pids, byId, rosterPositions) {
 
 /* ---------------- Data layer ---------------- */
 const SLEEPER = 'https://api.sleeper.app/v1';
-const FC = 'https://api.fantasycalc.com/values/current';
 const DEFAULT_LEAGUE = '1389377067920924672';
 const FC_TTL = 3 * 3600 * 1000, SL_TTL = 15 * 60 * 1000;
 
@@ -396,10 +395,27 @@ function fcParams(league) {
   const tep = bte >= 1 ? 'te++' : bte > 0 ? 'te+' : 'none';
   return { numQbs, numTeams, ppr, tep, rawTeams: nt };
 }
+// FantasyCalc's terms: responses are cached and shared, never fetched per visitor. A daily GitHub Action writes
+// data/fc/ at 12 teams (other sizes differ by about 1%); each file holds the dynasty value (val) and the redraft
+// value (rval, from FC's redraft list, TE premium included) for one numQbs / PPR / TE-premium format.
+let FC_UPDATED = null;
+const FC_FILES = {};
 async function fetchFC(isDynasty, p) {
-  const base = `${FC}?isDynasty=${isDynasty}&numQbs=${p.numQbs}&numTeams=${p.numTeams}&ppr=${p.ppr}`;
-  if (p.tep !== 'none') { try { return await cachedJSON(`${base}&tep=${p.tep}`, FC_TTL); } catch (e) {} }
-  return cachedJSON(base, FC_TTL);
+  const name = (tep) => `./data/fc/fc-${p.numQbs === 2 ? 'sf' : '1qb'}-ppr${p.ppr === 0.5 ? '05' : p.ppr}-${{ none: 'none', 'te+': 'tep1', 'te++': 'tep2' }[tep]}.json`;
+  const get = (u) => (FC_FILES[u] ||= fetch(u, { cache: 'no-cache' }).then(r => { if (!r.ok) throw new Error(`${r.status} from ${u}`); return r.json(); })
+    .catch(e => { delete FC_FILES[u]; throw e; }));   // the dynasty and redraft calls share one download
+  let f;
+  try { f = await get(name(p.tep)); } catch (e) { if (p.tep === 'none') throw e; f = await get(name('none')); }
+  FC_UPDATED = f.updated || null;
+  const c = (k) => f.fields.indexOf(k);
+  const rows = [];
+  for (const r of f.players || []) {
+    const v = isDynasty ? r[c('val')] : r[c('rval')];
+    if (!isDynasty && !(v > 0)) continue;   // the redraft list only has players with a redraft value
+    rows.push({ player: { sleeperId: r[c('sleeperId')] || null, name: r[c('name')], position: r[c('pos')], maybeTeam: r[c('team')] || null, maybeAge: r[c('age')] },
+      value: v, redraftValue: isDynasty ? r[c('rval')] : undefined, trend30Day: r[c('t30')] });
+  }
+  return rows;
 }
 
 async function fetchPicksMap(draftId) {

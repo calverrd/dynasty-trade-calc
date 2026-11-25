@@ -79,16 +79,18 @@ Main features and where they live:
 | File | Written by | What it holds |
 |---|---|---|
 | `ktc.json`, `ktc-history.json` | `update-ktc.yml`, daily at 11:17 UTC | KTC values (Playwright fallback, since a plain fetch gets bot-blocked); 120 days of history |
-| `fc-history.json` | same workflow, via `scripts/update-fc.mjs` | FantasyCalc dynasty SF values for 12 and 16 teams, keyed `sid:<SleeperID>`, 120 days. First day saved Nov 25. FC currently returns identical values for 12 and 16 teams. |
+| `data/fc/*.json` + `data/fc/manifest.json` | same workflow, via `scripts/fetch-fc-cache.mjs` (runs first) | The site's only FantasyCalc source: pages never call `api.fantasycalc.com` (FC terms: cache and reuse across users). 18 files `fc-{1qb|sf}-ppr{0|05|1}-{none|tep1|tep2}.json`, all at 12 teams, overwritten daily. Each: `updated`, `params`, `fields` (`sleeperId, name, pos, team, age, val, rval, t30`), `players`, `pickFields` (`name, val, fcId`), `picks`. `val` = dynasty value; `rval` = the `isDynasty=false` value (TE premium included), else the dynasty payload's `redraftValue`. 36 GETs a day, 0.75 s apart. A failed format keeps yesterday's file (marked `stale` in the manifest) and fails the run. ~22 KB per file (~5 KB gzipped). |
+| `fc-history.json` | same workflow, via `scripts/update-fc.mjs` (reads `data/fc/fc-sf-ppr1-none.json`, no API call) | FantasyCalc dynasty SF values for 12 and 16 teams, keyed `sid:<SleeperID>`, 120 days. First day saved Nov 25. FC currently returns identical values for 12 and 16 teams. |
 | `depth.json`, `draft_latest.json` | same workflow | RB depth charts and injuries; nflverse draft picks |
 | `ppg.json`, `signals.json`, `bf.json`, rookie-tab `DATA` | `rookie-refresh.yml` (Tuesdays in Sep–Jan, plus manual), via `scripts/refresh/refresh_rookies.py` | Veteran PPG, rookie signals, buckets |
-| `data/player-context.json` | same workflow, via `scripts/build_context.py` (after the refresh) | Slim copy of the three rookie tabs' `DATA` (`fields` + one array per row) plus veteran ages (`vets`, `"POS|normname": age`, from `ktc.json`, so ages lag up to a week). ~100 KB, 29 KB gzipped. Read by the comparison tool instead of the rookie pages (~1.4 MB). |
+| `data/player-context.json` | `scripts/build_context.py`: after the Tuesday rookie refresh, and daily in `update-ktc.yml` (after the FC cache and KTC) | Slim copy of the three rookie tabs' `DATA` (`fields` + one array per row) plus veteran ages (`vets`, `"POS|normname": age`). Ages use the hub's order: FantasyCalc `maybeAge` (from `data/fc/fc-sf-ppr1-none.json`) first, then `ktc.json`, so both pages put a player in the same age band (Nov 25: 306 FC, 43 KTC). ~100 KB, 29 KB gzipped. Read by the comparison tool instead of the rookie pages (~1.4 MB). |
 | `data/age-curves.json` | by hand (static; rebuild only if the nflverse study is rerun) | `sell.table` (next-season 12+ odds by position / age band / above-median PPG, cells `[hits, players]`) and `ageCurves.table` (next-season PPG retention by age). One copy, read by `index.html` (SELL badges, team timeline) and `bucket-explorer.html` (comparison). |
 | `data/predraft_*` | `build-predraft-data.yml` (manual; discover or build mode) | Pre-draft prospect dataset |
 | (run summary only) | `backtest-market.yml` (manual; inputs first_class, last_class, min_gap, min_value) | CHEAP/PRICEY backtest against DynastyProcess history. Never commits. |
 
 Daily workflow safety:
-- If FC fails, KTC still runs (`continue-on-error`).
+- If FC fails (cache or history), KTC still runs (`continue-on-error`).
+- `data/fc/*.json` files are committed only if they parse.
 - The commit step uses `!cancelled()`.
 - `fc-history.json` is committed only if it parses.
 - A final step fails the run, so GitHub emails the owner, if FC failed.
@@ -120,6 +122,7 @@ Rookie refresh safety (`scripts/refresh/check_outputs.py`, runs before the commi
   - The next draft has per-slot values, from KTC/FC early/mid/late anchors interpolated by projected slot.
   - Later drafts use generic values.
   - Leagues over 12 teams map each overall pick onto the 12-team curve.
+- **FantasyCalc input:** `fcFromCache` turns `data/fc/fc-{1qb|sf}-ppr{0|05|1}-none.json` back into FC's row shape for the sync code. The sync pill's tooltip shows the cache time.
 - **Trend graphs:** follow the selected source once FC history has 2+ days; until then they show KTC. Blend history reuses today's FC→KTC map (an approximation).
 
 ## 6. Rookie-tab model (validated)
@@ -157,7 +160,10 @@ Rookie refresh safety (`scripts/refresh/check_outputs.py`, runs before the commi
 
 - **FantasyCalc API terms** (https://fantasycalc.com/terms-of-usage, https://fantasycalc.com/api-docs, effective Oct 10, 2026; free under 1,000 monthly users with attribution):
     - A visible "FantasyCalc" link to https://fantasycalc.com near the data on every page using it, with at least one in the static HTML. Done: `index.html` header next to the Blend/KTC/FC toggle (Nov 25); `keeper.html` footer already had one.
-    - Only `GET /values/current`. Responses must be cached and reused across users; each unique query may be refreshed at most once every 3 hours. **Not met yet:** `index.html` and `keeper.html` call FC from each visitor's browser. Proposal: have the daily Action save the needed formats into `data/` and have the pages read those snapshots.
+    - Only `GET /values/current`. Responses must be cached and reused across users; each unique query may be refreshed at most once every 3 hours. Done Nov 25: `index.html` and `keeper.html` read `data/fc/` (see section 4); neither calls the API.
+        - Pre-flight (Nov 25): the dynasty payload's `redraftValue` covers the same 194 players as `isDynasty=false` and matches it exactly in SF / 1 PPR, but ignores the TE premium (25 TEs, up to +29%) and drifts 1–3% in 1QB formats. So each file also takes the `isDynasty=false` call.
+        - League size: every league maps to 12 teams. FC's 8/10/14-team values differ from 12 by a median ~0.6–1% (max ~3% among the top 150); 16 is identical to 12; TE premium changes only TEs.
+        - `index.html` uses the `none` files (it applies KTC's TE lift itself). `keeper.html` uses the league's TE-premium file, falling back to `none`.
     - Use restriction 1b: FC data or derivatives may not be used to replicate or substitute for FC's trade calculator or other key features. **Owner decision** (e.g. ask FantasyCalc for written permission, or use FC only as a secondary signal).
 
 - **Fixed Nov 25 — Blend outside KTC and FC.** There were two causes:
