@@ -1,0 +1,56 @@
+name: Build Pre-Draft Prospect Dataset
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "discover = list college data files; build = build dataset + validation report"
+        required: true
+        default: discover
+        type: choice
+        options: [discover, build]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: predraft
+  cancel-in-progress: false
+
+jobs:
+  predraft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install pandas numpy pyarrow scikit-learn openpyxl
+
+      - name: Discover college data sources
+        if: inputs.mode == 'discover'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/predraft/discover.py | tee predraft_discover.txt
+
+      - name: Build dataset and validation report
+        if: inputs.mode == 'build'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/predraft/build.py
+
+      - name: Commit outputs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p data
+          [ -f predraft_discover.txt ] && mv predraft_discover.txt data/predraft_discover.txt
+          git add data/ || true
+          if git diff --cached --quiet; then echo "Nothing to commit."; exit 0; fi
+          git commit -m "Pre-draft data: ${{ inputs.mode }} ($(date -u +%F))"
+          git pull --rebase origin main
+          git push origin HEAD:main
