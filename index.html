@@ -176,7 +176,7 @@
     <section id="view-calc" class="space-y-4">
       <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
         <summary class="cursor-pointer font-bold">How to use this tab</summary>
-        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Pick the two teams</strong> at the top (your team is usually side A), then add players or picks to each side with the search boxes or the roster quick-add.</li><li><strong>Read the verdict:</strong> it compares the two sides after the value adjustment (which accounts for getting the best player). Within the Fair ±% slider counts as fair; otherwise the suggestions show what to add to the short side.</li><li><strong>Before → after ranks:</strong> the table shows how each team's QB / RB / WR / TE ranks, starting lineup, win-now and total value would move. Tap <strong>Copy DM pitch</strong> under it for a ready-to-send Sleeper message.</li><li><strong>Picks</strong> show their elite / starter / bust odds under the name, based on where that pick is projected to land. Players in a sell window are tagged.</li><li><strong>Trade ideas:</strong> pick one of your players in the idea finder for fair offers from teams whose needs fit yours. To go after a specific player, tap <strong>Offer</strong> on a rookie or bucket tab, or <strong>Find offers for him</strong> on his player card, and the Trade Finder loads the best-fitting package.</li></ul>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Pick the two teams</strong> at the top (your team is usually side A), then add players or picks to each side with the search boxes or the roster quick-add.</li><li><strong>Read the verdict:</strong> it compares the two sides after the value adjustment (which accounts for getting the best player). Within the Fair ±% slider counts as fair; otherwise the suggestions show what to add to the short side.</li><li><strong>Before → after ranks:</strong> the table shows how each team's QB / RB / WR / TE ranks, starting lineup, win-now and total value would move. Tap <strong>Copy DM pitch</strong> under it for a ready-to-send Sleeper message.</li><li><strong>Picks</strong> show their elite / starter / bust odds under the name, based on where that pick is projected to land. Players in a sell window are tagged.</li><li><strong>Trade ideas:</strong> pick one of your players in the idea finder for fair offers from teams whose needs fit yours, or pick a team in the first box (or tap <strong>Ideas</strong> on the League tab) for up to 12 deals between just you and that team, ranked by what each side needs. To go after a specific player, tap <strong>Offer</strong> on a rookie or bucket tab, or <strong>Find offers for him</strong> on his player card, and the Trade Finder loads the best-fitting package.</li></ul>
       </details>
       <!-- Top Action Bar -->
       <div class="flex flex-wrap items-center justify-between gap-2">
@@ -303,7 +303,8 @@
             <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Pick any player to generate fair 1-for-1, player + pick, and 2-for-1 upgrade offers using live league rosters. When you're shopping your own player, partners whose needs fit yours rank higher. To go after a specific player, tap <strong>Offer</strong> next to him on the Rookie WR, RB or TE tabs, in a Profile Bucket, or in his player card.</p>
           </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+          <select id="ideaPartnerSel" title="Pick one team to get ideas between your roster and theirs, based on both teams' needs" class="bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#d6dbe3] dark:border-[#2e3540] rounded-lg px-2.5 py-2 text-xs font-semibold cursor-pointer"></select>
           <select id="ideaTeamSel" class="bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#d6dbe3] dark:border-[#2e3540] rounded-lg px-2.5 py-2 text-xs font-semibold cursor-pointer"></select>
           <select id="ideaPlayerSel" class="bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#d6dbe3] dark:border-[#2e3540] rounded-lg px-2.5 py-2 text-xs font-semibold cursor-pointer"></select>
           <select id="ideaGoalSel" class="bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#d6dbe3] dark:border-[#2e3540] rounded-lg px-2.5 py-2 text-xs font-semibold cursor-pointer">
@@ -2558,6 +2559,19 @@
       const prevP = pSel.value;
       pSel.innerHTML = pl.map(id => `<option value="${id}">${esc(P[id].name)} (${P[id].pos} · ${fmt(V[id])})</option>`).join('');
       if (pl.some(id => String(id) === String(prevP))) pSel.value = prevP;
+
+      const ptSel = document.getElementById('ideaPartnerSel');
+      if (ptSel) {
+        const prev = ptSel.value;
+        const fit = curTeam === ME ? computeFit(getLeaguePartnerProfiles().rows) : {};
+        const others = owners.filter(o => o !== curTeam)
+          .sort((a, b) => ((fit[b]?.score ?? -1) - (fit[a]?.score ?? -1)) || T[a].n.localeCompare(T[b].n));
+        ptSel.innerHTML = `<option value="">Mode: shop one player (all teams)</option>` +
+          others.map(o => `<option value="${esc(o)}">Ideas with: ${esc(T[o].n)}${fit[o] ? ` · fit ${fit[o].score}` : ''}</option>`).join('');
+        ptSel.value = others.includes(prev) ? prev : '';
+        pSel.disabled = !!ptSel.value;
+        pSel.classList.toggle('opacity-50', !!ptSel.value);
+      }
     }
 
     // ============================================================================
@@ -3081,8 +3095,160 @@
       return top;
     }
 
+    // Partner mode: ideas between one team and one partner only, ranked by how well each side's
+    // incoming assets fill its weak positions (value vs league average) without opening new holes,
+    // and by each team's contend / rebuild timeline. Value-balanced with the current source + adjustment.
+    function partnerIdeas(meKey, partner, posF) {
+      if (!T[meKey] || !T[partner] || meKey === partner) return [];
+      const { rows, posRanks } = getLeaguePartnerProfiles();
+      const FIT_POS = ['QB', 'RB', 'WR', 'TE'];
+      const avg = {};
+      FIT_POS.forEach(pos => { avg[pos] = rows.reduce((a, x) => a + x.posTotals[pos], 0) / Math.max(1, rows.length); });
+      const devOf = key => { const r = rows.find(x => x.o === key); return Object.fromEntries(FIT_POS.map(pos => [pos, r && avg[pos] ? (r.posTotals[pos] - avg[pos]) / avg[pos] : 0])); };
+      const dev = { [meKey]: devOf(meKey), [partner]: devOf(partner) };
+      const arch = { [meKey]: teamArchetype(meKey).archetype, [partner]: teamArchetype(partner).archetype };
+      const n = owners.length;
+      // How much an asset helps the team receiving it (giver = the team losing it)
+      const fitFor = (id, recvr, giver) => {
+        const p = P[id];
+        if (!p) return 0;
+        const a = arch[recvr];
+        if (p.pick) { const early = (p.rd || 9) <= 2; return a === 'rebuild' ? (early ? 6 : 1) : a === 'contender' ? -3 : (early ? 2 : 0); }
+        let b = 0;
+        if (dev[recvr][p.pos] < 0) b += 10 * Math.min(1, -dev[recvr][p.pos] * 2);   // fills a hole
+        else b -= 4 * Math.min(1, dev[recvr][p.pos]);                                // already deep there
+        if (dev[giver][p.pos] < 0) b -= 6 * Math.min(1, -dev[giver][p.pos] * 2);    // opens a hole for the giver
+        const age = Number(p.age) || 0;
+        if (a === 'rebuild' && age >= 28) b -= 5;
+        if (a === 'rebuild' && age && age <= 24.5) b += 3;
+        if (a === 'contender' && age && age <= 23 && (V[id] || 0) < 3000) b -= 2;
+        return b;
+      };
+      const assetsOf = key => [
+        ...(T[key].ids || []).filter(id => P[id] && (V[id] || 0) >= 700).map(id => ({ id, via: '' })),
+        ...(T[key].pk || []).filter(([id]) => P[id] && (V[id] || 0) >= 700).map(([id, via]) => ({ id, via }))
+      ].sort((x, y) => (V[y.id] || 0) - (V[x.id] || 0)).slice(0, 30);
+      const mine = assetsOf(meKey), theirs = assetsOf(partner);
+      const tol = Math.max(6, st.fair * 1.6);
+      const ideas = [];
+      const sum = arr => arr.reduce((a, x) => a + (V[x.id] || 0), 0);
+      const push = (send, recv, type) => {
+        if (posF !== 'ALL' && !recv.some(x => (posF === 'PICK' ? P[x.id].pick : P[x.id].pos === posF && !P[x.id].pick))) return;
+        const rs = sum(send), rr = sum(recv);
+        if (rr < rs * 0.6 || rr > rs * 1.67) return;                                  // cheap prefilter
+        if (Math.max(rr, rs) < 1500) return;                                            // skip trivial swaps
+        const ev = evalTrade(send, recv);
+        const gap = ((ev.effB - ev.effA) / Math.max(ev.effA, ev.effB, 1)) * 100;       // + = meKey receives more
+        if (gap < -st.fair || gap > Math.min(tol, Math.max(12, st.fair * 2))) return;   // never a loss on the selected source
+        const myFit = recv.reduce((a, x) => a + fitFor(x.id, meKey, partner), 0);
+        const theirFit = send.reduce((a, x) => a + fitFor(x.id, partner, meKey), 0);
+        if (myFit < 0 || theirFit < 0 || myFit + theirFit < 3) return;                  // must help, and hurt neither side
+        if ([...send, ...recv].every(x => P[x.id].pick)) return;                        // picks-for-picks only: not a real idea
+        const size = 6 * Math.max(0, Math.min(1.2, Math.log10(Math.max(rr, rs) / 1500)));   // meaningful deals rank higher
+        const score = 40 + 1.2 * Math.min(myFit, theirFit) + 0.6 * (myFit + theirFit) + size - Math.abs(gap) * 1.5 - (send.length + recv.length - 2) * 2;
+        ideas.push({ partner, type, send, recv, gapPct: gap, score, myFit, theirFit });
+      };
+      mine.forEach(a => theirs.forEach(b => push([{ ...a }], [{ ...b }], '1-for-1')));
+      for (let i = 0; i < mine.length; i++) for (let j = i + 1; j < mine.length; j++) theirs.forEach(b => {
+        const t = P[mine[i].id].pick || P[mine[j].id].pick ? 'Player + pick' : '2-for-1';
+        push([{ ...mine[i] }, { ...mine[j] }], [{ ...b }], t);
+      });
+      for (let i = 0; i < theirs.length; i++) for (let j = i + 1; j < theirs.length; j++) mine.forEach(a => {
+        const t = P[theirs[i].id].pick || P[theirs[j].id].pick ? 'Get player + pick' : '1-for-2';
+        push([{ ...a }], [{ ...theirs[i] }, { ...theirs[j] }], t);
+      });
+      ideas.sort((a, b) => b.score - a.score);
+      // Offer check: every source (KTC, FC, Blend) must agree it's sendable: you don't lose by more
+      // than the fair range, and you don't win by so much it will likely be rejected
+      const rejectAt = Math.max(12, st.fair * 2);
+      const MV = ['ktc', 'fc', 'blend'].map(m => modeValues(m));
+      const SRC_L = { ktc: 'KTC', fc: 'FantasyCalc', blend: 'Blend' };
+      const checkAll = x => {
+        const bad = [];
+        ['ktc', 'fc', 'blend'].forEach((m, i) => {
+          const mv = MV[i];
+          const ev = evalValues(x.send.map(y => mv.vals[y.id] || 0), x.recv.map(y => mv.vals[y.id] || 0), null, mv.max);
+          const g = (ev.effB - ev.effA) / Math.max(ev.effA, ev.effB, 1) * 100;
+          if (g < -st.fair) bad.push(`${SRC_L[m]} says you lose by ${(-g).toFixed(0)}%`);
+          else if (g > rejectAt) bad.push(`${SRC_L[m]} says you win by ${g.toFixed(0)}% (may be rejected)`);
+        });
+        return bad;
+      };
+      // Ideas that pass the offer check under every source come first; if fewer than 12 do, the list is
+      // topped up with ones that pass on the selected source, each labeled with the source that disagrees.
+      // Variety: each asset at most twice, no repeated package.
+      const used = {}, seen = new Set(), top = [], flagged = [];
+      for (const x of ideas) {
+        const ids = [...x.send, ...x.recv].map(y => y.id);
+        const k = ids.slice().sort().join('_');
+        if (seen.has(k)) continue;
+        x.warn = checkAll(x);
+        if (x.warn.length) { flagged.push(x); continue; }
+        if (ids.some(id => (used[id] || 0) >= 2)) continue;
+        seen.add(k); ids.forEach(id => { used[id] = (used[id] || 0) + 1; }); top.push(x);
+        if (top.length >= 12) break;
+      }
+      for (const x of flagged) {
+        if (top.length >= 12) break;
+        const ids = [...x.send, ...x.recv].map(y => y.id);
+        if (ids.some(id => (used[id] || 0) >= 2)) continue;
+        ids.forEach(id => { used[id] = (used[id] || 0) + 1; }); top.push(x);
+      }
+      // Plain-language reasons for each side
+      const posRkTxt = (key, pos) => `#${posRanks[pos][key] || '?'} of ${n} at ${pos}`;
+      const reasonFor = (assets, recvr) => {
+        const bits = [];
+        assets.forEach(x => {
+          const p = P[x.id];
+          if (p.pick) { if (arch[recvr] === 'rebuild') bits.push(`${p.name} fits a rebuild`); return; }
+          if (dev[recvr][p.pos] < 0) bits.push(`${p.name} fills ${p.pos} (${posRkTxt(recvr, p.pos)})`);
+          else if (arch[recvr] === 'rebuild' && Number(p.age) && p.age <= 24.5) bits.push(`${p.name} is young (${Number(p.age).toFixed(1)})`);
+        });
+        return bits.length ? bits.join('; ') : 'value swap';
+      };
+      top.forEach(x => {
+        x.whyMe = reasonFor(x.recv, meKey);
+        x.whyThem = reasonFor(x.send, partner);
+      });
+      return top;
+    }
+
     function renderTradeIdeas() {
       const listEl = document.getElementById('ideaList');
+      const partnerSel = document.getElementById('ideaPartnerSel');
+      const partnerKey = partnerSel?.value || '';
+      if (listEl && st.acquire == null && partnerKey && T[partnerKey]) {
+        const tKey0 = document.getElementById('ideaTeamSel')?.value;
+        const posF0 = document.getElementById('ideaPosSel')?.value || 'ALL';
+        if (!tKey0 || !T[tKey0]) return;
+        const top = partnerIdeas(tKey0, partnerKey, posF0);
+        listEl._ideas = { tKey: tKey0, top };
+        const archL = k => teamArchetype(k).label;
+        const head = `<div class="col-span-full flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/25 text-xs">
+          <span><strong>Ideas with ${esc(T[partnerKey].n)}</strong> (${esc(archL(partnerKey))}) for ${esc(T[tKey0].n)} (${esc(archL(tKey0))}). Only these two rosters. Ranked by how well each side fills its weak positions without opening new holes, and by each team's timeline. Ideas marked ✓ pass the offer check under all three sources; any others are labeled with the source that disagrees.</span>
+          <button type="button" data-clearpartner="1" class="px-2 py-1 rounded-md font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-500/15 cursor-pointer">✕ Back to one-player mode</button>
+        </div>`;
+        listEl.innerHTML = head + (top.length ? top.map((idea, idx) => {
+          const g = idea.gapPct;
+          const gCls = Math.abs(g) <= st.fair ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400';
+          const nm = arr => arr.map(x => `${P[x.id].name}${x.via && x.via !== 'own' ? ` (${x.via})` : ''}`).join(' + ');
+          return `<div class="p-3 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] flex flex-col justify-between gap-2">
+            <div class="space-y-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">${idea.warn && idea.warn.length ? '' : '<span class="text-emerald-600 dark:text-emerald-400" title="Passes the offer check under KTC, FantasyCalc and Blend">✓ </span>'}${esc(idea.type)}</span>
+                <span class="text-[11px] font-bold ${gCls}" title="+ means ${esc(T[tKey0].n)} receives more value">${g >= 0 ? '+' : ''}${g.toFixed(1)}%</span>
+              </div>
+              <div class="text-xs"><strong>Send:</strong> ${esc(nm(idea.send))}</div>
+              <div class="text-xs"><strong>Get:</strong> ${esc(nm(idea.recv))}</div>
+              <div class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]"><strong>For you:</strong> ${esc(idea.whyMe)}</div>
+              <div class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]"><strong>For them:</strong> ${esc(idea.whyThem)}</div>
+              ${idea.warn && idea.warn.length ? `<div class="text-[11px] font-semibold text-amber-700 dark:text-amber-300">⚠ ${esc(idea.warn.join(' · '))}</div>` : ''}
+            </div>
+            <button type="button" data-loadidea="${idx}" class="w-full py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Load in calculator (offer check + DM pitch) →</button>
+          </div>`;
+        }).join('') : `<div class="col-span-full text-xs text-[#5d6672] dark:text-[#98a2ae] py-3">No fair deals that help both teams. Try Target Pos "Any", or widen the Fair ± slider.</div>`);
+        return;
+      }
       if (listEl && st.acquire != null && P[st.acquire] && OWN[st.acquire] !== undefined && OWN[st.acquire] !== ME) {
         const tp = P[st.acquire], o = OWN[st.acquire];
         const top = acquireIdeas(st.acquire);
@@ -3446,7 +3612,7 @@
           <td class="py-2.5 pr-2 text-right hidden sm:table-cell text-[#5d6672] dark:text-[#98a2ae]">${fmt(r.posTotals.PICK)}</td>
           <td class="py-2.5 pr-2 text-right font-extrabold">${fmt(r.totalVal)}</td>
           <td class="py-2.5 pl-2 text-right">
-            <button type="button" data-tradewith="${esc(r.o)}" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Trade →</button>
+            ${r.o !== ME ? `<button type="button" data-ideapartner="${esc(r.o)}" title="Trade ideas between you and this team, based on both teams' needs" class="px-2.5 py-1 mr-1 rounded-lg text-[11px] font-bold border border-blue-500/40 text-blue-700 dark:text-blue-300 hover:bg-blue-500/10 cursor-pointer">Ideas</button>` : ''}<button type="button" data-tradewith="${esc(r.o)}" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Trade →</button>
           </td>
         </tr>${detail}`;
       }).join('');
@@ -4290,6 +4456,7 @@
       });
 
       document.getElementById('ideaTeamSel')?.addEventListener('change', () => { st.acquire = null; populateIdeaSelectors(); renderTradeIdeas(); });
+      document.getElementById('ideaPartnerSel')?.addEventListener('change', () => { st.acquire = null; populateIdeaSelectors(); renderTradeIdeas(); });
       ['ideaPlayerSel', 'ideaGoalSel', 'ideaPosSel'].forEach(id => document.getElementById(id)?.addEventListener('change', () => { st.acquire = null; renderTradeIdeas(); }));
 
       document.getElementById('leagueSel')?.addEventListener('change', e => {
@@ -4436,6 +4603,22 @@
           return;
         }
         if (e.target.closest('[data-clearacquire]')) { st.acquire = null; renderTradeIdeas(); return; }
+        if (e.target.closest('[data-clearpartner]')) { const ps = document.getElementById('ideaPartnerSel'); if (ps) ps.value = ''; populateIdeaSelectors(); renderTradeIdeas(); return; }
+        const ideaPartnerBtn = e.target.closest('[data-ideapartner]');
+        if (ideaPartnerBtn) {
+          e.stopPropagation();
+          st.acquire = null;
+          const tSel = document.getElementById('ideaTeamSel');
+          if (tSel && T[ME]) tSel.value = ME;
+          populateIdeaSelectors();
+          const ps = document.getElementById('ideaPartnerSel');
+          if (ps) ps.value = ideaPartnerBtn.dataset.ideapartner;
+          populateIdeaSelectors();
+          renderTradeIdeas();
+          switchTab('calc');
+          document.getElementById('tradeIdeasSection')?.scrollIntoView({ behavior: 'smooth' });
+          return;
+        }
         const loadIdeaBtn = e.target.closest('[data-loadidea]');
         if (loadIdeaBtn) {
           const listEl = document.getElementById('ideaList');

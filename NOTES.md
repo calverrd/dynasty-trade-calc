@@ -1,7 +1,7 @@
 # NOTES — read this first
 
 Single source of truth for every chat that works on this repo. **Read it before changing anything, and update it when you finish.**
-Last updated: Nov 25, 2026.
+Last updated: Nov 25, 2026 (afternoon).
 
 > This repo is **public**. Keep league strategy, trade plans and notes about other managers out of it. Those live in the owner's private doc.
 
@@ -63,7 +63,7 @@ Main features and where they live:
 | Value history and trend graphs | `loadHistory`, `srcHistVal`, `histSeries`, `trendWindow`, `graphMode` / `listMode`, `openPlayerModal` |
 | Lineups and rank impact | `solveLineup`, `teamStrength`, `tradeRankImpact` |
 | Hub cards | playoff odds (`#playoffCard`, 2,000 simulations); team timeline (AGE_R curves); pick-ownership grid; handcuffs and stash alerts (DEPTH/BFSH, `SID_OWNER`); rookie targets (`signalPlayers`); sell windows (`sellBadge`) |
-| Trading tools | Fit score (`computeFit`); Copy DM Pitch (`buildPitch`); acquire flow (`data-acquire` → `startAcquire`); Trade ideas section (`#tradeIdeasSection`); Trade Finder (acquire mode, about line 3028) |
+| Trading tools | Fit score (`computeFit`); Copy DM Pitch (`buildPitch`); acquire flow (`data-acquire` → `startAcquire`); Trade ideas section (`#tradeIdeasSection`) with three modes: shop one player (`renderTradeIdeas`), Trade Finder for one target (`acquireIdeas`), and **ideas with one team** (`#ideaPartnerSel` or the League tab's Ideas button → `partnerIdeas`) |
 | Saved settings (localStorage) | adj, adjModel, fair, src, w, theme |
 
 **Other pages:**
@@ -146,11 +146,14 @@ Daily workflow safety:
 
 ## 8. Open items
 
-- **Requested (Nov 25, owner's words):** "when clicking on trade ideas, i'd like the option for it to generate ideas for one team based on what each teams needs are". The plan: in Trade ideas, add a team picker (or click a team in the Fit list) that gives 8–15 ranked ideas between you and just that team.
-  - Ideas would be 1-for-1, 2-for-1 and pick-sweetener packages, value-balanced with the current source.
-  - Score them by both teams' needs (`computeFit` fit/send/recv/arch) and contend-or-rebuild timeline.
-  - Each idea needs a reason, plus Copy DM Pitch and offer-check buttons.
-  - Reuse the existing Trade ideas / Trade Finder code.
+- **Done Nov 25 — ideas with one team** (`partnerIdeas`): owner asked for trade ideas with one chosen team, based on what each team needs.
+    - Uses both full rosters (assets worth 700+): 1-for-1, 2-for-1 / player + pick, and 1-for-2 / get player + pick.
+    - Keeps a deal only if, on the selected source, you don't lose by more than Fair and don't win by more than max(12%, 2 × Fair).
+    - A deal must help at least one side and hurt neither; picks-only swaps are dropped.
+    - Need fit = filling positions below the league average without opening a hole on the other side, plus timeline (rebuild teams like early picks and youth; contenders don't want picks).
+    - Shows up to 12, each with a reason for each side. Ideas passing the offer check under all three sources come first, marked ✓; the rest show which source disagrees.
+    - Each asset appears at most twice.
+    - Not yet tested on a real league payload (the sandbox has no Sleeper access): check the live results and tune the weights.
 - **About Dec 25:** backtest which source (KTC, FC, Blend) best predicted later value moves, using `ktc-history.json` and `fc-history.json`.
 - **Unresolved method differences** (decide, don't silently pick):
   - An older 24-team chat used a stud premium of `Σ 10000·(v/10000)^1.5`, calibrated to both sites' calculators. The site now uses the KTC-matched adjustment above. Compare the two on 24-team trades.
