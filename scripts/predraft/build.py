@@ -27,7 +27,7 @@ def say(*a):
 
 NFLV = "https://github.com/nflverse/nflverse-data/releases/download"
 SDV = "https://github.com/sportsdataverse/sportsdataverse-data/releases/download"
-FIRST, LAST_SETTLED, LAST = 2015, 2024, 2026
+FIRST, LAST_SETTLED, LAST = int(os.environ.get("PD_FIRST", "2011")), 2024, 2026
 POSS = ("WR", "RB", "TE")
 UP = {"WR": 14, "RB": 15, "TE": 17}
 
@@ -105,7 +105,13 @@ for y in range(FIRST, LAST_SETTLED + 2):
     except Exception as e:
         say(f"stats {y} failed: {e}")
 wk = pd.concat(weeks)
+# Best two seasons in years 1-3 (7+ games, weeks 1-17 only; a non-qualifying season counts as 0)
+w17 = wk[wk.week <= 17]
 wk["pts"] = np.where(wk.position == "TE", wk.fantasy_points_ppr + 0.5 * wk.receptions.fillna(0), wk.fantasy_points_ppr)
+w17 = w17.assign(pts=np.where(w17.position == "TE", w17.fantasy_points_ppr + 0.5 * w17.receptions.fillna(0), w17.fantasy_points_ppr))
+s17 = w17.groupby(["player_id", "season"]).agg(gp=("week", "count"), pts=("pts", "sum")).reset_index()
+s17["ppg"] = np.where(s17.gp >= 7, s17.pts / s17.gp, 0.0)
+PPG17 = {(a, b): c for a, b, c in zip(s17.player_id, s17.season, s17.ppg)}
 ss = wk.groupby(["player_id", "season"]).agg(gp=("week", "count"), pts=("pts", "sum")).reset_index()
 ss = ss[ss.gp >= 8]
 ss["ppg"] = ss.pts / ss.gp
@@ -121,6 +127,14 @@ for r in df.itertuples():
         b = best.get(r.gsis, 0) if isinstance(r.gsis, str) else 0
         safe.append(1 if b >= 12 else 0); up.append(1 if b >= UP[r.pos] else 0); src.append("nflverse")
 df["safe"], df["up"], df["outcome_src"] = safe, up, src
+def b2s(g, yr):
+    if not isinstance(g, str) or yr > 2023:
+        return np.nan
+    v = sorted([PPG17.get((g, yr + k), 0.0) for k in range(3)], reverse=True)
+    return (v[0] + v[1]) / 2
+df["b2s"] = [b2s(g, y) for g, y in zip(df.gsis, df.yr)]
+# undrafted / unmatched with no NFL id: 0 if the class is complete
+df.loc[df.b2s.isna() & (df.yr <= 2023), "b2s"] = 0.0
 st = df[df.yr <= LAST_SETTLED]
 say(f"\nOutcomes 2015-{LAST_SETTLED}: {len(st)} players; source: {st.outcome_src.value_counts().to_dict()}; "
     f"safe rate {st.safe.mean():.1%}, upside rate {st.up.mean():.1%}")
@@ -134,12 +148,24 @@ for y in range(FIRST - 5, LAST):
     except Exception as e:
         say(f"college players {y}: {e}")
 cp = pd.concat(pc, ignore_index=True)
+tt = []
+for y in range(FIRST - 5, LAST):
+    try:
+        t = get(f"{SDV}/espn_cfb_usage_teams/usage_teams_{y}.parquet", "parquet")[["season", "pos_team_id", "plays"]]
+        tt.append(t)
+    except Exception as e:
+        say(f"college teams {y}: {e}")
+TP = pd.concat(tt, ignore_index=True).rename(columns={"plays": "team_plays"}) if tt else None
 cp = cp[cp.position_group.isin(["WR", "RB", "TE", "QB", "ATH", "FB"]) | cp.position_group.isna()]
 cp["nk"] = cp.player_name.map(norm)
 cp["sk"] = cp.pos_team.map(lambda s: norm(s))
 # team totals from the player file itself
 tot = cp.groupby(["season", "pos_team_id"]).agg(t_rec=("receiving_yards", "sum"), t_rush=("rushes", "sum"), t_rushyd=("rush_yards", "sum")).reset_index()
 cp = cp.merge(tot, on=["season", "pos_team_id"], how="left")
+if TP is not None:
+    cp = cp.merge(TP, on=["season", "pos_team_id"], how="left")
+else:
+    cp["team_plays"] = np.nan
 say(f"\nCollege rows: {len(cp)} player-seasons {cp.season.min()}-{cp.season.max()}; columns ok: "
     f"{all(c in cp.columns for c in ['targets','receptions','receiving_yards','rushes','rush_yards','team_targets','games'])}")
 by_name = defaultdict(list)
@@ -191,6 +217,10 @@ for o in df.to_dict("records"):
         f["best_target_share"] = max(map(tshare, seasons))
         f["best_rush_share"] = max(map(rshare, seasons))
         f["best_scrim_pg"] = max(map(scrim, seasons))
+        def ytpp(r): return ((r.receiving_yards or 0) + (r.rush_yards or 0)) / r.team_plays if r.team_plays and r.team_plays == r.team_plays else np.nan
+        v = [ytpp(r) for r in seasons if ytpp(r) == ytpp(r)]
+        f["best_yds_per_team_play"] = max(v) if v else np.nan
+        f["best_rec_share"] = max(((r.receptions or 0) / max(1, (r.team_targets or 0) * 0.62)) for r in seasons)
         last = max(seasons, key=lambda r: r.season)
         f["final_yard_share"] = yshare(last)
         f["final_ypta"] = ypta(last)
@@ -229,6 +259,15 @@ df["log_rank"] = np.log(df.class_rank + 2)
 df["speed_score"] = np.where(df.forty > 0, df.wt * 200 / df.forty.pow(4), np.nan)
 df["bmi"] = np.where((df.ht > 0) & (df.wt > 0), df.wt / df.ht.pow(2) * 703, np.nan)
 df["no_forty"] = df.forty.isna().astype(int)
+df["hass"] = df.speed_score * (df.ht / 73.5).pow(1.5)
+df["early_declare"] = ((df.college_seasons <= 3) | (df.draft_age < 21.5)).astype(float)
+# teammate draft capital: same school + position drafted in [yr-2, yr], excluding the player
+dc = df[df.pick.notna()][["school", "pos", "yr", "pick", "name"]]
+def tdc(o):
+    m = dc[(dc.school == o.school) & (dc.pos == o.pos) & dc.yr.between(o.yr - 2, o.yr) & (dc.name != o.name)]
+    return float(((263 - m.pick) / 262).sum())
+df["teammate_dc"] = [tdc(o) for o in df.itertuples()]
+df["early_rd"] = (df.rd.fillna(9) <= 2).astype(float)
 df.to_csv(f"{OUT}/predraft_dataset.csv", index=False)
 say(f"\nWrote {OUT}/predraft_dataset.csv ({len(df)} rows)")
 
@@ -320,5 +359,61 @@ for pos in POSS:
                 MODELS[f"{pos}|{tgt}"] = dict(cols=final_cols, mu=mu.tolist(), sd=sd.tolist(), coef=m.coef_[0].tolist(),
                                               intercept=float(m.intercept_[0]), median=med, auc=float(roc_auc_score(y, pf)), n=int(len(x)))
 json.dump(MODELS, open(f"{OUT}/predraft_models.json", "w"), indent=1)
+
+# ------------------------------------------------------------------ continuous target: best two seasons, years 1-3
+from sklearn.linear_model import Ridge
+from scipy.stats import spearmanr
+say("\n# Continuous check: best two seasons (years 1-3) PPG, classes %d-2023" % FIRST)
+CONT = {
+    "WR": [["best_ypta"], ["breakout_age"], ["teammate_dc"], ["early_declare"], ["best_ypta", "teammate_dc", "early_declare"], ["best_yard_share"], ["draft_age"]],
+    "RB": [["best_rec_share"], ["best_target_share"], ["best_yds_per_team_play"], ["best_rec_share", "best_yds_per_team_play"], ["best_target_share", "tgt_x_early"], ["ypp_x_late"], ["wt"], ["speed_score"]],
+    "TE": [["breakout_age"], ["best_ypta"], ["hass"], ["hass", "pick_x_hass"], ["breakout_age", "best_ypta"], ["wt"]],
+}
+df["tgt_x_early"] = df.best_target_share * df.early_rd
+df["ypp_x_late"] = df.best_yds_per_team_play * (1 - df.early_rd)
+df["pick_x_hass"] = df.log_pick * df.hass
+
+
+def loso_reg(x, cols):
+    p = np.zeros(len(x)); yrs = x.yr.values
+    X = prep(x, cols); y = x.b2s.values
+    for yr in sorted(set(yrs)):
+        tr = yrs != yr
+        mu, sd = X[tr].mean(0), X[tr].std(0) + 1e-9
+        m = Ridge(alpha=1.0).fit((X[tr] - mu) / sd, y[tr])
+        p[~tr] = m.predict((X[~tr] - mu) / sd)
+    return p
+
+
+def r2(y, p): return 1 - ((y - p) ** 2).sum() / ((y - y.mean()) ** 2).sum()
+
+
+def rho_within(x, p):
+    m = (x.rd <= 3).values
+    return spearmanr(x.b2s.values[m], p[m]).correlation if m.sum() > 10 else np.nan
+
+
+for pos in POSS:
+    x = df[(df.pos == pos) & (df.yr <= 2023) & df.b2s.notna()].reset_index(drop=True)
+    anchor = ["log_rank"] if pos == "WR" else ["log_pick"]
+    base = loso_reg(x, anchor); y = x.b2s.values
+    say(f"\n## {pos} (n={len(x)}, mean B2S {y.mean():.1f}) anchor {anchor}: LOSO R² {r2(y, base):.3f}, MAE {np.abs(y-base).mean():.2f}, R1-3 Spearman {rho_within(x, base):.3f}")
+    for add in CONT[pos]:
+        if any(x[c].notna().mean() < 0.5 for c in add):
+            say(f"  - +{add}: skipped (coverage)"); continue
+        p = loso_reg(x, anchor + add)
+        ds = []
+        for _ in range(1000):
+            i = RNG.integers(0, len(x), len(x))
+            ds.append(r2(y[i], p[i]) - r2(y[i], base[i]))
+        lo, hi = np.percentile(ds, [2.5, 97.5])
+        # within rounds 1-3 rank correlation gain
+        m = (x.rd <= 3).values; dr = []
+        for _ in range(1000):
+            i = RNG.choice(np.where(m)[0], m.sum())
+            dr.append(spearmanr(y[i], p[i]).correlation - spearmanr(y[i], base[i]).correlation)
+        rlo, rhi = np.percentile(dr, [2.5, 97.5])
+        verdict = "KEEP" if (lo > 0 or rlo > 0) else "drop"
+        say(f"  - +{add}: R² {r2(y, p):.3f} (Δ {r2(y,p)-r2(y,base):+.3f} [{lo:+.3f}, {hi:+.3f}]); R1-3 Spearman {rho_within(x, p):.3f} (Δ [{rlo:+.3f}, {rhi:+.3f}]) {verdict}")
 open(f"{OUT}/predraft_report.md", "w").write("\n".join(REPORT) + "\n")
 say("\nDone.")
