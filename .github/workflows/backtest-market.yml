@@ -1,0 +1,44 @@
+name: Backtest CHEAP / PRICEY vs market
+
+# Manual research job. Pulls DynastyProcess value history and checks whether the rookie tabs'
+# CHEAP / PRICEY flags beat the market. Writes a report to the run summary and as a downloadable
+# artifact; it never commits or touches the site's data.
+on:
+  workflow_dispatch:
+    inputs:
+      first_class:
+        description: "First rookie class to test"
+        default: "2020"
+      last_class:
+        description: "Last rookie class to test"
+        default: "2025"
+
+permissions:
+  contents: read
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: pip install pandas numpy scikit-learn
+
+      - name: Clone DynastyProcess history (blobless, only what's needed)
+        run: git clone --filter=blob:none --no-checkout https://github.com/dynastyprocess/data.git dp
+
+      - name: Run backtest
+        run: |
+          mkdir -p reports
+          python scripts/backtest_market.py . dp reports/market_backtest.md "${{ inputs.first_class }}" "${{ inputs.last_class }}"
+          cat reports/market_backtest.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: market-backtest
+          path: reports/
