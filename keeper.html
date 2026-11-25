@@ -32,6 +32,7 @@
     <nav class="flex flex-wrap gap-1 ml-auto text-sm" id="tabs">
       <button data-tab="trade" class="tabbtn px-3 py-1.5 rounded-md">Trade calculator</button>
       <button data-tab="board" class="tabbtn px-3 py-1.5 rounded-md">Keeper board</button>
+      <button data-tab="draft" class="tabbtn px-3 py-1.5 rounded-md">Draft board</button>
       <button data-tab="picks" class="tabbtn px-3 py-1.5 rounded-md">Pick values</button>
       <button data-tab="players" class="tabbtn px-3 py-1.5 rounded-md">Player values</button>
       <button data-tab="howto" class="tabbtn px-3 py-1.5 rounded-md">How to use</button>
@@ -62,6 +63,7 @@
 
   <section id="tab-trade" class="tabpane"></section>
   <section id="tab-board" class="tabpane hidden"></section>
+  <section id="tab-draft" class="tabpane hidden"></section>
   <section id="tab-picks" class="tabpane hidden"></section>
   <section id="tab-players" class="tabpane hidden"></section>
   <section id="tab-howto" class="tabpane hidden">
@@ -82,7 +84,7 @@
         </div>
 
         <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3">
-          <h2 class="text-lg font-bold">The four tabs</h2>
+          <h2 class="text-lg font-bold">The tabs</h2>
           <div><h3 class="font-semibold text-emerald-600 dark:text-emerald-400">Trade calculator</h3>
             <ul class="list-disc pl-5 space-y-1">
               <li>Pick a team for each side. Their roster and draft picks appear underneath. Tap <b>＋</b> to add something to the trade.</li>
@@ -95,6 +97,12 @@
               <li>Every team's roster, sorted by keeper value, with the projected keepers checked.</li>
               <li>Know a manager's real plans? Check or uncheck a player to lock that decision (🔒). The draft pool and every pick value recalculate from it.</li>
               <li><b>Keeper crunch</b> lists teams with more good keepers than slots. They'll lose the extras for nothing, so they're the best teams to trade with. <b>Rental sellers</b> are losing teams holding stars they can't keep.</li>
+            </ul></div>
+          <div><h3 class="font-semibold text-emerald-600 dark:text-emerald-400">Draft board</h3>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Next year's full snake draft, with every projected keeper (<b>green K</b>) sitting in the pick it uses up. Traded picks show "via" the original team.</li>
+              <li>Turn on <b>Fill in projected picks</b> to fill the empty slots with the best players left, a rough mock draft based on value. Hover any cell for details.</li>
+              <li>Pick a team to highlight its picks. Lock keepers on the Keeper board and the draft board updates.</li>
             </ul></div>
           <div><h3 class="font-semibold text-emerald-600 dark:text-emerald-400">Pick values</h3>
             <ul class="list-disc pl-5 space-y-1">
@@ -221,13 +229,13 @@ function partOf(pos, N) { const e = Math.round(N / 3); return pos <= e ? 'Early'
 function pickCurve(ctx, keptSet, effRound, keeperTeam) {
   const { N, T } = ctx, total = N * T;
   const pool = ctx.universe.filter(p => !keptSet.has(p.pid)).sort((a, b) => b.vy1 - a.vy1);
-  const occ = new Set(), used = {};
+  const occ = new Set(), occBy = new Map(), used = {};
   for (const [pid, r] of effRound) {
     const rid = keeperTeam.get(pid);
     const origs = ((ctx.owned[rid] || {})[r]) || [];
     used[rid + ':' + r] = used[rid + ':' + r] || 0;
     const orig = origs[used[rid + ':' + r]++];
-    if (orig != null && ctx.teamSlot[orig]) occ.add(overallOf(r, ctx.teamSlot[orig], N));
+    if (orig != null && ctx.teamSlot[orig]) { const o = overallOf(r, ctx.teamSlot[orig], N); occ.add(o); occBy.set(o, pid); }
   }
   const val = new Array(total + 1).fill(0), rank = new Array(total + 1).fill(0);
   let k = 0;
@@ -243,7 +251,7 @@ function pickCurve(ctx, keptSet, effRound, keeperTeam) {
     let s = 0; for (let i = (r - 1) * N + 1; i <= r * N; i++) s += val[i];
     roundAvg[r] = s / N;
   }
-  return { pool, val, rank, roundAvg, occ };
+  return { pool, val, rank, roundAvg, occ, occBy };
 }
 
 function surplus(p, seq, curve) {
@@ -849,6 +857,77 @@ function renderBoard() {
     <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">${teamsHTML}</div>`;
 }
 
+/* ---------------- Draft board tab ---------------- */
+let boardOpts = store.get('keeper:boardOpts', { mock: true, hl: '' });
+function renderDraftBoard() {
+  const el = $('#tab-draft'), { N, T } = CTX, c = RES.curve;
+  const slotTeam = {}; for (const t of CTX.teams) slotTeam[CTX.teamSlot[t.rid]] = t.rid;
+  // who currently owns each original pick
+  const ownerOf = {};
+  for (const t of CTX.teams) for (let r = 1; r <= T; r++) for (const orig of (CTX.owned[t.rid][r] || [])) ownerOf[r + ':' + orig] = t.rid;
+  const hl = boardOpts.hl ? Number(boardOpts.hl) : (trade.A.rid || null);
+  const short = (s, n = 14) => { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+  const posColor = { QB: 'border-l-rose-500', RB: 'border-l-emerald-500', WR: 'border-l-sky-500', TE: 'border-l-amber-500' };
+  let k = 0, rows = '';
+  const keepCount = {};
+  for (let r = 1; r <= T; r++) {
+    let cells = '';
+    for (let pos = 1; pos <= N; pos++) {
+      const overall = (r - 1) * N + pos;
+      const slot = r % 2 === 1 ? pos : N + 1 - pos;
+      const orig = slotTeam[slot], owner = ownerOf[r + ':' + orig] ?? orig;
+      const keeperPid = c.occBy.get(overall);
+      let p, isKeeper = false;
+      if (keeperPid) { p = CTX.byId.get(keeperPid); isKeeper = true; keepCount[owner] = (keepCount[owner] || 0) + 1; }
+      else { p = c.pool[k++]; }
+      const mine = hl && owner === hl;
+      const via = owner !== orig ? `<div class="text-[9px] text-amber-600 dark:text-amber-400 truncate">via ${esc(short(teamName(orig), 12))}</div>` : '';
+      let body;
+      if (isKeeper) {
+        const note = RES.notes.get(keeperPid);
+        body = `<div class="flex items-center gap-1"><span class="text-[9px] font-bold px-1 rounded bg-emerald-600 text-white">K</span><span class="font-semibold truncate">${esc(short(p.name, 16))}</span></div>
+          <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${esc(p.pos)} · ${esc(short(teamName(owner), 13))}${note ? ' ⚠' : ''}</div>`;
+      } else if (boardOpts.mock && p) {
+        body = `<div class="truncate text-slate-600 dark:text-slate-300">${esc(short(p.name, 17))}</div>
+          <div class="text-[10px] text-slate-400 truncate">${esc(p.pos)} · ${esc(short(teamName(owner), 13))}</div>`;
+      } else {
+        body = `<div class="text-[10px] text-slate-400 truncate">${esc(short(teamName(owner), 16))}</div>`;
+      }
+      const cls = isKeeper
+        ? 'bg-emerald-500/15 border-emerald-500/50'
+        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
+      const left = p && (isKeeper || boardOpts.mock) ? `border-l-4 ${posColor[p.pos] || 'border-l-slate-400'}` : '';
+      const title = `${r}.${String(pos).padStart(2, '0')} (#${overall}) · ${teamName(owner)}${owner !== orig ? ' via ' + teamName(orig) : ''}${p && (isKeeper || boardOpts.mock) ? ' · ' + p.name + (isKeeper ? ' (keeper)' : ' (projected)') : ''}${isKeeper && RES.notes.get(keeperPid) ? ' · ' + RES.notes.get(keeperPid) : ''}`;
+      cells += `<td class="p-0.5 align-top"><div title="${esc(title)}" class="h-[3.4rem] w-[7.5rem] rounded border ${cls} ${left} px-1.5 py-1 text-[11px] leading-tight ${mine ? 'ring-2 ring-violet-500' : ''}">
+        <div class="text-[9px] text-slate-400 num">${r}.${String(pos).padStart(2, '0')}</div>${body}${via}</div></td>`;
+    }
+    rows += `<tr><td class="pr-2 text-xs font-semibold text-slate-500 align-middle whitespace-nowrap">Rd ${r} ${r % 2 === 1 ? '→' : '←'}</td>${cells}</tr>`;
+  }
+  const head = Array.from({ length: N }, (_, i) => {
+    const rid = slotTeam[i + 1];
+    return `<th class="p-0.5 text-[10px] font-semibold text-slate-500 text-left align-bottom"><div class="w-[7.5rem] truncate" title="${esc(teamName(rid))}">${i + 1}. ${esc(short(teamName(rid), 15))}</div></th>`;
+  }).join('');
+  el.innerHTML = `<div class="${card} p-4">
+    <div class="flex flex-wrap items-center gap-3 mb-2">
+      <div class="font-semibold">${CTX.nextSeason} draft board · ${RES.kept.size} projected keepers</div>
+      <label class="flex items-center gap-1.5 text-sm ml-auto"><input type="checkbox" id="boardMock" ${boardOpts.mock ? 'checked' : ''}> Fill in projected picks</label>
+      <select id="boardHl" class="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
+        <option value="">Highlight: ${trade.A.rid ? esc(teamName(trade.A.rid)) : 'none'}</option>
+        ${CTX.teams.map(t => `<option value="${t.rid}" ${String(boardOpts.hl) === String(t.rid) ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}
+      </select>
+    </div>
+    <div class="text-xs text-slate-500 mb-3">Snake order projected from current standings (worst record picks 1st). <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Green K</span> = projected keeper, sitting in the pick it costs. ${boardOpts.mock ? 'Other cells show the best player left by value, as a rough mock draft, not real ADP.' : ''} ⚠ = bumped by a same-round collision. Change who's kept on the Keeper board tab and this updates.</div>
+    <div class="overflow-x-auto scroll-thin"><table class="border-separate" style="border-spacing:0"><thead><tr><th></th>${head}</tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="flex flex-wrap gap-3 mt-3 text-[11px] text-slate-500">
+      <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 border-l-4 border-l-rose-500 bg-slate-200 dark:bg-slate-800"></span>QB</span>
+      <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 border-l-4 border-l-emerald-500 bg-slate-200 dark:bg-slate-800"></span>RB</span>
+      <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 border-l-4 border-l-sky-500 bg-slate-200 dark:bg-slate-800"></span>WR</span>
+      <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 border-l-4 border-l-amber-500 bg-slate-200 dark:bg-slate-800"></span>TE</span>
+      <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded ring-2 ring-violet-500"></span>Highlighted team's picks</span>
+      <span class="text-amber-600 dark:text-amber-400">via = traded pick</span>
+    </div></div>`;
+}
+
 /* ---------------- Picks tab ---------------- */
 function renderPicks() {
   const el = $('#tab-picks'), N = CTX.N, c = RES.curve;
@@ -911,7 +990,7 @@ function renderPlayers() {
 
 /* ---------------- Render + events ---------------- */
 function renderAll() {
-  renderRules(); renderTrade(); renderBoard(); renderPicks(); renderPlayers();
+  renderRules(); renderTrade(); renderBoard(); renderDraftBoard(); renderPicks(); renderPlayers();
   document.querySelectorAll('.tabbtn').forEach(b => {
     const on = b.dataset.tab === activeTab;
     b.className = 'tabbtn px-3 py-1.5 rounded-md ' + (on ? 'bg-emerald-600 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800');
@@ -973,6 +1052,8 @@ document.addEventListener('change', (e) => {
     store.set(lk('rules'), rules); recompute(); return;
   }
   if (t.id === 'pteam') { playerFilter.team = t.value; renderPlayers(); }
+  if (t.id === 'boardMock') { boardOpts.mock = t.checked; store.set('keeper:boardOpts', boardOpts); renderDraftBoard(); }
+  if (t.id === 'boardHl') { boardOpts.hl = t.value; store.set('keeper:boardOpts', boardOpts); renderDraftBoard(); }
 });
 
 document.addEventListener('input', (e) => {
