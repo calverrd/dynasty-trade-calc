@@ -34,6 +34,7 @@
       <button data-tab="board" class="tabbtn px-3 py-1.5 rounded-md">Keeper board</button>
       <button data-tab="picks" class="tabbtn px-3 py-1.5 rounded-md">Pick values</button>
       <button data-tab="players" class="tabbtn px-3 py-1.5 rounded-md">Player values</button>
+      <button data-tab="howto" class="tabbtn px-3 py-1.5 rounded-md">How to use</button>
       <a href="index.html" class="px-3 py-1.5 rounded-md text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400">← Dynasty calc</a>
     </nav>
     <div class="flex items-center gap-2 text-sm">
@@ -63,6 +64,88 @@
   <section id="tab-board" class="tabpane hidden"></section>
   <section id="tab-picks" class="tabpane hidden"></section>
   <section id="tab-players" class="tabpane hidden"></section>
+  <section id="tab-howto" class="tabpane hidden">
+    <div class="grid lg:grid-cols-3 gap-4 text-sm leading-relaxed">
+      <div class="lg:col-span-2 space-y-4">
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+          <h2 class="text-lg font-bold mb-2">Why keeper trades are hard to value</h2>
+          <p>In a keeper league, next year's draft is a full startup draft, not a rookie draft. A 3rd-round pick isn't a rookie lottery ticket. It's whoever is left after every team keeps its players. And a player is worth what he scores this season <i>plus</i> how cheaply you can keep him. This page works out both for you.</p>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+          <h2 class="text-lg font-bold mb-3">Getting started</h2>
+          <ol class="list-decimal pl-5 space-y-2">
+            <li><b>Load your league.</b> The box at the top right holds a Sleeper league ID (the long number in your league's Sleeper URL). Paste yours and press <b>Load</b>. The page remembers it next time.</li>
+            <li><b>Check the rules.</b> Open <b>League rules</b> near the top and make sure the keeper settings match your league. Changes save automatically and every value updates right away.</li>
+            <li><b>Pick a tab</b> for what you want to do (below).</li>
+          </ol>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3">
+          <h2 class="text-lg font-bold">The four tabs</h2>
+          <div><h3 class="font-semibold text-emerald-600 dark:text-emerald-400">Trade calculator</h3>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Pick a team for each side. Their roster and draft picks appear underneath. Tap <b>＋</b> to add something to the trade.</li>
+              <li>Use <b>Search any player</b> to add anyone, including free agents, or add a <b>generic pick</b> by round and Early / Mid / Late.</li>
+              <li>The bar at the top shows whether the deal is fair (<span class="text-emerald-500 font-semibold">green</span> = within 5%, <span class="text-amber-500 font-semibold">amber</span> = within 15%, <span class="text-rose-500 font-semibold">red</span> = lopsided). It also shows how each team's starting lineup and keeper core rank changes.</li>
+              <li><b>Copy DM pitch</b> writes a message you can paste to the other manager. It's written for Side A, so put your own team there.</li>
+            </ul></div>
+          <div><h3 class="font-semibold text-emerald-600 dark:text-emerald-400">Keeper board</h3>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Every team's roster, sorted by keeper value, with the projected keepers checked.</li>
+              <li>Know a manager's real plans? Check or uncheck a player to lock that decision (🔒). The draft pool and every pick value recalculate from it.</li>
+              <li><b>Keeper crunch</b> lists teams with more good keepers than slots. They'll lose the extras for nothing, so they're the best teams to trade with. <b>Rental sellers</b> are losing teams holding stars they can't keep.</li>
+            </ul></div>
+          <div><h3 class="font-semibold text-emerald-600 dark:text-emerald-400">Pick values</h3>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>What each round is worth, plus the players expected to still be available there after keepers.</li>
+              <li>The ownership grid shows who has extra picks (green) or traded picks away (red) in rounds 1–9.</li>
+            </ul></div>
+          <div><h3 class="font-semibold text-emerald-600 dark:text-emerald-400">Player values</h3>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>Every rostered player with how he was acquired, his next keeper cost, years left, and values. Filter to <b>Bargain keepers</b> or <b>Rentals</b>, or by team.</li>
+              <li>If a cost or years-left is wrong (an odd trade or commissioner ruling, say), change it in the dropdown. Your fix is saved and used everywhere.</li>
+            </ul></div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+          <h2 class="text-lg font-bold mb-2">Reading a player</h2>
+          <p class="mb-2">The big number is <b>trade value</b>. Underneath it splits into:</p>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><b>Redraft</b>: what he's worth for the rest of this season.</li>
+            <li><b class="text-emerald-600 dark:text-emerald-400">Keeper</b>: how much more he's worth than the pick it costs to keep him, over the years he has left.</li>
+            <li><b>Cost</b>: the round you'd give up to keep him next year.</li>
+            <li><b>Yrs left</b>: <span class="text-emerald-500">2</span>, <span class="text-amber-500">1</span>, or <span class="text-rose-500">0</span> (a rental you can't keep).</li>
+            <li><b>K</b> badge: projected to be kept.</li>
+          </ul>
+        </div>
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+          <h2 class="text-lg font-bold mb-2">Keeper rules (default)</h2>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Up to 3 keepers per team, each kept up to 2 years in a row.</li>
+            <li>Keeping costs a pick one round earlier than where he went last year.</li>
+            <li>Round 10+ picks and waiver adds cost a 9th, then an 8th.</li>
+            <li>Round 1 picks can't be kept. Round 2 picks can be kept once, for a 1st.</li>
+            <li>If two keepers cost the same round, the lesser one moves up a round, unless the team owns an extra pick in that round.</li>
+          </ul>
+        </div>
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+          <h2 class="text-lg font-bold mb-2">Season phase</h2>
+          <p>Values shift through the year. <b>In-Season</b> leans on this season's points, <b>Trade Deadline</b> blends the two, and <b>Offseason</b> counts only keeper value, so rentals drop to 0. It's set automatically, and you can change it in League rules.</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+          <h2 class="text-lg font-bold mb-2">Good to know</h2>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Next year's draft order is projected from current standings (worst record picks first).</li>
+            <li>Values update every 3 hours. Press ⟳ to refresh now.</li>
+            <li>Next year's rookies aren't in the values yet, so late picks may read a little low.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <footer class="max-w-7xl mx-auto px-4 py-8 text-xs text-slate-500 dark:text-slate-400 space-y-1">
