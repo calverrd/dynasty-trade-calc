@@ -101,7 +101,7 @@
           <div><h3 class="font-semibold text-emerald-600 dark:text-emerald-400">Draft board</h3>
             <ul class="list-disc pl-5 space-y-1">
               <li>Next year's full snake draft, with every projected keeper (<b>green K</b>) sitting in the pick it uses up. Traded picks show "via" the original team.</li>
-              <li>Turn on <b>Fill in projected picks</b> to fill the empty slots with the best players left, a rough mock draft based on value. Hover any cell for details.</li>
+              <li>Picks that aren't used on a keeper show as <b>Open pick</b>. Turn on <b>Show mock draft in open picks</b> to see who might still be available at each pick (marked <b>proj.</b>). Those players are not on that team. Hover any cell for details.</li>
               <li><b>Click any team name or pick</b> to highlight all of that team's picks (others fade out). Click again to clear. Lock keepers on the Keeper board and the draft board updates.</li>
             </ul></div>
           <div><h3 class="font-semibold text-emerald-600 dark:text-emerald-400">Pick values</h3>
@@ -858,7 +858,8 @@ function renderBoard() {
 }
 
 /* ---------------- Draft board tab ---------------- */
-let boardOpts = store.get('keeper:boardOpts', { mock: true, hl: '' });
+let boardOpts = store.get('keeper:boardOpts', { mock: false, hl: '' });
+if (boardOpts.v !== 2) { boardOpts = { ...boardOpts, mock: false, v: 2 }; store.set('keeper:boardOpts', boardOpts); }
 function renderDraftBoard() {
   const el = $('#tab-draft'), { N, T } = CTX, c = RES.curve;
   const slotTeam = {}; for (const t of CTX.teams) slotTeam[CTX.teamSlot[t.rid]] = t.rid;
@@ -890,16 +891,18 @@ function renderDraftBoard() {
         body = `<div class="flex items-center gap-1"><span class="text-[9px] font-bold px-1 rounded bg-emerald-600 text-white">K</span><span class="font-semibold truncate">${esc(short(p.name, 16))}</span></div>
           <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${esc(p.pos)} · ${esc(short(teamName(owner), 13))}${note ? ' ⚠' : ''}</div>`;
       } else if (boardOpts.mock && p) {
-        body = `<div class="truncate text-slate-600 dark:text-slate-300">${esc(short(p.name, 17))}</div>
-          <div class="text-[10px] text-slate-400 truncate">${esc(p.pos)} · ${esc(short(teamName(owner), 13))}</div>`;
+        body = `<div class="truncate italic text-slate-500 dark:text-slate-400"><span class="not-italic text-[9px] font-semibold px-1 rounded bg-slate-200 dark:bg-slate-700 mr-0.5">proj.</span>${esc(short(p.name, 13))}</div>
+          <div class="text-[10px] text-slate-400 truncate">${esc(short(teamName(owner), 16))}'s pick</div>`;
       } else {
-        body = `<div class="text-[10px] text-slate-400 truncate">${esc(short(teamName(owner), 16))}</div>`;
+        body = `<div class="font-medium ${mine ? 'text-violet-600 dark:text-violet-300' : 'text-slate-500 dark:text-slate-400'}">Open pick</div>
+          <div class="text-[10px] text-slate-400 truncate">${esc(short(teamName(owner), 16))}</div>`;
       }
       const cls = isKeeper
         ? 'bg-emerald-500/15 border-emerald-500/50'
+        : boardOpts.mock ? 'bg-slate-50 dark:bg-slate-900/60 border-dashed border-slate-300 dark:border-slate-700'
         : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800';
-      const left = p && (isKeeper || boardOpts.mock) ? `border-l-4 ${posColor[p.pos] || 'border-l-slate-400'}` : '';
-      const title = `${r}.${String(pos).padStart(2, '0')} (#${overall}) · ${teamName(owner)}${owner !== orig ? ' via ' + teamName(orig) : ''}${p && (isKeeper || boardOpts.mock) ? ' · ' + p.name + (isKeeper ? ' (keeper)' : ' (projected)') : ''}${isKeeper && RES.notes.get(keeperPid) ? ' · ' + RES.notes.get(keeperPid) : ''}`;
+      const left = p && isKeeper ? `border-l-4 ${posColor[p.pos] || 'border-l-slate-400'}` : '';
+      const title = `${r}.${String(pos).padStart(2, '0')} (#${overall}) · ${teamName(owner)}${owner !== orig ? ' via ' + teamName(orig) : ''}${p && isKeeper ? ' · ' + p.name + ' (keeper)' : p && boardOpts.mock ? ' · open pick · mock: ' + p.name + ' could be available here (not on this team)' : ' · open pick'}${isKeeper && RES.notes.get(keeperPid) ? ' · ' + RES.notes.get(keeperPid) : ''}`;
       cells += `<td class="p-0.5 align-top"><div data-hlteam="${owner}" title="${esc(title)}\nClick to highlight ${esc(teamName(owner))}'s picks" class="cursor-pointer transition-opacity h-[3.4rem] w-[6.75rem] rounded border ${cls} ${left} px-1.5 py-1 text-[11px] leading-tight ${mine ? 'ring-2 ring-violet-500 shadow-md shadow-violet-500/30' : hl ? 'opacity-35 hover:opacity-80' : 'hover:ring-1 hover:ring-violet-400'}">
         <div class="text-[9px] text-slate-400 num">${r}.${String(pos).padStart(2, '0')}</div>${body}${via}</div></td>`;
     }
@@ -912,14 +915,14 @@ function renderDraftBoard() {
   el.innerHTML = `<div class="${card} p-4">
     <div class="flex flex-wrap items-center gap-3 mb-2">
       <div class="font-semibold">${CTX.nextSeason} draft board · ${RES.kept.size} projected keepers</div>
-      <label class="flex items-center gap-1.5 text-sm ml-auto"><input type="checkbox" id="boardMock" ${boardOpts.mock ? 'checked' : ''}> Fill in projected picks</label>
+      <label class="flex items-center gap-1.5 text-sm ml-auto"><input type="checkbox" id="boardMock" ${boardOpts.mock ? 'checked' : ''}> Show mock draft in open picks</label>
       <select id="boardHl" class="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm">
         <option value="none" ${hl == null ? 'selected' : ''}>Highlight: none</option>
         ${CTX.teams.map(t => `<option value="${t.rid}" ${hl === t.rid ? 'selected' : ''}>Highlight: ${esc(t.name)}</option>`).join('')}
       </select>
     </div>
     ${hl ? `<div class="flex flex-wrap items-center gap-2 mb-2 text-sm"><span class="inline-block w-3 h-3 rounded ring-2 ring-violet-500"></span><b>${esc(teamName(hl))}</b><span class="text-slate-500">· ${hlCount.n || 0} picks (${[...RES.kept].filter(p => RES.keeperTeam.get(p) === hl).length} used on keepers)</span><button data-hlteam="none" class="ml-1 px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 text-xs">Clear</button></div>` : ''}
-    <div class="text-xs text-slate-500 mb-3"><b>Click any team name or pick to highlight all of that team's picks</b>; click again to clear. Snake order projected from current standings (worst record picks 1st). <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Green K</span> = projected keeper, sitting in the pick it costs. ${boardOpts.mock ? 'Other cells show the best player left by value, as a rough mock draft, not real ADP.' : ''} ⚠ = bumped by a same-round collision. Change who's kept on the Keeper board tab and this updates.</div>
+    <div class="text-xs text-slate-500 mb-3"><b>Click any team name or pick to highlight all of that team's picks</b>; click again to clear. Snake order projected from current standings (worst record picks 1st). <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Green K</span> = projected keeper, sitting in the pick it costs. ${boardOpts.mock ? '<b>proj.</b> names are a mock draft (best player left by value) to show who might be available at that pick. They are <b>not</b> on that team.' : 'Open pick = a pick the team will actually make in the draft.'} ⚠ = bumped by a same-round collision. Change who's kept on the Keeper board tab and this updates.</div>
     <div class="overflow-x-auto scroll-thin"><table class="border-separate" style="border-spacing:0"><thead><tr><th></th>${head}</tr></thead><tbody>${rows}</tbody></table></div>
     <div class="flex flex-wrap gap-3 mt-3 text-[11px] text-slate-500">
       <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 border-l-4 border-l-rose-500 bg-slate-200 dark:bg-slate-800"></span>QB</span>
