@@ -1876,7 +1876,7 @@
             age: pl.maybeAge ? Number(pl.maybeAge) : null,
             sleeperId: pl.sleeperId ? String(pl.sleeperId) : '',
             fRaw: Number(row.value) || 0,
-            fcKey: `${pl.name || ''}|${pos}`,
+            fcKey: pl.sleeperId ? `sid:${pl.sleeperId}` : `${normName(pl.name || '')}|${pos}`,
             fcTrend30: Number(row.trend30Day) || 0,
             rdv: Number(row.redraftValue) || 0,
             k: 0,
@@ -2129,8 +2129,10 @@
     function fcHistVal(p, date) {
       const row = FC_HISTORY && p.fcKey && FC_HISTORY.days[date] && FC_HISTORY.days[date][p.fcKey];
       if (!row) return null;
-      const col = (activeLeague.numTeams || 12) >= 14 ? 1 : 0;
-      const v = row[col] != null ? row[col] : row[0];
+      const n = activeLeague.numTeams || 12;
+      const a = row[0], b = row[1] != null ? row[1] : row[0];
+      const t = Math.max(0, Math.min(1, (n - 12) / 4));
+      const v = a != null && b != null ? a + (b - a) * t : (a != null ? a : b);
       return v != null ? Math.round(v * (p.pos === 'TE' ? (p.fcTeMult || 1) : 1)) : null;
     }
     // A past value under a given source, built the same way valueFor() builds today's value
@@ -2139,8 +2141,11 @@
       if (!FC_HISTORY || !FC_HISTORY.days[date]) return null;
       const k = p.ktcKey && HISTORY ? histVal(p.ktcKey, p.pos, date) : null;
       const f = fcHistVal(p, date);
+      const hasF = Number(p.fRaw) > 0 && !p.est, hasK = Number(p.k) > 0 && !p.est;
+      if (hasF && f == null) return null; // FC prices him today but not on this date: skip, don't splice in KTC
       if (mode === 'fc') return f != null ? f : (k ? Math.round(FC_SCALE.toFc(k)) : null);
       if (HISTORY && !HISTORY.days[date]) return null;
+      if (hasK && !k) return null;
       const fK = f != null ? FC_SCALE.toKtc(f) : null;
       if (k && fK) return Math.round(k * (st.w / 100) + fK * (1 - st.w / 100));
       return fK != null ? Math.round(fK) : (k || null);
@@ -2804,29 +2809,6 @@
         const txt = r.fair ? `Fair (${r.gap.toFixed(1)}%)` : `${esc(name(r.winner))} wins by ${r.gap.toFixed(1)}%`;
         return `<span class="px-2 py-1 rounded-lg text-[11px] font-semibold border ${cls}">${esc(r.label)}: ${txt}</span>`;
       };
-      let banner;
-      const REJECT_X = 2.4; // "too good to be accepted" = you win by more than 2.4x the fair range under every source
-      if (mySide) {
-        const losses = valid.filter(r => r.winner && r.winner !== mySide);
-        const allFair = valid.length && valid.every(r => r.fair);
-        const lopsided = valid.length && valid.every(r => r.winner === mySide && r.gap > st.fair * REJECT_X);
-        if (losses.length) {
-          banner = `<div class="px-3 py-2 rounded-lg bg-rose-500/12 border border-rose-500/35 text-rose-800 dark:text-rose-200 text-xs font-bold">⚠ ${losses.length} of ${valid.length} value source${valid.length > 1 ? 's' : ''} say you lose this trade (${esc(losses.map(r => r.label.split(' (')[0]).join(', '))}). Ask for more or pass.</div>`;
-        } else if (allFair) {
-          banner = `<div class="px-3 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-800 dark:text-emerald-200 text-xs font-bold">✓ Safe to send — every value source calls this fair (within ±${st.fair}%).</div>`;
-        } else if (lopsided) {
-          const minGap = Math.min(...valid.map(r => r.gap));
-          banner = `<div class="px-3 py-2 rounded-lg bg-amber-500/12 border border-amber-500/35 text-amber-800 dark:text-amber-200 text-xs font-bold">Likely rejected — every source says you win by ${minGap.toFixed(0)}%+. Offers this lopsided usually get declined; give a little back if you want it accepted.</div>`;
-        } else if (valid.length) {
-          const wins = valid.filter(r => r.winner === mySide).length;
-          banner = `<div class="px-3 py-2 rounded-lg bg-emerald-500/12 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-bold">✓ No value source says you lose this trade${wins ? ` — ${wins} of ${valid.length} say you win it` : ''}.</div>`;
-        }
-      } else {
-        const winners = new Set(valid.map(r => r.winner || 'fair'));
-        banner = winners.size > 1
-          ? `<div class="px-3 py-2 rounded-lg bg-amber-500/12 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs font-bold">Sources disagree on this trade — check each before deciding.</div>`
-          : `<div class="px-3 py-2 rounded-lg bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] text-xs font-bold">All value sources agree. (Pick your team on Side A or B to get a “you lose” warning.)</div>`;
-      }
       // Data-coverage warnings: assets only one source values (the others fall back to it, so they
       // aren't independent checks) or that no source values at all (estimated pick curve).
       const notes = [];
@@ -2841,6 +2823,37 @@
       const noteHtml = notes.length
         ? `<div class="px-3 py-1.5 rounded-lg bg-amber-500/8 border border-amber-500/25 text-amber-800 dark:text-amber-200 text-[11px]"><b>Less reliable:</b> ${notes.map(esc).join(' · ')}</div>`
         : '';
+      const thinData = notes.length > 0;
+      let banner;
+      // "Too good to be accepted": at least 12%, or twice the fair range if that is wider (so a strict
+      // Fair ± setting can't make ordinary wins look insulting, and a loose one can't hide a fleece)
+      const rejectAt = Math.max(12, st.fair * 2);
+      if (mySide) {
+        const losses = valid.filter(r => r.winner && r.winner !== mySide);
+        const allFair = valid.length && valid.every(r => r.fair);
+        const over = valid.filter(r => r.winner === mySide && r.gap > rejectAt);
+        const lopsided = valid.length && over.length === valid.length;
+        if (losses.length) {
+          banner = `<div class="px-3 py-2 rounded-lg bg-rose-500/12 border border-rose-500/35 text-rose-800 dark:text-rose-200 text-xs font-bold">⚠ ${losses.length} of ${valid.length} value source${valid.length > 1 ? 's' : ''} say you lose this trade (${esc(losses.map(r => r.label.split(' (')[0]).join(', '))}). Ask for more or pass.</div>`;
+        } else if (allFair) {
+          banner = thinData
+            ? `<div class="px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-bold">✓ Looks fair under every source — but some values below come from only one source, so the sources aren’t truly independent here.</div>`
+            : `<div class="px-3 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-800 dark:text-emerald-200 text-xs font-bold">✓ Safe to send — every value source calls this fair (within ±${st.fair}%).</div>`;
+        } else if (lopsided) {
+          const minGap = Math.min(...valid.map(r => r.gap));
+          banner = `<div class="px-3 py-2 rounded-lg bg-amber-500/12 border border-amber-500/35 text-amber-800 dark:text-amber-200 text-xs font-bold">Likely rejected — every source says you win by ${minGap.toFixed(0)}%+. Offers this lopsided usually get declined; give a little back if you want it accepted.</div>`;
+        } else if (over.length) {
+          banner = `<div class="px-3 py-2 rounded-lg bg-amber-500/12 border border-amber-500/35 text-amber-800 dark:text-amber-200 text-xs font-bold">Might be rejected — ${esc(over.map(r => `${r.label.split(' (')[0]} says you win by ${r.gap.toFixed(0)}%`).join(', '))}. A manager who uses ${over.length > 1 ? 'those values' : 'that site'} will likely see this as lopsided.</div>`;
+        } else if (valid.length) {
+          const wins = valid.filter(r => r.winner === mySide).length;
+          banner = `<div class="px-3 py-2 rounded-lg bg-emerald-500/12 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-bold">✓ No value source says you lose this trade${wins ? ` — ${wins} of ${valid.length} say you win it` : ''}.</div>`;
+        }
+      } else {
+        const winners = new Set(valid.map(r => r.winner || 'fair'));
+        banner = winners.size > 1
+          ? `<div class="px-3 py-2 rounded-lg bg-amber-500/12 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs font-bold">Sources disagree on this trade — check each before deciding.</div>`
+          : `<div class="px-3 py-2 rounded-lg bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] text-xs font-bold">All value sources agree. (Pick your team on Side A or B to get a “you lose” warning.)</div>`;
+      }
       box.classList.remove('hidden');
       box.innerHTML = `<div class="space-y-1.5">
           ${banner || ''}

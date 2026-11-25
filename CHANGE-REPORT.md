@@ -218,3 +218,16 @@ Previously the player-popup graphs, 7/30-day changes, chart badges and League Mo
 - Blend history uses today's FC→KTC scale map for past dates (not each day's own map), which is a close approximation.
 - League fit uses today's values on past trades, so it measures fit to the current market, not the market when the trade happened.
 - In about 30 days of saved history, the next step is a backtest of which source best predicted later value moves.
+
+### Gemini review fixes (Nov 25)
+- "Likely rejected" threshold is now max(12%, 2 × Fair ±) instead of 2.4 × Fair ± (fixes Fair 0% / 2% / 10% edge cases).
+- New amber "Might be rejected" when ANY source says you win past that threshold (and none says you lose).
+- "Safe to send" downgrades to "Looks fair… but some values come from only one source" whenever the Less-reliable list isn't empty.
+- fc-history keys are now "sid:<Sleeper ID>" (normalized "name|POS" fallback), so name changes don't break history.
+- League sizes between 12 and 16 interpolate between the sf12 and sf16 values (14 teams = average).
+- No source-switch cliffs: if a source prices a player today, past dates without that source are skipped instead of spliced in from the other source.
+- Workflow: commit step uses `!cancelled()` (not `always()`); fc-history.json is only staged if it parses; update-fc.mjs writes to a temp file, verifies it, then renames; each FC format is validated on its own (200+ rows with finite positive values); a final step fails the run (sending GitHub's failure email) if FantasyCalc failed, after KTC data is already committed.
+- Known limit added: today's KTC TE-premium lift (fcTeMult) is applied to past FC values for TEs.
+
+### Deployment note
+The first Nov 25 upload accidentally overwrote index.html and the workflow with an older base, dropping the Nov 23–24 work (Hub, Trade Finder, rookie tabs, sell windows, depth.json/draft_latest.json commits). Both were restored with a 3-way merge the same morning; nothing was lost.
