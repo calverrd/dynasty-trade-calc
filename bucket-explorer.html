@@ -2,6 +2,7 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dynasty Profile Bucket Explorer &amp; Range of Outcomes</title>
 
@@ -2635,28 +2636,46 @@
       return { n, safe: w(safeOf), up: w(upOf), rep: w(b => b.repPct) };
     }
 
-    // Lazy-load the non-value extras the first time the tool is used
+    // Lazy-load the non-value extras the first time the tool is used. data/player-context.json is a slim copy of
+    // the three rookie tabs' DATA plus veteran ages (built by scripts/build_context.py on the Tuesday refresh),
+    // and data/age-curves.json is the same sell-window table the hub uses — ~40 KB gzipped in total.
     async function cmpLoadExtras() {
       if (CMP.extra) return CMP.extra;
       if (CMP.loading) return CMP.loading;
       const getJson = u => fetch(u, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
-      const getData = u => fetch(u, { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
-        const m = t.match(/const DATA = (\[[\s\S]*?\]);\s*\n/);
-        try { return m ? JSON.parse(m[1]) : []; } catch (e) { return []; }
-      }).catch(() => []);
       CMP.loading = Promise.all([
-        getJson('./signals.json'), getJson('./ppg.json'),
-        getData('./rookie-wr-tracker.html'), getData('./rookie-rb-tracker.html'), getData('./rookie-te-tracker.html')
-      ]).then(([sig, ppg, wr, rb, te]) => {
-        const track = { WR: wr, RB: rb, TE: te };
+        getJson('./signals.json'), getJson('./ppg.json'), getJson('./data/player-context.json'), getJson('./data/age-curves.json')
+      ]).then(([sig, ppg, ctx, curves]) => {
+        const F = ctx?.fields || [];
+        const rowsOf = pos => (ctx?.rows?.[pos] || []).map(r => Object.fromEntries(F.map((f, i) => [f, r[i]])));
+        const track = { WR: rowsOf('WR'), RB: rowsOf('RB'), TE: rowsOf('TE') };
         const settledYr = {};
         Object.entries(track).forEach(([pos, d]) => { settledYr[pos] = d.length ? Math.max(...d.map(x => x.yr)) - 2 : 0; });
         const sigBy = new Map(); (sig?.players || []).forEach(x => sigBy.set(`${x.pos}|${cmpNorm(x.n)}`, x));
         const ppgBy = new Map(); Object.entries(ppg?.players || {}).forEach(([k, v]) => ppgBy.set(`${v.pos}|${cmpNorm(k)}`, v));
-        CMP.extra = { track, settledYr, sigBy, ppgBy, season: ppg?.season || sig?.season || null };
+        CMP.extra = { track, settledYr, sigBy, ppgBy, ages: ctx?.vets || {}, sell: curves?.sell?.table || null,
+          season: ppg?.season || sig?.season || null, ok: !!(ctx && curves) };
         return CMP.extra;
       });
       return CMP.loading;
+    }
+    // Next-season odds to post 12+ PPG again — same table and rule as the hub's SELL badges (index.html sellInfo):
+    // RB/WR/TE, 12+ PPG this season, by age band and whether he's above the position median
+    function sellOdds(p, pg, ex) {
+      const cfg = ex?.sell?.[p.pos];
+      if (!cfg) return { why: p.pos === 'QB' ? 'not modeled for QBs' : 'not loaded' };
+      if (!pg || pg.pos !== p.pos) return { why: 'no PPG on file this season' };
+      if (pg.ppg < 12) return { why: `under 12 PPG this season (${Number(pg.ppg).toFixed(1)})` };
+      const age = Number(ex.ages[`${p.pos}|${cmpNorm(p.name)}`]);
+      if (!age) return { why: 'age not on file' };
+      const i = cfg.ages.filter(a => age >= a).length;
+      const [k, n] = (pg.ppg >= cfg.med ? cfg.top : cfg.bot)[i];
+      let flag = null;
+      if (p.pos === 'RB') flag = age >= 28 ? 'now' : age >= 27 ? 'window' : null;
+      if (p.pos === 'WR') flag = age >= 31 ? 'now' : (age >= 29 && pg.ppg < cfg.med) ? 'window' : null;
+      if (p.pos === 'TE' && pg.ppg < cfg.med) flag = age >= 32 ? 'now' : age >= 31 ? 'window' : null;
+      const A = cfg.ages, band = i === 0 ? `under ${A[0]}` : i === A.length ? `${A[i - 1]}+` : A[i] - A[i - 1] === 1 ? `${A[i - 1]}` : `${A[i - 1]}–${A[i] - 1}`;
+      return { odds: Math.round(100 * k / n), k, n, age, band, flag, above: pg.ppg >= cfg.med, med: cfg.med };
     }
     function trackRow(p, ex) {
       const d = ex?.track[p.pos];
@@ -2744,7 +2763,7 @@
       const A = CMP.a ? PLAYER_BY_ID.get(CMP.a) : null, B = CMP.b ? PLAYER_BY_ID.get(CMP.b) : null;
       if (!A && !B) { out.innerHTML = `<p class="text-xs text-slate-500 dark:text-slate-400">Pick two players. Their profile buckets are compared right away; usage, draft-slot history and model odds load the first time.</p>`; return; }
       if (!CMP.extra) {
-        out.innerHTML = `<div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 py-3"><span class="inline-block w-3.5 h-3.5 rounded-full border-2 border-sky-500 border-t-transparent animate-spin"></span>Loading usage and draft history (first time only)…</div>`;
+        out.innerHTML = `<div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 py-3"><span class="inline-block w-3.5 h-3.5 rounded-full border-2 border-sky-500 border-t-transparent animate-spin"></span>Loading usage, draft history and age curves (first time only)…</div>`;
         await cmpLoadExtras();
       }
       const ex = CMP.extra;
@@ -2823,8 +2842,14 @@
         return bits.join(' · ') + ' <span class="text-slate-400">seasons</span>';
       };
       const now = d => d.pg ? `<strong>${Number(d.pg.ppg).toFixed(1)}</strong> PPG in ${d.pg.gp} games (${d.pg.s})` : '—';
-      h += cmpStrip('Career', cmpRow('Seasons by PPG tier', col(da, res), col(db, res)) + ((da?.pg || db?.pg) ? cmpRow('This season', col(da, now), col(db, now)) : ''));
-      h += `<p class="pt-2 text-[10px] text-slate-500 dark:text-slate-400">Bucket odds are historical rates for players drafted with that profile; tap a bucket for its full list. Model odds and usage come from the rookie tabs. Nothing here uses trade values.</p>`;
+      const keep = d => {
+        const x = sellOdds(d.p, d.pg, ex);
+        if (x.odds == null) return `<span class="text-slate-400">${x.why}</span>`;
+        const fl = x.flag ? ` <span class="text-[10px] font-bold px-1.5 rounded ${x.flag === 'now' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : 'bg-amber-400/20 text-amber-800 dark:text-amber-300'}">${x.flag === 'now' ? 'SELL NOW' : 'SELL WINDOW'}</span>` : '';
+        return `<strong>${x.odds}%</strong> repeat 12+${fl} <span class="text-slate-400">(age ${Math.floor(x.age)}: ${x.k} of ${x.n} ${d.p.pos}s aged ${x.band}, ${x.above ? 'above' : 'below'} ${x.med} PPG)</span>`;
+      };
+      h += cmpStrip('Career', cmpRow('Seasons by PPG tier', col(da, res), col(db, res)) + ((da?.pg || db?.pg) ? cmpRow('This season', col(da, now), col(db, now)) + cmpRow('Next season', col(da, keep), col(db, keep)) : ''));
+      h += `<p class="pt-2 text-[10px] text-slate-500 dark:text-slate-400">Bucket odds are historical rates for players drafted with that profile; tap a bucket for its full list. Model odds and usage come from the rookie tabs. Next-season odds use the same age table as the hub's SELL badges (nflverse 2015–2024). Nothing here uses trade values.</p>`;
       out.innerHTML = h;
     }
 

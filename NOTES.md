@@ -39,6 +39,8 @@ Last updated: Nov 25, 2026 (afternoon).
 
 ## 3. Site map
 
+Every page has `<meta name="robots" content="noindex, nofollow">` in its `<head>` (added Nov 25), so search engines leave the site out and it stays a link-only tool. Keep it on any new page. (A project site can't use robots.txt; that would have to sit at the root of calverrd.github.io.)
+
 **`index.html` — hub and trade calculator.** One file. Tabs:
 - Trade chart
 - Trade calculator
@@ -80,6 +82,8 @@ Main features and where they live:
 | `fc-history.json` | same workflow, via `scripts/update-fc.mjs` | FantasyCalc dynasty SF values for 12 and 16 teams, keyed `sid:<SleeperID>`, 120 days. First day saved Nov 25. FC currently returns identical values for 12 and 16 teams. |
 | `depth.json`, `draft_latest.json` | same workflow | RB depth charts and injuries; nflverse draft picks |
 | `ppg.json`, `signals.json`, `bf.json`, rookie-tab `DATA` | `rookie-refresh.yml` (Tuesdays in Sep–Jan, plus manual), via `scripts/refresh/refresh_rookies.py` | Veteran PPG, rookie signals, buckets |
+| `data/player-context.json` | same workflow, via `scripts/build_context.py` (after the refresh) | Slim copy of the three rookie tabs' `DATA` (`fields` + one array per row) plus veteran ages (`vets`, `"POS|normname": age`, from `ktc.json`, so ages lag up to a week). ~100 KB, 29 KB gzipped. Read by the comparison tool instead of the rookie pages (~1.4 MB). |
+| `data/age-curves.json` | by hand (static; rebuild only if the nflverse study is rerun) | `sell.table` (next-season 12+ odds by position / age band / above-median PPG, cells `[hits, players]`) and `ageCurves.table` (next-season PPG retention by age). One copy, read by `index.html` (SELL badges, team timeline) and `bucket-explorer.html` (comparison). |
 | `data/predraft_*` | `build-predraft-data.yml` (manual; discover or build mode) | Pre-draft prospect dataset |
 | (run summary only) | `backtest-market.yml` (manual; inputs first_class, last_class, min_gap, min_value) | CHEAP/PRICEY backtest against DynastyProcess history. Never commits. |
 
@@ -88,6 +92,11 @@ Daily workflow safety:
 - The commit step uses `!cancelled()`.
 - `fc-history.json` is committed only if it parses.
 - A final step fails the run, so GitHub emails the owner, if FC failed.
+
+Rookie refresh safety (`scripts/refresh/check_outputs.py`, runs before the commit):
+- Every committed file must parse: the three pages' `DATA` (100+ rows, each with name, class and tier), `ppg.json` (200+ players, PPG −10 to 70, a season), `signals.json` / `bf.json` (season, non-empty players), `data/player-context.json` (row counts equal the pages', 100+ ages).
+- Against the last commit: no file loses more than 15% of its rows (ppg/signals/bf compared only within the same season), and the season can't go backwards.
+- On failure the workflow restores the committed files and fails the run (GitHub emails the owner). `build_context.py` also exits non-zero on missing or tiny `DATA`.
 
 ## 5. Value math (calculator)
 
@@ -146,6 +155,11 @@ Daily workflow safety:
 
 ## 8. Open items
 
+- **FantasyCalc API terms** (https://fantasycalc.com/terms-of-usage, https://fantasycalc.com/api-docs, effective Oct 10, 2026; free under 1,000 monthly users with attribution):
+    - A visible "FantasyCalc" link to https://fantasycalc.com near the data on every page using it, with at least one in the static HTML. Done: `index.html` header next to the Blend/KTC/FC toggle (Nov 25); `keeper.html` footer already had one.
+    - Only `GET /values/current`. Responses must be cached and reused across users; each unique query may be refreshed at most once every 3 hours. **Not met yet:** `index.html` and `keeper.html` call FC from each visitor's browser. Proposal: have the daily Action save the needed formats into `data/` and have the pages read those snapshots.
+    - Use restriction 1b: FC data or derivatives may not be used to replicate or substitute for FC's trade calculator or other key features. **Owner decision** (e.g. ask FantasyCalc for written permission, or use FC only as a secondary signal).
+
 - **Fixed Nov 25 — Blend outside KTC and FC.** There were two causes:
     1. `evalValues` gave the value adjustment to whichever side led on the raw curve. When that lead flipped, the stud side's premium dropped from about +3,000 to 0, so a near-even stud-for-package verdict could swing about 30 points. Now the side with the best player always gets the adjustment, sized continuously. KTC reference trades are unchanged.
     2. Blend mixed asset values with FC rescaled onto KTC's curve, which changes how players compare to each other. Now `evalIds(aIds, bIds, mode)` grades Blend from KTC's and FC's own results: `mixEvals` mixes each side's SHARE of the trade by the blend weight. That's a convex mix, so Blend always lies between them (0 of 3,941 random test trades fall outside) and each source gets exactly its weight. Normalizing by each source's top value instead had tilted the mix toward KTC's flatter curve.
@@ -159,14 +173,13 @@ Daily workflow safety:
     - Odds and comps always come from the player's own bucket. The type (e.g. Konami vs Pocket) is the point of a bucket, so the owner decided against pooling other types at the same tier (Nov 25).
     - When a bucket has fewer than 5 players: a "Small sample — treat as a lean" note, a faint tier-average reference line (`tierWide`, labeled "different play styles mixed"), and no lead pills.
     - Also shown: Repeat %, the top 4 hits and the 3 most recent busts from the bucket.
-    - Lazy-loads `signals.json`, `ppg.json` and the three rookie pages' `DATA` the first time it's used (about 1.4 MB).
+    - Lazy-loads `signals.json`, `ppg.json`, `data/player-context.json` and `data/age-curves.json` the first time it's used (about 40 KB gzipped; was about 1.4 MB when it read the rookie pages).
         - Draft-slot history: same round group, settled classes, % hitting 12+ and % reaching the tab's elite tier (Hit Rates sheet tiers: WR/RB `green` = 14+/15+, TE `g17` = 17+).
         - Early usage (WR/RB Games 1–4, TE Games 1–8), model odds (`hp`), flags (BUY / MISSED TIME / JUMPED), BF%, Year 2 usage.
         - Typical best season: `typBestCmp` uses the same 15-nearest method as the rookie tabs, and matches them exactly (Love 17.7, Coleman 6.3).
-        - Career: season counts by PPG tier (bucket data), plus this season's PPG (`ppg.json`).
+        - Career: season counts by PPG tier (bucket data), this season's PPG (`ppg.json`), and next-season odds to repeat 12+ (`sellOdds`, the same table and SELL NOW / SELL WINDOW rule as the hub's `sellInfo`; RB/WR/TE at 12+ PPG; shows the age band and n).
     - Each Safe/Upside cell prints that player's PPG bar. The "+N" lead pill shows only on same-position pairs.
     - WR header shows within-class rank (WR1 = first WR drafted that year). Odds for older unsettled players are labeled "Rookie-yr odds"; each view needs 2+ games.
-    - Deferred: next-season retention odds, until the sell-window curves are shared as a common JSON.
 - **Fixed Nov 25 — Year 2 preset counts:** a Year 2 bullet's % covers settled classes only (through the newest class − 3; 2023 now), but the filter also lists newer sophomores. The preset bar now says how many settled players the % is based on and how many newer ones are in the list (TE "9+ both years": 7 + 4 = the 11 rows). It doesn't print its own hit rate: the bullets count 12+ seasons in Year 2 or later, which needs season-level data the pages don't carry. Year 1 bars are unchanged.
     - **Maintenance:** the Year 2 cutoff is pinned (`Y2_BULLET_CUTOFF = 2023` in all three rookie pages) to match the static Year 2 bullet text. When the Year 2 bullets are regenerated with newer classes, update that constant in the same push. Otherwise the bar's settled count won't match the bullets.
 - **Fixed Nov 25 — dead-looking presets:** four "best filter combination" bullets had no `data-preset`, so tapping did nothing: WR "Usage 8–15 · Day 3 or undrafted"; TE "Games 1–8 · Usage 9+ · Round 4 or later", "MISSED TIME · Round 1–3" and "Round 4 or later · Games 1–8 usage under 6". All 39 presets now load, and their settled-class numbers match the text.

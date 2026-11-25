@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dynasty Trade Calculator — Multi-League Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -99,6 +100,8 @@
             <button type="button" data-src="ktc" class="src-btn px-2 py-1 font-semibold cursor-pointer">KTC</button>
             <button type="button" data-src="fc" class="src-btn px-2 py-1 font-semibold cursor-pointer">FC</button>
           </div>
+          <!-- Attribution (FantasyCalc API terms: a visible FantasyCalc link near the data, in the static HTML) -->
+          <span class="text-[11px] text-[#5d6672] dark:text-[#98a2ae] whitespace-nowrap">Values: <a href="https://keeptradecut.com" target="_blank" rel="noopener" class="font-semibold underline hover:text-blue-600">KeepTradeCut</a> + <a href="https://fantasycalc.com" target="_blank" rel="noopener" class="font-semibold underline hover:text-blue-600">FantasyCalc</a></span>
           <label id="blendWrap" class="flex items-center gap-1.5 text-[11px] font-medium text-[#5d6672] dark:text-[#98a2ae]">
             <span>KTC <strong id="blendLbl" class="text-[#111827] dark:text-white">50%</strong></span>
             <input id="blendSlider" type="range" min="0" max="100" step="5" value="50" class="w-16 accent-blue-600 cursor-pointer" />
@@ -961,15 +964,13 @@
     // his PPG is above that position's median. Cells are [hits, players]. Age bands with under 10 players
     // are pooled with the next-younger band, and bands are pooled so odds never rise with age.
     let PPG = {};
-    const SELL = {
-      RB: { med: 14.9, ages: [24, 26, 27, 28, 29], top: [[35,40],[31,40],[19,25],[19,25],[6,16],[6,16]], bot: [[21,41],[21,47],[21,47],[9,35],[9,35],[9,35]] },
-      WR: { med: 15.0, ages: [25, 27, 29, 30, 31], top: [[119,157],[119,157],[119,157],[119,157],[119,157],[5,13]], bot: [[41,70],[22,38],[13,30],[7,23],[7,23],[1,11]] },
-      TE: { med: 14.4, ages: [26, 28, 30, 31, 32], top: [[26,34],[26,34],[16,23],[16,23],[16,23],[16,23]], bot: [[11,24],[9,21],[9,21],[9,21],[2,12],[2,12]] }
-    };
+    // Sell-window and age-curve tables live in data/age-curves.json (shared with bucket-explorer.html);
+    // loaded below, and every view re-renders once they arrive.
+    let SELL = null;
     function sellInfo(p) {
       if (!p || p.pick || !p.age) return null;
       const r = PPG[normName(p.name)];
-      const cfg = SELL[p.pos];
+      const cfg = SELL && SELL[p.pos];
       if (!r || !cfg || r.pos !== p.pos || r.ppg < 12) return null;
       const age = Number(p.age);
       const i = cfg.ages.filter(a => age >= a).length;
@@ -992,6 +993,9 @@
       if (!x) return '';
       return ` · <span title="Share of similar players (position, age, PPG) who posted 12+ PPG again the next season, 2015-2024">Next-year odds: <strong>${x.odds}%</strong> to repeat 12+ (${x.k} of ${x.n} similar players; ${x.ppg} PPG in ${x.season})</span>`;
     }
+    fetch(`./data/age-curves.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
+      if (d && d.sell && d.ageCurves) { SELL = d.sell.table; AGE_R = d.ageCurves.table; try { all(); } catch (e) { /* app not ready yet */ } }
+    }).catch(() => {});
     fetch(`./ppg.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
       if (d && d.players) { PPG = d.players; try { all(); } catch (e) { /* app not ready yet; next render picks it up */ } }
     }).catch(() => {});
@@ -4046,15 +4050,9 @@
     // PPG / this-season PPG among players with 8+ games both years, times the share who played 8+ games
     // next season. 3-year age windows; forced non-increasing after the peak. Only ranks and changes
     // relative to the league are shown, since every curve sits below 1 (regression to the mean).
-    const AGE_R = {
-      start: 21,
-      QB: [0.85, 0.839, 0.863, 0.855, 0.827, 0.773, 0.691, 0.681, 0.675, 0.675, 0.675, 0.675, 0.675, 0.675, 0.675, 0.621, 0.519],
-      RB: [0.891, 0.814, 0.781, 0.732, 0.71, 0.69, 0.684, 0.567, 0.567, 0.477, 0.477, 0.477, 0.477, 0.477, 0.477, 0.477, 0.477],
-      WR: [0.981, 0.856, 0.838, 0.796, 0.796, 0.776, 0.773, 0.741, 0.723, 0.643, 0.596, 0.496, 0.496, 0.496, 0.496, 0.496, 0.496],
-      TE: [0.837, 0.936, 0.858, 0.815, 0.768, 0.768, 0.768, 0.739, 0.653, 0.645, 0.593, 0.593, 0.593, 0.593, 0.593, 0.593, 0.593]
-    };
+    let AGE_R = null;   // from data/age-curves.json (see SELL above)
     function ageRet(pos, age) {
-      const arr = AGE_R[pos];
+      const arr = AGE_R && AGE_R[pos];
       if (!arr || !age) return 1;
       const i = Math.max(0, Math.min(arr.length - 1, Math.floor(age) - AGE_R.start));
       return arr[i];
@@ -4071,6 +4069,7 @@
       if (!el) return;
       if (owners.length < 4) { el.classList.add('hidden'); return; }
       el.classList.remove('hidden');
+      if (!AGE_R) { el.innerHTML = cardHead('Team timeline', 'Loading age curves…'); return; }
       if (!HAS_RDV()) { el.innerHTML = cardHead('Team timeline', 'Needs FantasyCalc redraft (Win Now) values, which didn\'t load. Try Sync.'); return; }
       const rows = owners.map(o => ({ o, s: [0, 1, 2].map(y => solveLineup(T[o].ids || [], id => projWinNow(id, y)).total) }));
       const avg = y => rows.reduce((a, r) => a + r.s[y], 0) / rows.length;
