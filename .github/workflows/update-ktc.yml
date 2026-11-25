@@ -18,14 +18,14 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: main
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Install Playwright (Chromium) for the browser fallback
         run: |
@@ -33,6 +33,7 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Save FantasyCalc snapshot (fc-history.json)
+        id: fc
         continue-on-error: true
         run: node scripts/update-fc.mjs
 
@@ -40,12 +41,12 @@ jobs:
         run: node scripts/update-ktc.mjs
 
       - name: Commit and push ktc.json + history
-        if: always()
+        if: ${{ !cancelled() }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add ktc.json ktc-history.json
-          [ -f fc-history.json ] && git add fc-history.json
+          git add ktc.json ktc-history.json depth.json draft_latest.json
+          if [ -f fc-history.json ] && node -e "JSON.parse(require('fs').readFileSync('fc-history.json','utf8'))"; then git add fc-history.json; fi
           if git diff --cached --quiet; then
             echo "Data unchanged - nothing to commit."
             exit 0
@@ -53,3 +54,9 @@ jobs:
           git commit -m "Update KTC/FC values $(date -u +%Y-%m-%d)"
           git pull --rebase origin main
           git push origin HEAD:main
+
+      - name: Flag a FantasyCalc failure (after KTC data is saved)
+        if: ${{ !cancelled() && steps.fc.outcome == 'failure' }}
+        run: |
+          echo "::error::FantasyCalc snapshot failed today; KTC data was still saved."
+          exit 1
