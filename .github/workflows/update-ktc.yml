@@ -47,12 +47,19 @@ jobs:
       - name: Scrape KeepTradeCut into ktc.json
         run: node scripts/update-ktc.mjs
 
+      # Same-day ages for the comparison tool (FantasyCalc first, KTC fallback), so its age bands match the hub's
+      - name: Rebuild data/player-context.json
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: python3 scripts/build_context.py .
+
       - name: Commit and push ktc.json + history
         if: ${{ !cancelled() }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add ktc.json ktc-history.json depth.json draft_latest.json
+          if [ -f data/player-context.json ] && node -e "JSON.parse(require('fs').readFileSync('data/player-context.json','utf8'))"; then git add data/player-context.json; fi
           if [ -f fc-history.json ] && node -e "JSON.parse(require('fs').readFileSync('fc-history.json','utf8'))"; then git add fc-history.json; fi
           for f in data/fc/*.json; do
             if [ -f "$f" ] && node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$f"; then git add "$f"; fi
