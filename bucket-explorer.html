@@ -2726,10 +2726,10 @@
         return `<div class="space-y-0.5"><div class="flex items-baseline gap-1.5"><span class="font-extrabold tabular-nums">${v.toFixed(0)}%</span>${th ? `<span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">${th}</span>` : ''}${lead ? `<span class="text-[10px] font-bold px-1.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">+${(v - other).toFixed(0)}</span>` : ''}</div>
           <div class="h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full bg-emerald-500" style="width:${Math.max(0, Math.min(100, v))}%"></div></div></div>`;
       };
-      return `<div class="grid grid-cols-[7.5rem_1fr_1fr] gap-3 items-center py-1.5 border-t border-slate-100 dark:border-slate-800">
+      return `<div class="grid grid-cols-[4.75rem_1fr_1fr] sm:grid-cols-[7.5rem_1fr_1fr] gap-x-2 sm:gap-x-3 gap-3 items-center py-1.5 border-t border-slate-100 dark:border-slate-800">
         <div class="text-[11px] font-bold text-slate-600 dark:text-slate-400 leading-tight">${label}</div>${cell(va, vb, ta)}${cell(vb, va, tb)}</div>`;
     }
-    const cmpRow = (label, a, b) => `<div class="grid grid-cols-[7.5rem_1fr_1fr] gap-3 items-start py-1.5 border-t border-slate-100 dark:border-slate-800">
+    const cmpRow = (label, a, b) => `<div class="grid grid-cols-[4.75rem_1fr_1fr] sm:grid-cols-[7.5rem_1fr_1fr] gap-x-2 sm:gap-x-3 gap-3 items-start py-1.5 border-t border-slate-100 dark:border-slate-800">
       <div class="text-[11px] font-bold text-slate-600 dark:text-slate-400 leading-tight">${label}</div><div class="text-xs">${a}</div><div class="text-xs">${b}</div></div>`;
     const cmpStrip = (title, body) => `<div class="pt-2"><div class="text-[11px] font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-400">${title}</div>${body}</div>`;
 
@@ -2755,7 +2755,7 @@
         <button type="button" data-open-bucket="${esc(d.b.id)}" class="mt-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 hover:underline cursor-pointer">${esc(d.b.name)} · n=${d.b.n}</button>
         ${d.fb ? `<div class="text-[10px] text-amber-700 dark:text-amber-300 mt-0.5">Bucket has only n=${d.b.n}, so odds and comps use all ${esc(tierOf(d.b.name))} ${d.p.pos}s (n=${d.fb.n})</div>` : ''}`;
       const sLbl = d => `${safeLbl(d.p.pos)}`, uLbl = d => `${upLbl(d.p.pos)}`;
-      let h = `<div class="grid grid-cols-[7.5rem_1fr_1fr] gap-3 items-start pb-2"><div></div><div>${col(da, head)}</div><div>${col(db, head)}</div></div>`;
+      let h = `<div class="grid grid-cols-[4.75rem_1fr_1fr] sm:grid-cols-[7.5rem_1fr_1fr] gap-x-2 sm:gap-x-3 gap-3 items-start pb-2"><div></div><div>${col(da, head)}</div><div>${col(db, head)}</div></div>`;
       // Core bucket odds (Safe or Upside first, by toggle)
       const samePos = !!(da && db && da.p.pos === db.p.pos);
       const lineSafe = cmpBar('Safe', da?.safe, db?.safe, da && sLbl(da), db && sLbl(db), samePos);
@@ -2790,7 +2790,7 @@
           const parts = [['4', 'G1–4'], ['8', 'G1–8'], ['L', 'Last 4']]
             .filter(([k]) => hp[k] != null && (gOf[k] == null || gOf[k] >= 2))   // needs 2+ games in that view
             .map(([k, l]) => `${l} <strong>${hp[k]}%</strong>`);
-          if (!parts.length) return '<span class="text-slate-400">no model odds (needs 2+ games)</span>';
+          if (!parts.length) return Object.keys(hp).length ? '<span class="text-slate-400">no model odds (needs 2+ games)</span>' : '<span class="text-slate-400">no model odds on file</span>';
           return (d.soph ? '<span class="text-[10px] font-bold text-slate-500">Rookie-yr odds:</span> ' : '') + parts.join(' · ');
         };
         const tags = d => {
