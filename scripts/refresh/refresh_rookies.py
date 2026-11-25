@@ -460,7 +460,7 @@ def add_odds(rows, pos):
         mu, sd = X.mean(0), X.std(0) + 1e-9
         w = logit_fit((X - mu) / sd, np.array([1.0 if hit(o) else 0.0 for o in tr]))
         for o in rows:
-            if o["tier"] != "tbd" or (o.get(gk) or 0) < 1 or o.get(uk) is None:
+            if o["tier"] != "tbd" or (o.get(gk) or 0) < 2 or o.get(uk) is None:   # same 2-game floor as training
                 continue
             z = (np.array([o[uk], lp(o)]) - mu) / sd
             p = 1 / (1 + math.exp(-(w[0] + w[1] * z[0] + w[2] * z[1])))
@@ -495,6 +495,37 @@ for pos, fname in (("RB", "rookie-rb-tracker.html"), ("TE", "rookie-te-tracker.h
     SIGNALS.extend(signals(rows, pos))
     write_data(path, s, rows, old)
     print(pos, len(rows), "rows;", sum(1 for o in rows if o["y2t"]), "Year 2 tags")
+
+# ---------------------------------------------------------------- backfield share for every RB (bf.json)
+# Each RB's share of his team's RB work (carries + 2.5 x targets) over the team's last 4 games this
+# season. The hub uses it on the handcuff and stash cards for veterans as well as rookies.
+def backfield_shares():
+    w = wk[(wk.season == CUR) & (wk.season_type == "REG") & (wk.position == "RB")].copy()
+    if w.empty:
+        return {}
+    w["work"] = w.carries.fillna(0) + 2.5 * w.targets.fillna(0)
+    out = {}
+    for tm, g in w.groupby("team"):
+        last = sorted(g.week.unique())[-4:]
+        g = g[g.week.isin(last)]
+        tot = g.work.sum()
+        if tot <= 0:
+            continue
+        for name, x in g.groupby("player_display_name"):
+            share = x.work.sum() / tot
+            if share >= 0.03:
+                out[f"{norm_name(name)}|{tm}"] = round(float(share), 3)
+    return out
+
+
+bf_path = f"{SITE}/bf.json"
+new_bf = json.dumps({"season": CUR, "players": backfield_shares()}, separators=(",", ":"), sort_keys=True)
+old_bf = open(bf_path).read() if os.path.exists(bf_path) else ""
+if old_bf.strip() != new_bf:
+    open(bf_path, "w").write(new_bf + "\n")
+    print("bf.json updated")
+else:
+    print("bf.json unchanged")
 
 sig_path = f"{SITE}/signals.json"
 new_sig = json.dumps({"season": CUR, "players": SIGNALS}, separators=(",", ":"), ensure_ascii=False, sort_keys=True)
