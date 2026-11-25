@@ -6,7 +6,8 @@
 // Step 2: plain fetch() of the HTML + parse `playersArray` (the old page format).
 // Step 3 (fallback): headless Chromium via Playwright, wait for window.playersArray to fill.
 // Each step counts as failed if it returns fewer than MIN_PLAYERS, so the next one is tried.
-// Also attaches Sleeper player IDs (so KTC-only players can be matched to Sleeper rosters).
+// Also attaches Sleeper player IDs (so KTC-only players can be matched to Sleeper rosters)
+// and writes depth.json (RB depth charts + injury status from Sleeper's players file).
 // Fails (non-zero exit) if every step comes up short, so a bad scrape
 // never overwrites good data.
 
@@ -17,6 +18,7 @@ const POOL_URL = "https://keeptradecut.com/dynasty-rankings/player-pool";
 const SLEEPER_PLAYERS = "https://api.sleeper.app/v1/players/nfl";
 const OUT = "ktc.json";
 const HISTORY = "ktc-history.json";
+const DEPTH = "depth.json";
 const HISTORY_DAYS = 120;
 const MIN_PLAYERS = 300;
 const UA =
@@ -111,11 +113,43 @@ export function mergeHistory(prev, dateKey, snap, keepDays = HISTORY_DAYS) {
   return { version: 1, updatedAt: new Date().toISOString(), days };
 }
 
-async function sleeperIndex() {
+async function sleeperPlayers() {
   try {
     const res = await fetch(SLEEPER_PLAYERS, { headers: { "User-Agent": UA } });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const all = await res.json();
+    return await res.json();
+  } catch (e) {
+    console.warn(`Sleeper players download failed (${e.message})`);
+    return null;
+  }
+}
+
+// depth.json: every NFL team's RBs in Sleeper depth-chart order, with injury status, for the hub's
+// handcuff and stash cards. Small (about 30 KB) so the browser never needs Sleeper's 5 MB players file.
+export function buildDepth(all) {
+  const teams = {};
+  for (const [id, p] of Object.entries(all || {})) {
+    if (p.position !== "RB" || !p.team || !p.active) continue;
+    const order = Number(p.depth_chart_order);
+    const inj = p.injury_status || (/injured reserve|physically unable/i.test(p.status || "") ? "IR" : null);
+    (teams[p.team] = teams[p.team] || []).push({
+      sid: id,
+      n: p.full_name || `${p.first_name || ""} ${p.last_name || ""}`.trim(),
+      o: p.depth_chart_position === "RB" && Number.isFinite(order) ? order : 99,
+      inj,
+      age: p.age ?? null,
+    });
+  }
+  for (const t of Object.keys(teams)) {
+    teams[t].sort((a, b) => a.o - b.o || a.n.localeCompare(b.n));
+    teams[t] = teams[t].slice(0, 5);
+  }
+  return { updatedAt: new Date().toISOString(), teams };
+}
+
+function sleeperIndex(all) {
+  try {
+    if (!all) throw new Error("no players file");
     const idx = new Map();
     const byName = new Map();
     for (const [id, p] of Object.entries(all)) {
@@ -219,7 +253,13 @@ async function main() {
   }
   if (!raw) throw new Error(`All KTC sources failed (${errors.join("; ")}). Not writing ${OUT}.`);
 
-  const players = normalize(raw, await sleeperIndex());
+  const all = await sleeperPlayers();
+  if (all) {
+    const depth = buildDepth(all);
+    writeFileSync(DEPTH, JSON.stringify(depth) + "\n");
+    console.log(`Wrote ${DEPTH}: ${Object.keys(depth.teams).length} teams`);
+  }
+  const players = normalize(raw, sleeperIndex(all));
   if (players.length < MIN_PLAYERS) {
     throw new Error(`Only ${players.length} players parsed (need ${MIN_PLAYERS}+). Not writing ${OUT}.`);
   }
