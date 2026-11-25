@@ -269,6 +269,27 @@
       </div>
     </section>
 
+    <!-- Player Comparison (value-free) -->
+    <section id="cmpSection" aria-label="Compare two players" class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Compare two players</h2>
+          <p class="text-xs text-slate-600 dark:text-slate-400">Odds only — no trade values. Profile bucket for everyone, plus early usage and model odds for recent rookies, draft-slot history, and career seasons. Any positions.</p>
+        </div>
+        <div class="inline-flex rounded-lg border border-slate-300 dark:border-slate-700 overflow-hidden text-xs font-bold">
+          <button type="button" data-cmpmode="safe" class="cmp-mode px-3 py-1.5">Safe</button>
+          <button type="button" data-cmpmode="upside" class="cmp-mode px-3 py-1.5">Upside</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-2 items-center">
+        <input id="cmpA" list="cmpList" type="search" autocomplete="off" placeholder="Player A — type a name" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
+        <button id="cmpSwap" type="button" title="Swap players" class="justify-self-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">⇄</button>
+        <input id="cmpB" list="cmpList" type="search" autocomplete="off" placeholder="Player B — type a name" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
+      </div>
+      <datalist id="cmpList"></datalist>
+      <div id="cmpOut" class="text-sm"></div>
+    </section>
+
     <!-- Positional Quick Insights Banner -->
     <div id="posInsightBanner" class="rounded-2xl bg-gradient-to-r from-slate-100 via-sky-50/70 to-indigo-50/60 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/40 border border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-xs">
     </div>
@@ -2589,6 +2610,242 @@
       });
     }
 
+
+    // =========================================================================
+    // PLAYER COMPARISON (value-free: no KTC / FantasyCalc, no CHEAP/PRICEY)
+    // Safe  = 12+ PPG (QB 16+) — bucket nearTotal (TE: hit, which is 12+)
+    // Upside = WR 14+ / RB 15+ / TE 17+ / QB 20+ — bucket hit (TE: elite)
+    // =========================================================================
+    const CMP = { a: null, b: null, mode: 'safe', extra: null, loading: null };
+    const cmpLabel = p => `${p.name} (${p.pos} ${p.year})`;
+    const CMP_BY_LABEL = new Map();
+    const safeOf = b => b.noNear ? b.hitPct : b.nearTotalPct;
+    const upOf = b => b.noNear ? b.elitePct : b.hitPct;
+    const safeLbl = pos => pos === 'TE' ? POS_META.TE.hitLbl : POS_META[pos].nearLbl;
+    const upLbl = pos => pos === 'TE' ? POS_META.TE.eliteLbl : POS_META[pos].hitLbl;
+    const tierOf = name => String(name).split(' ')[0];
+    const cmpNorm = s => String(s || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\b(jr|sr|ii|iii|iv|v)\b\.?/g, '').replace(/[^a-z]/g, '');
+
+    // Tier-wide numbers (same position, same tier word), weighted by bucket size — used when n < 5
+    function tierWide(pos, tier) {
+      const bs = BUCKETS.filter(b => b.pos === pos && tierOf(b.name) === tier && b.n > 0);
+      const n = bs.reduce((a, b) => a + b.n, 0);
+      if (!n) return null;
+      const w = f => bs.reduce((a, b) => a + f(b) * b.n, 0) / n;
+      return { n, safe: w(safeOf), up: w(upOf), rep: w(b => b.repPct) };
+    }
+
+    // Lazy-load the non-value extras the first time the tool is used
+    async function cmpLoadExtras() {
+      if (CMP.extra) return CMP.extra;
+      if (CMP.loading) return CMP.loading;
+      const getJson = u => fetch(u, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).catch(() => null);
+      const getData = u => fetch(u, { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
+        const m = t.match(/const DATA = (\[[\s\S]*?\]);\s*\n/);
+        try { return m ? JSON.parse(m[1]) : []; } catch (e) { return []; }
+      }).catch(() => []);
+      CMP.loading = Promise.all([
+        getJson('./signals.json'), getJson('./ppg.json'),
+        getData('./rookie-wr-tracker.html'), getData('./rookie-rb-tracker.html'), getData('./rookie-te-tracker.html')
+      ]).then(([sig, ppg, wr, rb, te]) => {
+        const track = { WR: wr, RB: rb, TE: te };
+        const settledYr = {};
+        Object.entries(track).forEach(([pos, d]) => { settledYr[pos] = d.length ? Math.max(...d.map(x => x.yr)) - 2 : 0; });
+        const sigBy = new Map(); (sig?.players || []).forEach(x => sigBy.set(`${x.pos}|${cmpNorm(x.n)}`, x));
+        const ppgBy = new Map(); Object.entries(ppg?.players || {}).forEach(([k, v]) => ppgBy.set(`${v.pos}|${cmpNorm(k)}`, v));
+        CMP.extra = { track, settledYr, sigBy, ppgBy, season: ppg?.season || sig?.season || null };
+        return CMP.extra;
+      });
+      return CMP.loading;
+    }
+    function trackRow(p, ex) {
+      const d = ex?.track[p.pos];
+      if (!d) return null;
+      const k = cmpNorm(p.name);
+      return d.find(x => cmpNorm(x.n) === k && Math.abs(x.yr - p.year) <= 1) || null;
+    }
+    const roundGroup = rd => rd == null ? 'UDFA' : rd <= 3 ? `Round ${rd}` : 'Day 3';
+    function draftBaseline(p, tr, ex) {
+      if (!tr || !ex) return null;
+      const d = ex.track[p.pos], sy = ex.settledYr[p.pos];
+      const g = roundGroup(tr.rd);
+      const peers = d.filter(x => x.yr <= sy && x.tier !== 'tbd' && roundGroup(x.rd) === g);
+      if (peers.length < 5) return null;
+      const hit = peers.filter(x => x.tier !== 'red').length;
+      // Elite exactly as each rookie tab defines it, from the synced Hit Rates sheet tiers: WR/RB 'green' (14+ / 15+), TE 'g17'
+      const up = peers.filter(x => x.tier === (p.pos === 'TE' ? 'g17' : 'green')).length;
+      return { g, n: peers.length, safe: 100 * hit / peers.length, up: 100 * up / peers.length };
+    }
+
+    const VIEW_KEY = { WR: ['u', 'g'], RB: ['u', 'g'], TE: ['u8', 'g8'] };
+    const TB_CACHE = {};
+    function typBestCmp(pos, tr, ex) {
+      if (!tr || !ex || !VIEW_KEY[pos]) return null;
+      const [uk, gk] = VIEW_KEY[pos];
+      if (tr[uk] == null || !tr[gk]) return null;
+      if (!TB_CACHE[pos]) {
+        const d = ex.track[pos];
+        const top = Math.max(...d.map(x => x.yr)) - 3;
+        const pool = d.filter(x => x.yr <= top && x.tier !== 'tbd' && x[uk] != null && x[gk] && x.b3 != null)
+          .map(x => ({ u: x[uk], lp: Math.log(x.pk || 300), b: x.b3 || 0 }));
+        const sd = a => { const m = a.reduce((q, v) => q + v, 0) / a.length; return Math.sqrt(a.reduce((q, v) => q + (v - m) ** 2, 0) / a.length) || 1; };
+        TB_CACHE[pos] = { pool, su: sd(pool.map(x => x.u)), sl: sd(pool.map(x => x.lp)) };
+      }
+      const { pool, su, sl } = TB_CACHE[pos];
+      if (pool.length < 15) return null;
+      const lp = Math.log(tr.pk || 300);
+      const nb = pool.map(x => ({ dd: Math.hypot((x.u - tr[uk]) / su, (x.lp - lp) / sl), b: x.b })).sort((a, b) => a.dd - b.dd).slice(0, 15).map(x => x.b).sort((a, b) => a - b);
+      const q = f => nb[Math.min(nb.length - 1, Math.floor(f * (nb.length - 1) + 0.5))];
+      return { med: q(0.5), lo: q(0.25), hi: q(0.75) };
+    }
+    function cmpPlayerData(p, ex) {
+      const b = BUCKET_BY_ID.get(p.bucketId);
+      const fb = b.n < 5 ? tierWide(p.pos, tierOf(b.name)) : null;
+      const tr = trackRow(p, ex);
+      const sg = ex?.sigBy.get(`${p.pos}|${cmpNorm(p.name)}`) || null;
+      const pg = ex?.ppgBy.get(`${p.pos}|${cmpNorm(p.name)}`) || null;
+      const pool = fb ? BUCKETS.filter(x => x.pos === p.pos && tierOf(x.name) === tierOf(b.name)).flatMap(x => x.players) : b.players;
+      const others = pool.filter(x => x.id !== p.id && !x.isRookie);
+      const hits = others.filter(x => x.hit > 0).sort((x, y) => (y.elite - x.elite) || (y.hit - x.hit)).slice(0, 4);
+      const busts = others.filter(x => x.status === 'bust').sort((x, y) => y.year - x.year).slice(0, 3);
+      const early = !!(tr && ex && tr.yr > ex.settledYr[p.pos]);
+      // Within-class WR draft rank (WR1 = first WR taken that year)
+      const wrRank = (p.pos === 'WR' && tr && tr.pk) ? 1 + ex.track.WR.filter(x => x.yr === tr.yr && x.pk && x.pk < tr.pk).length : null;
+      // Current class = newest year on the rookie tabs; older unsettled players are sophomores (odds are from their rookie year)
+      const newest = ex?.track[p.pos]?.length ? Math.max(...ex.track[p.pos].map(x => x.yr)) : null;
+      return { p, b, fb, tr, sg, pg, hits, busts, early, wrRank, soph: !!(tr && newest && tr.yr < newest), tb: early ? typBestCmp(p.pos, tr, ex) : null, base: draftBaseline(p, tr, ex),
+        safe: fb ? fb.safe : safeOf(b), up: fb ? fb.up : upOf(b), rep: fb ? fb.rep : b.repPct };
+    }
+
+    // cmpBar(label, valueA, valueB, thresholdA, thresholdB, samePos): the +N lead pill only on same-position pairs,
+    // since different positions have different scarcity bars
+    function cmpBar(label, va, vb, ta, tb, samePos) {
+      const cell = (v, other, th) => {
+        if (v == null) return `<div class="text-xs text-slate-400">—</div>`;
+        const lead = samePos && other != null && v - other >= 3;
+        return `<div class="space-y-0.5"><div class="flex items-baseline gap-1.5"><span class="font-extrabold tabular-nums">${v.toFixed(0)}%</span>${th ? `<span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">${th}</span>` : ''}${lead ? `<span class="text-[10px] font-bold px-1.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">+${(v - other).toFixed(0)}</span>` : ''}</div>
+          <div class="h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full bg-emerald-500" style="width:${Math.max(0, Math.min(100, v))}%"></div></div></div>`;
+      };
+      return `<div class="grid grid-cols-[7.5rem_1fr_1fr] gap-3 items-center py-1.5 border-t border-slate-100 dark:border-slate-800">
+        <div class="text-[11px] font-bold text-slate-600 dark:text-slate-400 leading-tight">${label}</div>${cell(va, vb, ta)}${cell(vb, va, tb)}</div>`;
+    }
+    const cmpRow = (label, a, b) => `<div class="grid grid-cols-[7.5rem_1fr_1fr] gap-3 items-start py-1.5 border-t border-slate-100 dark:border-slate-800">
+      <div class="text-[11px] font-bold text-slate-600 dark:text-slate-400 leading-tight">${label}</div><div class="text-xs">${a}</div><div class="text-xs">${b}</div></div>`;
+    const cmpStrip = (title, body) => `<div class="pt-2"><div class="text-[11px] font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-400">${title}</div>${body}</div>`;
+
+    async function renderCompare() {
+      const out = document.getElementById('cmpOut');
+      if (!out) return;
+      document.querySelectorAll('.cmp-mode').forEach(btn => {
+        const on = btn.dataset.cmpmode === CMP.mode;
+        btn.className = `cmp-mode px-3 py-1.5 cursor-pointer ${on ? 'bg-sky-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`;
+      });
+      const A = CMP.a ? PLAYER_BY_ID.get(CMP.a) : null, B = CMP.b ? PLAYER_BY_ID.get(CMP.b) : null;
+      if (!A && !B) { out.innerHTML = `<p class="text-xs text-slate-500 dark:text-slate-400">Pick two players. Their profile buckets are compared right away; usage, draft-slot history and model odds load the first time.</p>`; return; }
+      if (!CMP.extra) {
+        out.innerHTML = `<div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 py-3"><span class="inline-block w-3.5 h-3.5 rounded-full border-2 border-sky-500 border-t-transparent animate-spin"></span>Loading usage and draft history (first time only)…</div>`;
+        await cmpLoadExtras();
+      }
+      const ex = CMP.extra;
+      const da = A ? cmpPlayerData(A, ex) : null, db = B ? cmpPlayerData(B, ex) : null;
+      const col = (d, f) => d ? f(d) : '<span class="text-slate-400">—</span>';
+      const up = CMP.mode === 'upside';
+      const head = d => `<div class="flex flex-wrap items-center gap-1.5"><span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${POS_META[d.p.pos].badgeCls}">${d.p.pos}</span><span class="font-extrabold text-slate-900 dark:text-white">${esc(d.p.name)}</span></div>
+        <div class="text-[11px] text-slate-500 dark:text-slate-400">${d.p.year} class${d.tr && d.tr.rd != null ? ` · Rd ${d.tr.rd} · #${d.tr.pk}${d.wrRank ? ` · WR${d.wrRank}` : ''}` : d.tr ? ' · undrafted' : ''}${d.tr?.tm ? ` · ${esc(d.tr.tm)}` : ''}</div>
+        <button type="button" data-open-bucket="${esc(d.b.id)}" class="mt-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 hover:underline cursor-pointer">${esc(d.b.name)} · n=${d.b.n}</button>
+        ${d.fb ? `<div class="text-[10px] text-amber-700 dark:text-amber-300 mt-0.5">Bucket has only n=${d.b.n}, so odds and comps use all ${esc(tierOf(d.b.name))} ${d.p.pos}s (n=${d.fb.n})</div>` : ''}`;
+      const sLbl = d => `${safeLbl(d.p.pos)}`, uLbl = d => `${upLbl(d.p.pos)}`;
+      let h = `<div class="grid grid-cols-[7.5rem_1fr_1fr] gap-3 items-start pb-2"><div></div><div>${col(da, head)}</div><div>${col(db, head)}</div></div>`;
+      // Core bucket odds (Safe or Upside first, by toggle)
+      const samePos = !!(da && db && da.p.pos === db.p.pos);
+      const lineSafe = cmpBar('Safe', da?.safe, db?.safe, da && sLbl(da), db && sLbl(db), samePos);
+      const lineUp = cmpBar('Upside', da?.up, db?.up, da && uLbl(da), db && uLbl(db), samePos);
+      h += cmpStrip('Profile bucket odds', (up ? lineUp + lineSafe : lineSafe + lineUp) + cmpBar('Repeat (2+ hit seasons, of hitters)', da?.rep, db?.rep, null, null, samePos)
+        + (da && db && !samePos ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 pt-1">Different positions have different PPG bars, so no "leads by" marks.</p>` : ''));
+      h += cmpRow('Bucket hits', col(da, d => d.hits.map(x => `${esc(x.name)} <span class="text-slate-400">${x.year}</span>`).join(', ') || '—'), col(db, d => d.hits.map(x => `${esc(x.name)} <span class="text-slate-400">${x.year}</span>`).join(', ') || '—'));
+      h += cmpRow('Bucket busts', col(da, d => d.busts.map(x => `${esc(x.name)} <span class="text-slate-400">${x.year}</span>`).join(', ') || '—'), col(db, d => d.busts.map(x => `${esc(x.name)} <span class="text-slate-400">${x.year}</span>`).join(', ') || '—'));
+      // Draft-capital baseline
+      if (da?.base || db?.base) {
+        const ELT = { WR: '14+', RB: '15+', TE: '17+' };
+        const bl = d => d.base ? `${d.base.g}: <strong>${d.base.safe.toFixed(0)}%</strong> hit 12+ · ${d.base.up.toFixed(0)}% ${ELT[d.p.pos]} <span class="text-slate-400">(n=${d.base.n})</span>` : '—';
+        h += cmpStrip('Draft-slot history', cmpRow(`Same round, ${samePos ? da.p.pos : 'same position'}, settled classes`, col(da, bl), col(db, bl)));
+      }
+      // Rookie usage & model odds (current rookies / second-year players)
+      const isEarly = d => d && (d.early || d.sg);
+      if (isEarly(da) || isEarly(db)) {
+        const VIEW = { WR: 'Weeks 1–4', RB: 'Games 1–4', TE: 'Games 1–8' };
+        const use = d => {
+          if (!isEarly(d)) return '—';
+          const te = d.p.pos === 'TE';
+          const u = te ? (d.tr?.u8 ?? d.sg?.u8) : (d.tr?.u ?? d.sg?.u);
+          const g = te ? d.tr?.g8 : d.tr?.g;
+          const u8 = d.tr?.u8 ?? d.sg?.u8;
+          const bf = d.tr?.bf8 ?? d.sg?.bf8;
+          return `${VIEW[d.p.pos] || 'Early'} usage <strong>${u != null ? Number(u).toFixed(1) : '—'}</strong>${g != null ? ` <span class="text-slate-400">(${g} g)</span>` : ''}${!te && u8 != null ? ` · Games 1–8 ${Number(u8).toFixed(1)}` : ''}${bf != null ? ` · BF% ${(bf * 100).toFixed(0)}` : ''}`;
+        };
+        const odds = d => {
+          if (!isEarly(d)) return '—';
+          const hp = d.tr?.hp || d.sg?.hp || {};
+          const gOf = { '4': d.tr?.g, '8': d.tr?.g8, 'L': d.tr?.gL };
+          const parts = [['4', 'G1–4'], ['8', 'G1–8'], ['L', 'Last 4']]
+            .filter(([k]) => hp[k] != null && (gOf[k] == null || gOf[k] >= 2))   // needs 2+ games in that view
+            .map(([k, l]) => `${l} <strong>${hp[k]}%</strong>`);
+          if (!parts.length) return '<span class="text-slate-400">no model odds (needs 2+ games)</span>';
+          return (d.soph ? '<span class="text-[10px] font-bold text-slate-500">Rookie-yr odds:</span> ' : '') + parts.join(' · ');
+        };
+        const tags = d => {
+          if (!isEarly(d)) return '—';
+          const t = [...new Set([...(d.tr?.tags || []), ...(d.sg?.sig || [])])].filter(x => ['buy', 'missed', 'jump'].includes(x));
+          const lbl = { buy: 'WR BUY', missed: 'MISSED TIME', jump: 'JUMPED' };
+          return t.length ? t.map(x => `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">${lbl[x]}</span>`).join(' ') : '—';
+        };
+        const best = d => d.tb ? `<strong>${d.tb.med.toFixed(1)}</strong> PPG <span class="text-slate-400">(middle half ${d.tb.lo.toFixed(1)}–${d.tb.hi.toFixed(1)}; 15 closest past rookies on usage and draft slot)</span>` : '—';
+        h += cmpStrip('Early usage & model odds', cmpRow('Usage', col(da, use), col(db, use)) + cmpRow('12+ hit odds (usage + draft slot)', col(da, odds), col(db, odds)) + cmpRow('Flags', col(da, tags), col(db, tags)) + cmpRow('Typical best season, Years 1–3', col(da, best), col(db, best)));
+        // Year 2 shift
+        const y2 = d => (d?.sg?.u2 != null) ? `Rookie ${d.sg.u != null ? Number(d.sg.u).toFixed(1) : '—'} → Year 2 <strong>${Number(d.sg.u2).toFixed(1)}</strong>${(d.sg.sig || []).includes('jump') ? ' <span class="text-[10px] font-extrabold px-1.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">JUMPED</span>' : ''}` : '—';
+        if (da?.sg?.u2 != null || db?.sg?.u2 != null) h += cmpRow('Year 2 usage (Games 1–4)', col(da, y2), col(db, y2));
+      }
+      // Career résumé (any player with completed seasons)
+      const res = d => {
+        if (d.p.isRookie) return '<span class="text-slate-400">no completed seasons</span>';
+        const pm = POS_META[d.p.pos];
+        const bits = [];
+        if (!d.b.noNear) bits.push(`${pm.nearLbl}: <strong>${d.p.near}</strong>`);
+        bits.push(`${pm.hitLbl}: <strong>${d.p.hit}</strong>`);
+        bits.push(`${pm.eliteLbl}: <strong>${d.p.elite}</strong>`);
+        return bits.join(' · ') + ' <span class="text-slate-400">seasons</span>';
+      };
+      const now = d => d.pg ? `<strong>${Number(d.pg.ppg).toFixed(1)}</strong> PPG in ${d.pg.gp} games (${d.pg.s})` : '—';
+      h += cmpStrip('Career', cmpRow('Seasons by PPG tier', col(da, res), col(db, res)) + ((da?.pg || db?.pg) ? cmpRow('This season', col(da, now), col(db, now)) : ''));
+      h += `<p class="pt-2 text-[10px] text-slate-500 dark:text-slate-400">Bucket odds are historical rates for players drafted with that profile; tap a bucket for its full list. Model odds and usage come from the rookie tabs. Nothing here uses trade values.</p>`;
+      out.innerHTML = h;
+    }
+
+    function wireCompare() {
+      const list = document.getElementById('cmpList');
+      if (!list) return;
+      const sorted = ALL_PLAYERS.slice().sort((x, y) => (y.year - x.year) || x.name.localeCompare(y.name));
+      sorted.forEach(p => CMP_BY_LABEL.set(cmpLabel(p), p.id));
+      list.innerHTML = sorted.map(p => `<option value="${esc(cmpLabel(p))}"></option>`).join('');
+      const pick = (inp, key) => {
+        const v = inp.value.trim();
+        let id = CMP_BY_LABEL.get(v);
+        if (!id && v) {   // allow a bare name when it's unique
+          const m = sorted.filter(p => p.norm === normStr(v));
+          if (m.length === 1) { id = m[0].id; inp.value = cmpLabel(m[0]); }
+        }
+        if (id || !v) { CMP[key] = id || null; renderCompare(); }
+      };
+      const a = document.getElementById('cmpA'), b = document.getElementById('cmpB');
+      a.addEventListener('change', () => pick(a, 'a'));
+      b.addEventListener('change', () => pick(b, 'b'));
+      document.getElementById('cmpSwap').addEventListener('click', () => {
+        [CMP.a, CMP.b] = [CMP.b, CMP.a]; [a.value, b.value] = [b.value, a.value]; renderCompare();
+      });
+      document.querySelectorAll('.cmp-mode').forEach(btn => btn.addEventListener('click', () => { CMP.mode = btn.dataset.cmpmode; renderCompare(); }));
+      renderCompare();
+    }
+
     function initEmbedded() {
       if (!EMBEDDED) return;
       document.documentElement.classList.add('embedded');
@@ -2631,6 +2888,7 @@
       syncControlStyles();
       renderBucketsGrid();
       wireEvents();
+      wireCompare();
       initEmbedded();
     }
 

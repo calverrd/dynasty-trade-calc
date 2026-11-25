@@ -153,11 +153,20 @@ Daily workflow safety:
     - The verdict is steep near even (about 0.12 points per value point against a 3,000 + 2,900 package) but has no jumps. That steepness is KTC's own model, the same one that matches the reference trades.
     - Calibration now shows how many trades are uneven (only those move with the setting) and the best fit for KTC and FC separately.
     - Every trade grade now goes through `evalIds`: calculator, offer check, league trades, calibration, Trade ideas. Asset-level Blend values (`valueFor`) are still used for the chart, totals and "add X" suggestions.
-- **Next: player comparison** — goes inside the Profile Buckets tab (`bucket-explorer.html`), per the owner. Pick two players; independent of trade values. Show:
-    - Rookies: Weeks 1–4 odds (TE: Games 1–8), plus the typical best PPG in Years 1–3.
-    - Year 2 players: the Year 2 read (Games 1–4, plus the 1–8 current-season note) beside the rookie read.
-    - Everyone: profile bucket hit and repeat rates.
-    - Veterans: actual career 12+ and elite PPG season counts and recent PPG (nflverse, `ppg.json`), so late-round breakouts aren't judged only by prospect tier.
+- **Built Nov 25 — player comparison** (`bucket-explorer.html`, "Compare two players" section; `wireCompare` / `renderCompare`). Value-free: no KTC, no FC, no CHEAP/PRICEY.
+    - Any positions. Two search boxes (datalist of every bucket player), Swap, and a Safe / Upside toggle that sets which odds line comes first.
+    - Safe = 12+ PPG (QB 16+) from bucket `nearTotal` (TE: hit). Upside = WR 14+ / RB 15+ / TE 17+ / QB 20+ from bucket `hit` (TE: `elite`).
+    - Buckets with n < 5 fall back to the whole tier at that position, weighted by bucket size (`tierWide`). Repeat %, and the top 4 hits and 3 recent busts from the bucket, are shown too.
+    - Lazy-loads `signals.json`, `ppg.json` and the three rookie pages' `DATA` the first time it's used (about 1.4 MB).
+        - Draft-slot history: same round group, settled classes, % hitting 12+ and % reaching the tab's elite tier (Hit Rates sheet tiers: WR/RB `green` = 14+/15+, TE `g17` = 17+).
+        - Early usage (WR/RB Games 1–4, TE Games 1–8), model odds (`hp`), flags (BUY / MISSED TIME / JUMPED), BF%, Year 2 usage.
+        - Typical best season: `typBestCmp` uses the same 15-nearest method as the rookie tabs, and matches them exactly (Love 17.7, Coleman 6.3).
+        - Career: season counts by PPG tier (bucket data), plus this season's PPG (`ppg.json`).
+    - Each Safe/Upside cell prints that player's PPG bar. The "+N" lead pill shows only on same-position pairs.
+    - Fallback note gives the raw bucket n; comps come from the tier pool when it triggers.
+    - WR header shows within-class rank (WR1 = first WR drafted that year). Odds for older unsettled players are labeled "Rookie-yr odds"; each view needs 2+ games.
+    - Deferred: next-season retention odds, until the sell-window curves are shared as a common JSON.
+- **Fixed Nov 25 — dead-looking presets:** four "best filter combination" bullets had no `data-preset`, so tapping did nothing: WR "Usage 8–15 · Day 3 or undrafted"; TE "Games 1–8 · Usage 9+ · Round 4 or later", "MISSED TIME · Round 1–3" and "Round 4 or later · Games 1–8 usage under 6". All 39 presets now load, and their settled-class numbers match the text.
 - **Done Nov 25 — ideas with one team** (`partnerIdeas`): owner asked for trade ideas with one chosen team, based on what each team needs.
     - Uses both full rosters (assets worth 700+): 1-for-1, 2-for-1 / player + pick, and 1-for-2 / get player + pick.
     - Keeps a deal only if, on the selected source, you don't lose by more than Fair and don't win by more than max(12%, 2 × Fair).
