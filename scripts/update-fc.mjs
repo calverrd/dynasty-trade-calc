@@ -1,10 +1,11 @@
 // Saves a daily snapshot of FantasyCalc dynasty values to ./fc-history.json
 // (last 120 days), so we can later test which source best predicts value changes.
-// Format: { version, updatedAt, formats:["sf12","sf16"], days: { "YYYY-MM-DD": { "Name|POS": [sf12, sf16] } } }
+// Format: { version, updatedAt, formats:["sf12","sf16"], days: { "YYYY-MM-DD": { key: [sf12, sf16] } } }
+// key = "sid:<Sleeper ID>" when FantasyCalc gives one (stable), else "<normalized name>|POS" (picks etc.)
 // Non-fatal by design: the workflow runs this with continue-on-error.
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { mergeHistory } from "./update-ktc.mjs";
+import { readFileSync, writeFileSync, existsSync, renameSync } from "node:fs";
+import { mergeHistory, normName } from "./update-ktc.mjs";
 
 const HISTORY = "fc-history.json";
 const BASE = "https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=2&ppr=1&numTeams=";
@@ -18,7 +19,7 @@ export function fcSnapshot(lists) {
     for (const r of rows || []) {
       const pl = r.player || {};
       if (!pl.name || !pl.position) continue;
-      const key = `${pl.name}|${pl.position}`;
+      const key = pl.sleeperId ? `sid:${pl.sleeperId}` : `${normName(pl.name)}|${pl.position}`;
       if (!snap[key]) snap[key] = new Array(lists.length).fill(null);
       snap[key][i] = Math.round(r.value);
     }
@@ -30,8 +31,11 @@ async function getFormat(n) {
   const res = await fetch(BASE + n, { headers: { Accept: "application/json" } });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const rows = await res.json();
-  if (!Array.isArray(rows) || rows.length < MIN_ROWS) throw new Error(`only ${rows?.length} rows`);
-  return rows;
+  if (!Array.isArray(rows)) throw new Error("not a list");
+  // Each format is checked on its own: enough rows with real, positive values
+  const good = rows.filter((r) => r && r.player && Number.isFinite(Number(r.value)) && Number(r.value) > 0);
+  if (good.length < MIN_ROWS) throw new Error(`numTeams=${n}: only ${good.length} valid rows`);
+  return good;
 }
 
 async function main() {
@@ -44,7 +48,11 @@ async function main() {
   }
   const dateKey = new Date().toISOString().slice(0, 10);
   const hist = { ...mergeHistory(prev, dateKey, snap), formats: FORMATS.map((f) => f[0]) };
-  writeFileSync(HISTORY, JSON.stringify(hist) + "\n");
+  // Write to a temp file, check it parses, then swap it in (never leaves a half-written file)
+  const tmp = HISTORY + ".tmp";
+  writeFileSync(tmp, JSON.stringify(hist) + "\n");
+  JSON.parse(readFileSync(tmp, "utf8"));
+  renameSync(tmp, HISTORY);
   console.log(`Wrote ${HISTORY}: ${Object.keys(snap).length} assets, ${Object.keys(hist.days).length} day(s)`);
 }
 
