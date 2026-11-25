@@ -1,4 +1,4 @@
-// Saves a daily snapshot of FantasyCalc dynasty values to ./fc-history.json
+// Saves a daily snapshot of FantasyCalc dynasty values to ./fc-history.json, from the daily cache in data/fc/
 // (last 120 days), so we can later test which source best predicts value changes.
 // Format: { version, updatedAt, formats:["sf12","sf16"], days: { "YYYY-MM-DD": { key: [sf12, sf16] } } }
 // key = "sid:<Sleeper ID>" when FantasyCalc gives one (stable), else "<normalized name>|POS" (picks etc.)
@@ -8,7 +8,6 @@ import { readFileSync, writeFileSync, existsSync, renameSync } from "node:fs";
 import { mergeHistory, normName } from "./update-ktc.mjs";
 
 const HISTORY = "fc-history.json";
-const BASE = "https://api.fantasycalc.com/values/current?isDynasty=true&numQbs=2&ppr=1&numTeams=";
 const FORMATS = [["sf12", 12], ["sf16", 16]];
 const MIN_ROWS = 200;
 
@@ -27,20 +26,25 @@ export function fcSnapshot(lists) {
   return snap;
 }
 
-async function getFormat(n) {
-  const res = await fetch(BASE + n, { headers: { Accept: "application/json" } });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const rows = await res.json();
-  if (!Array.isArray(rows)) throw new Error("not a list");
-  // Each format is checked on its own: enough rows with real, positive values
+// Reads today's FantasyCalc cache (data/fc/, written just before by fetch-fc-cache.mjs) instead of calling the
+// API again: the terms allow one refresh per unique query, and the cache already holds SF / 1 PPR at 12 teams.
+// FantasyCalc returns the same values for 16 teams as for 12 (checked Nov 25), so sf16 reuses it.
+const CACHE = "data/fc/fc-sf-ppr1-none.json";
+function getFormat() {
+  const f = JSON.parse(readFileSync(CACHE, "utf8"));
+  if (!f.updated || !(Date.now() - Date.parse(f.updated) < 12 * 3600 * 1000)) throw new Error(`${CACHE} is more than 12 hours old (${f.updated})`);
+  const P = f.fields, K = f.pickFields || ["name", "val", "fcId"];
+  const rows = f.players.map((r) => ({ player: { sleeperId: r[P.indexOf("sleeperId")], name: r[P.indexOf("name")], position: r[P.indexOf("pos")] }, value: r[P.indexOf("val")] }))
+    .concat(f.picks.map((r) => ({ player: { sleeperId: r[K.indexOf("fcId")] || "", name: r[K.indexOf("name")], position: "PICK" }, value: r[K.indexOf("val")] })));
   const good = rows.filter((r) => r && r.player && Number.isFinite(Number(r.value)) && Number(r.value) > 0);
-  if (good.length < MIN_ROWS) throw new Error(`numTeams=${n}: only ${good.length} valid rows`);
+  if (good.length < MIN_ROWS) throw new Error(`only ${good.length} valid rows`);
   return good;
 }
 
 async function main() {
   const lists = [];
-  for (const [, n] of FORMATS) lists.push(await getFormat(n));
+  const today = getFormat();
+  for (const f of FORMATS) lists.push(today);   // sf12, sf16 (identical at FantasyCalc)
   const snap = fcSnapshot(lists);
   let prev = null;
   if (existsSync(HISTORY)) {
