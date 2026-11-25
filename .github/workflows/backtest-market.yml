@@ -12,6 +12,9 @@ on:
       last_class:
         description: "Last rookie class to test"
         default: "2025"
+      min_gap:
+        description: "Minimum value gap in points (site uses 500 for KTC; DynastyProcess rookie values are much smaller, so try 0)"
+        default: "0"
 
 permissions:
   contents: read
@@ -35,7 +38,7 @@ jobs:
       - name: Run backtest
         run: |
           mkdir -p reports
-          python scripts/backtest_market.py . dp reports/market_backtest.md "${{ inputs.first_class }}" "${{ inputs.last_class }}"
+          python scripts/backtest_market.py . dp reports/market_backtest.md "${{ inputs.first_class }}" "${{ inputs.last_class }}" "${{ inputs.min_gap }}"
           cat reports/market_backtest.md >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
