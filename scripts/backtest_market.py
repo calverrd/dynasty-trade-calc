@@ -33,6 +33,7 @@ SITE, DP, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 FIRST = int(sys.argv[4]) if len(sys.argv) > 4 else 2020
 LAST = int(sys.argv[5]) if len(sys.argv) > 5 else 2025
 MIN_GAP = float(sys.argv[6]) if len(sys.argv) > 6 else 500  # the site's KTC-scale floor; 0 = rank gap + 15% only
+MIN_VALUE = float(sys.argv[7]) if len(sys.argv) > 7 else 0  # drop deep-bench rookies valued below this at the decision date
 DATA_RE = re.compile(r"^\s*const DATA = (.*);\s*$", re.M)
 DP_FILE = "files/values-players.csv"
 rng = np.random.default_rng(7)
@@ -112,6 +113,7 @@ for y in range(FIRST, LAST + 1):
             cls["hp"] = m.predict_proba(cls[["lp", ucol]])[:, 1]
             mv = v0[v0.pos == pos][["key", "value_2qb"]].rename(columns={"value_2qb": "v0"})
             cls = cls.merge(mv, on="key", how="inner")
+            cls = cls[cls.v0 >= MIN_VALUE]
             if len(cls) < 6:
                 continue
             for nm, vv in (("v6", v6), ("v12", v12)):
@@ -136,7 +138,7 @@ for y in range(FIRST, LAST + 1):
 
 B = pd.DataFrame(recs)
 out = ["# CHEAP / PRICEY vs DynastyProcess market values", "",
-       f"Classes {FIRST}-{LAST}. Value = DynastyProcess `value_2qb` (superflex). Minimum value gap {MIN_GAP:g} points (plus 15%). Run {dt.date.today()}.", ""]
+       f"Classes {FIRST}-{LAST}. Value = DynastyProcess `value_2qb` (superflex). Minimum value gap {MIN_GAP:g} points (plus 15%). Only rookies valued {MIN_VALUE:g}+ at the decision date. Run {dt.date.today()}.", ""]
 if B.empty:
     out += ["**No players matched.** Snapshot notes:", ""] + [f"- {x}" for x in notes]
     open(OUT, "w").write("\n".join(out) + "\n")
@@ -197,6 +199,35 @@ for w, g in list(B.groupby("when")) + [("Both decision points", B)]:
                 continue
             p, lo, hi, nn = r
             out.append(f"| {w} | {a} vs {b} | +{h}m | {pct(p)} | {pct(lo)} to {pct(hi)} | {nn} |")
+
+out += ["", "## Robust check vs FAIR (same position and starting-value tier)", "",
+        "Skew-resistant versions of the edge: median of each flagged player's change minus his cell's FAIR median, and the share of flagged players who beat that FAIR median (50% = no edge; for PRICEY, lower is better). 95% bootstrap interval on the share.", "",
+        "| Decision point | Flag | Horizon | Median vs FAIR | Beat FAIR median | 95% CI | n |", "|---|---|---|---|---|---|---|"]
+
+
+def robust(df, flag, col):
+    vals = []
+    for _, g in df.groupby(["pos", "tier"], observed=True):
+        fm = g[g.flag == "FAIR"][col].dropna()
+        if len(fm) < 3:
+            continue
+        vals += list(g[g.flag == flag][col].dropna().values - fm.median())
+    if not vals:
+        return None
+    v = np.array(vals)
+    share = (v > 0).mean()
+    boots = [(rng.choice(v, len(v)) > 0).mean() for _ in range(1000)]
+    return np.median(v), share, np.percentile(boots, 2.5), np.percentile(boots, 97.5), len(v)
+
+
+for w, g in list(B.groupby("when")) + [("Both decision points", B)]:
+    for f in ("CHEAP", "PRICEY"):
+        for h in ("6", "12"):
+            r = robust(g, f, f"lr{h}")
+            if r is None:
+                continue
+            md, sh, lo, hi, nn = r
+            out.append(f"| {w} | {f} | +{h}m | {pct(md)} | {sh:.0%} | {lo:.0%} to {hi:.0%} | {nn} |")
 
 out += ["", "## By position (both decision points, +12 months, stratified CHEAP vs PRICEY)", "", "| Position | Edge | 95% CI | Matched n |", "|---|---|---|---|"]
 for pos, g in B.groupby("pos"):
