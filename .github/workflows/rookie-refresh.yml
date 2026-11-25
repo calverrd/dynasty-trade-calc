@@ -32,11 +32,24 @@ jobs:
       - name: Rebuild rookie WR / RB / TE data and veteran PPG (ppg.json)
         run: python scripts/refresh/refresh_rookies.py nflverse_raw .
 
+      - name: Build the shared player context (data/player-context.json)
+        run: python scripts/build_context.py .
+
+      # Every committed file must parse, keep its row counts (within 15% of the last commit) and not move
+      # the season backwards. On failure, put the committed versions back and fail the run so nothing is pushed.
+      - name: Sanity gate
+        run: |
+          if ! python scripts/refresh/check_outputs.py .; then
+            git checkout -- rookie-wr-tracker.html rookie-rb-tracker.html rookie-te-tracker.html ppg.json signals.json bf.json data/player-context.json
+            echo "::error::Rookie refresh output failed the sanity gate; nothing was committed."
+            exit 1
+          fi
+
       - name: Commit if anything changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add rookie-wr-tracker.html rookie-rb-tracker.html rookie-te-tracker.html ppg.json signals.json bf.json
+          git add rookie-wr-tracker.html rookie-rb-tracker.html rookie-te-tracker.html ppg.json signals.json bf.json data/player-context.json
           if git diff --cached --quiet; then
             echo "No changes."
             exit 0
