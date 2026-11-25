@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keeper Trade Calculator — Sleeper Keeper Leagues</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  try { tailwind.config = { darkMode: 'class' }; } catch (e) {}
+  try { if (localStorage.getItem('theme') === 'light') document.documentElement.classList.remove('dark'); } catch (e) {}
+</script>
+<style>
+  .scroll-thin::-webkit-scrollbar{height:6px;width:6px}
+  .scroll-thin::-webkit-scrollbar-thumb{background:#47556988;border-radius:3px}
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+  .num { font-variant-numeric: tabular-nums; }
+  table.kt th { position: sticky; top: 0; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen antialiased">
+
+<header class="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-0 z-30">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
+    <div class="flex items-center gap-2">
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-amber-500 grid place-items-center font-black text-white text-sm">KP</div>
+      <div>
+        <div class="font-bold leading-tight">Keeper Trade Calculator</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400 leading-tight" id="leagueName">Loading…</div>
+      </div>
+    </div>
+    <nav class="flex flex-wrap gap-1 ml-auto text-sm" id="tabs">
+      <button data-tab="trade" class="tabbtn px-3 py-1.5 rounded-md">Trade calculator</button>
+      <button data-tab="board" class="tabbtn px-3 py-1.5 rounded-md">Keeper board</button>
+      <button data-tab="picks" class="tabbtn px-3 py-1.5 rounded-md">Pick values</button>
+      <button data-tab="players" class="tabbtn px-3 py-1.5 rounded-md">Player values</button>
+      <a href="index.html" class="px-3 py-1.5 rounded-md text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400">← Dynasty calc</a>
+    </nav>
+    <div class="flex items-center gap-2 text-sm">
+      <input id="leagueInput" class="w-44 px-2 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 num" placeholder="Sleeper league ID">
+      <button id="loadBtn" class="px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-medium">Load</button>
+      <button id="refreshBtn" title="Clear cache and reload" class="px-2 py-1.5 rounded-md bg-slate-200 dark:bg-slate-800">⟳</button>
+      <button id="themeBtn" title="Toggle theme" class="px-2 py-1.5 rounded-md bg-slate-200 dark:bg-slate-800">🌓</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-4 space-y-4">
+  <div id="status" class="text-sm text-slate-500 dark:text-slate-400"></div>
+
+  <!-- Detected settings + rules drawer -->
+  <details id="rulesDrawer" class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+    <summary class="px-4 py-3 flex flex-wrap items-center gap-2 text-sm">
+      <span class="font-semibold">League rules</span>
+      <span id="detectedLine" class="text-slate-500 dark:text-slate-400"></span>
+      <span class="ml-auto text-xs text-emerald-600 dark:text-emerald-400">edit ▾</span>
+    </summary>
+    <div class="px-4 pb-4 grid gap-4 md:grid-cols-2 lg:grid-cols-4 text-sm" id="rulesForm"></div>
+    <div class="px-4 pb-4 text-xs text-slate-500 dark:text-slate-400" id="evidence"></div>
+  </details>
+
+  <section id="tab-trade" class="tabpane"></section>
+  <section id="tab-board" class="tabpane hidden"></section>
+  <section id="tab-picks" class="tabpane hidden"></section>
+  <section id="tab-players" class="tabpane hidden"></section>
+</main>
+
+<footer class="max-w-7xl mx-auto px-4 py-8 text-xs text-slate-500 dark:text-slate-400 space-y-1">
+  <p>Player values provided by <a href="https://fantasycalc.com" target="_blank" rel="noopener" class="underline text-emerald-600 dark:text-emerald-400">FantasyCalc</a>. League data from the Sleeper API. FantasyCalc responses are cached in your browser for 3 hours.</p>
+  <p>Keeper surplus = how much more a player is worth than the pick it costs to keep him. Pick values come from the players expected to still be in the draft pool after every team keeps.</p>
+</footer>
+
+<script>
+/* =====================================================================
+   ENGINE START — pure functions (no DOM). Tested in isolation.
+   ===================================================================== */
+const MODES = {
+  inseason: { label: 'In-Season',       wNow: 1.00, d1: 0.70, d2: 0.40, dp: 0.80 },
+  deadline: { label: 'Trade Deadline',  wNow: 0.75, d1: 0.85, d2: 0.50, dp: 0.88 },
+  offseason:{ label: 'Offseason',       wNow: 0.00, d1: 1.00, d2: 0.60, dp: 1.00 },
+};
+const DEFAULT_RULES = {
+  K: null,               // null = auto-detect
+  maxKeepYears: 2,
+  minRoundCost: 9,       // floor: round 10+/waiver adds cost this round
+  waiverRound: 10,       // treated "drafted round" for undrafted players
+  firstRoundRule: 'B',   // A: no 1st-round cost allowed; B: only Rd 1 draftees ineligible
+  dropReset: true,       // drafted-then-dropped player resets to waiver cost
+  seasonMode: 'auto',
+};
+
+function legalRound(c, rules) { return c >= 1 && !(c === 1 && rules.firstRoundRule === 'A'); }
+
+// Where did this player come from? d0 = latest completed draft, d1 = the draft before.
+function baseClock(pid, d0, d1, acq, rosterRid, rules) {
+  const p0 = d0.get(pid);
+  if (!p0) return { R: rules.waiverRound, kept: 0, source: 'waiver', draftRound: null };
+  const a = acq && acq.get(pid);
+  if (rules.dropReset && a && (a.type === 'waiver' || a.type === 'free_agent') && a.rid === rosterRid) {
+    return { R: rules.waiverRound, kept: 0, source: 'reset', draftRound: p0.round };
+  }
+  if (p0.is_keeper) {
+    const p1 = d1.get(pid);
+    const kept = (p1 && p1.is_keeper) ? 2 : 1;
+    return { R: p0.round, kept, source: kept === 2 ? 'kept2' : 'kept1', draftRound: p0.round };
+  }
+  return { R: p0.round, kept: 0, source: 'drafted', draftRound: p0.round };
+}
+
+// Sequence of future keeper costs [c1, c2, ...]; length = years left.
+function costSeq(R, kept, rules) {
+  const yrs = rules.maxKeepYears - kept, seq = [];
+  let c = Math.min(R - 1, rules.minRoundCost);
+  for (let y = 0; y < yrs; y++) { if (!legalRound(c, rules)) break; seq.push(c); c -= 1; }
+  return seq;
+}
+
+function applyOverride(seq, ov) {
+  if (!ov || (ov.c1 == null && ov.yl == null)) return seq;
+  if (ov.c1 != null) {
+    const yl = ov.yl != null ? ov.yl : Math.max(seq.length, 1), s = [];
+    let c = ov.c1;
+    for (let y = 0; y < yl && c >= 1; y++) { s.push(c); c--; }
+    return s;
+  }
+  let s = seq.slice(0, ov.yl);
+  let c = s.length ? s[s.length - 1] - 1 : null;
+  while (s.length < ov.yl && c != null && c >= 1) { s.push(c); c--; }
+  return s;
+}
+
+function overallOf(r, slot, N) { return (r - 1) * N + (r % 2 === 1 ? slot : N + 1 - slot); }
+function posInRound(r, slot, N) { return r % 2 === 1 ? slot : N + 1 - slot; }
+function partOf(pos, N) { const e = Math.round(N / 3); return pos <= e ? 'Early' : pos > N - e ? 'Late' : 'Mid'; }
+
+// Value of every overall draft slot from the unkept pool.
+function pickCurve(ctx, keptSet, effRound, keeperTeam) {
+  const { N, T } = ctx, total = N * T;
+  const pool = ctx.universe.filter(p => !keptSet.has(p.pid)).sort((a, b) => b.vy1 - a.vy1);
+  const occ = new Set(), used = {};
+  for (const [pid, r] of effRound) {
+    const rid = keeperTeam.get(pid);
+    const origs = ((ctx.owned[rid] || {})[r]) || [];
+    used[rid + ':' + r] = used[rid + ':' + r] || 0;
+    const orig = origs[used[rid + ':' + r]++];
+    if (orig != null && ctx.teamSlot[orig]) occ.add(overallOf(r, ctx.teamSlot[orig], N));
+  }
+  const val = new Array(total + 1).fill(0), rank = new Array(total + 1).fill(0);
+  let k = 0;
+  for (let i = 1; i <= total; i++) {
+    const rk = k + 1; rank[i] = rk;
+    let s = 0, n = 0;
+    for (let j = Math.max(1, rk - 2); j <= rk + 2; j++) { s += pool[j - 1] ? pool[j - 1].vy1 : 0; n++; }
+    val[i] = s / n;
+    if (!occ.has(i)) k++;
+  }
+  const roundAvg = [0];
+  for (let r = 1; r <= T; r++) {
+    let s = 0; for (let i = (r - 1) * N + 1; i <= r * N; i++) s += val[i];
+    roundAvg[r] = s / N;
+  }
+  return { pool, val, rank, roundAvg, occ };
+}
+
+function surplus(p, seq, curve) {
+  const S1 = seq.length >= 1 ? Math.max(0, p.vy1 - curve.roundAvg[seq[0]]) : 0;
+  const S2 = seq.length >= 2 ? Math.max(0, p.vy2 - curve.roundAvg[seq[1]]) : 0;
+  return { S1, S2 };
+}
+
+// Choose each team's keepers, resolving same-round collisions.
+function selectKeepers(ctx, curve) {
+  const { K, rules } = ctx;
+  const kept = new Set(), effRound = new Map(), keeperTeam = new Map(), notes = new Map(), overflow = new Map();
+  for (const team of ctx.teams) {
+    const cands = [];
+    for (const pid of team.players) {
+      const seq = ctx.seqOf(pid), lock = ctx.locks[pid];
+      if (!seq.length || lock === 'out') continue;
+      const p = ctx.byId.get(pid); if (!p) continue;
+      const { S1, S2 } = curve ? surplus(p, seq, curve) : { S1: p.vy1, S2: 0 };
+      cands.push({ pid, seq, score: S1 + 0.5 * S2, S1, forced: lock === 'in' });
+    }
+    cands.sort((a, b) => (b.forced - a.forced) || (b.score - a.score));
+    const chosen = [], positives = [];
+    for (const c of cands) {
+      if (!c.forced && c.S1 <= 0) continue;
+      positives.push(c.pid);
+      if (chosen.length < K) chosen.push(c);
+    }
+    overflow.set(team.rid, positives.slice(K));
+    const avail = {};
+    const own = ctx.owned[team.rid] || {};
+    for (const r in own) avail[r] = own[r].length;
+    for (const c of chosen) {
+      let r = c.seq[0], bumped = false;
+      while (r >= 1 && !(avail[r] > 0)) { r--; bumped = true; }
+      if (!legalRound(r, rules)) { notes.set(c.pid, 'No legal pick left to keep him with'); continue; }
+      avail[r]--;
+      kept.add(c.pid); effRound.set(c.pid, r); keeperTeam.set(c.pid, team.rid);
+      if (bumped) notes.set(c.pid, `Collision: bumped from Rd ${c.seq[0]} to Rd ${r}`);
+    }
+  }
+  return { kept, effRound, keeperTeam, notes, overflow };
+}
+
+function solve(ctx) {
+  // Pass 0: keep top-K eligible by projected value, no pick info yet
+  let sel = selectKeepers(ctx, null);
+  let curve = pickCurve(ctx, sel.kept, sel.effRound, sel.keeperTeam);
+  for (let pass = 1; pass <= 3; pass++) {
+    sel = selectKeepers(ctx, curve);
+    curve = pickCurve(ctx, sel.kept, sel.effRound, sel.keeperTeam);
+  }
+  const W = ctx.weights, values = new Map();
+  for (const p of ctx.universe.concat(ctx.extraPlayers || [])) {
+    let seq = ctx.seqOf(p.pid);
+    if (sel.effRound.has(p.pid)) {
+      const r = sel.effRound.get(p.pid);
+      seq = seq.length >= 2 && legalRound(r - 1, ctx.rules) ? [r, r - 1] : [r];
+    }
+    const { S1, S2 } = surplus(p, seq, curve);
+    const redraftPart = W.wNow * p.vr, keeperPart = W.d1 * S1 + W.d2 * S2;
+    values.set(p.pid, { S1, S2, seq, redraftPart, keeperPart, tv: redraftPart + keeperPart });
+  }
+  return { ...sel, curve, values };
+}
+
+function pickValue(ctx, res, r, origRid, season) {
+  const { N, T } = ctx, c = res.curve, dp = ctx.weights.dp;
+  const last = c.roundAvg[T];
+  let raw, part = 'Mid', overall = null;
+  if (season === ctx.nextSeason && ctx.teamSlot[origRid]) {
+    const pos = posInRound(r, ctx.teamSlot[origRid], N);
+    overall = overallOf(r, ctx.teamSlot[origRid], N);
+    raw = c.val[overall]; part = partOf(pos, N);
+  } else raw = c.roundAvg[r];
+  const futureDisc = season > ctx.nextSeason ? 0.9 : 1;
+  return { raw, part, overall, tv: dp * Math.max(0, raw - last) * futureDisc };
+}
+
+function genericPickValue(ctx, res, r, part) {
+  const { N, T } = ctx, c = res.curve, vals = [];
+  for (let pos = 1; pos <= N; pos++) if (!part || partOf(pos, N) === part) vals.push(c.val[(r - 1) * N + pos]);
+  const raw = vals.reduce((a, b) => a + b, 0) / Math.max(1, vals.length);
+  return { raw, part: part || 'Avg', tv: ctx.weights.dp * Math.max(0, raw - c.roundAvg[T]) };
+}
+
+// Best possible starting lineup value (by redraft value) for a set of players.
+function lineupValue(pids, byId, rosterPositions) {
+  const pl = pids.map(id => byId.get(id)).filter(Boolean).sort((a, b) => b.vr - a.vr);
+  const used = new Set(); let total = 0;
+  const elig = {
+    QB: ['QB'], RB: ['RB'], WR: ['WR'], TE: ['TE'],
+    FLEX: ['RB', 'WR', 'TE'], WRRB_FLEX: ['RB', 'WR'], REC_FLEX: ['WR', 'TE'], SUPER_FLEX: ['QB', 'RB', 'WR', 'TE'],
+  };
+  const slots = rosterPositions.filter(s => elig[s]);
+  slots.sort((a, b) => elig[a].length - elig[b].length);
+  for (const s of slots) {
+    const p = pl.find(x => !used.has(x.pid) && elig[s].includes(x.pos));
+    if (p) { used.add(p.pid); total += p.vr; }
+  }
+  return total;
+}
+/* ===================== ENGINE END ===================== */
+
+/* ---------------- Data layer ---------------- */
+const SLEEPER = 'https://api.sleeper.app/v1';
+const FC = 'https://api.fantasycalc.com/values/current';
+const DEFAULT_LEAGUE = '1389377067920924672';
+const FC_TTL = 3 * 3600 * 1000, SL_TTL = 15 * 60 * 1000;
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} },
+};
+
+async function cachedJSON(url, ttl) {
+  const key = 'kc:' + url;
+  const hit = store.get(key, null);
+  if (hit && Date.now() - hit.t < ttl) return hit.d;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${r.status} from ${url}`);
+  const d = await r.json();
+  try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), d })); }
+  catch (e) { // quota: drop older cache entries and retry once
+    try { Object.keys(localStorage).filter(k => k.startsWith('kc:') && k !== key).forEach(k => localStorage.removeItem(k)); localStorage.setItem(key, JSON.stringify({ t: Date.now(), d })); } catch (e2) {}
+  }
+  return d;
+}
+const sl = (path) => cachedJSON(SLEEPER + path, SL_TTL);
+
+function fcParams(league) {
+  const rp = league.roster_positions || [];
+  const qbs = rp.filter(x => x === 'QB').length, sf = rp.includes('SUPER_FLEX');
+  const numQbs = (sf || qbs >= 2) ? 2 : 1;
+  const nt = league.total_rosters || 12;
+  const numTeams = [8, 10, 12, 14].reduce((a, b) => Math.abs(b - nt) < Math.abs(a - nt) ? b : a);
+  const rec = (league.scoring_settings || {}).rec ?? 1;
+  const ppr = [0, 0.5, 1].reduce((a, b) => Math.abs(b - rec) < Math.abs(a - rec) ? b : a);
+  const bte = (league.scoring_settings || {}).bonus_rec_te || 0;
+  const tep = bte >= 1 ? 'te++' : bte > 0 ? 'te+' : 'none';
+  return { numQbs, numTeams, ppr, tep, rawTeams: nt };
+}
+async function fetchFC(isDynasty, p) {
+  const base = `${FC}?isDynasty=${isDynasty}&numQbs=${p.numQbs}&numTeams=${p.numTeams}&ppr=${p.ppr}`;
+  if (p.tep !== 'none') { try { return await cachedJSON(`${base}&tep=${p.tep}`, FC_TTL); } catch (e) {} }
+  return cachedJSON(base, FC_TTL);
+}
+
+async function fetchPicksMap(draftId) {
+  if (!draftId) return { map: new Map(), list: [], draft: null };
+  const [draft, picks] = await Promise.all([sl(`/draft/${draftId}`), sl(`/draft/${draftId}/picks`)]);
+  const map = new Map();
+  for (const p of picks || []) if (p.player_id) map.set(String(p.player_id), p);
+  return { map, list: picks || [], draft };
+}
+
+async function loadLeague(id) {
+  setStatus('Loading league from Sleeper…');
+  const league = await sl(`/league/${id}`);
+  if (!league || !league.league_id) throw new Error('League not found');
+  const [users, rosters, traded] = await Promise.all([sl(`/league/${id}/users`), sl(`/league/${id}/rosters`), sl(`/league/${id}/traded_picks`)]);
+
+  // Walk back up to 2 prior seasons
+  const chain = [league];
+  let prevId = league.previous_league_id;
+  for (let i = 0; i < 2 && prevId && prevId !== '0'; i++) {
+    try { const l = await sl(`/league/${prevId}`); chain.push(l); prevId = l.previous_league_id; } catch (e) { break; }
+  }
+  const drafts = [];
+  for (const l of chain) drafts.push({ league: l, ...(await fetchPicksMap(l.draft_id)) });
+  // Latest *completed* draft = d0; the one before = d1
+  const done = drafts.filter(d => d.draft && d.draft.status === 'complete');
+  const d0 = done[0] || { map: new Map(), list: [], draft: null, league };
+  const d1 = done[1] || { map: new Map(), list: [], draft: null };
+  const d0IsCurrent = d0.league && d0.league.league_id === league.league_id;
+  const nextSeason = d0IsCurrent ? Number(league.season) + 1 : Number(league.season);
+
+  // Transactions (for drafted-then-dropped detection)
+  setStatus('Loading transactions…');
+  const acq = new Map();
+  const txLeagues = [...new Set([league.league_id, d0.league && d0.league.league_id].filter(Boolean))];
+  for (const lid of txLeagues) {
+    const l = lid === league.league_id ? league : d0.league;
+    const weeks = Math.min(18, Math.max(1, (l.settings && (l.settings.leg || l.settings.last_scored_leg)) || 18) + 1);
+    const res = await Promise.all(Array.from({ length: weeks }, (_, i) => sl(`/league/${lid}/transactions/${i + 1}`).catch(() => [])));
+    for (const txs of res) for (const t of txs || []) {
+      if (t.status !== 'complete' || !t.adds) continue;
+      const ts = t.status_updated || t.created || 0;
+      for (const [pid, rid] of Object.entries(t.adds)) {
+        const cur = acq.get(pid);
+        if (!cur || ts > cur.ts) acq.set(pid, { type: t.type, rid, ts });
+      }
+    }
+  }
+
+  setStatus('Loading FantasyCalc values…');
+  const fp = fcParams(league);
+  const [fcDyn, fcRed] = await Promise.all([fetchFC(true, fp), fetchFC(false, fp).catch(() => [])]);
+  return { league, users, rosters, traded, chain, drafts, d0, d1, d0IsCurrent, nextSeason, acq, fp, fcDyn, fcRed };
+}
+
+/* ---------------- App state ---------------- */
+let RAW = null, CTX = null, RES = null;
+let leagueId = store.get('keeper:league', DEFAULT_LEAGUE);
+const lk = (k) => `keeper:${leagueId}:${k}`;
+let rules = {}, overrides = {}, locks = {};
+let trade = { A: { rid: null, items: [] }, B: { rid: null, items: [] } };
+let activeTab = store.get('keeper:tab', 'trade');
+let playerFilter = { q: '', view: 'all', team: '' };
+
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = (n) => Math.round(n || 0).toLocaleString();
+function setStatus(t, err) { const el = $('#status'); el.textContent = t || ''; el.className = 'text-sm ' + (err ? 'text-rose-500' : 'text-slate-500 dark:text-slate-400'); }
+
+function detectMode(league) {
+  const s = league.settings || {}, st = league.status;
+  if (st !== 'in_season') return 'offseason';
+  const leg = s.leg || 1, dl = s.trade_deadline || 99;
+  if (leg > dl) return 'offseason';
+  if (leg >= dl - 3) return 'deadline';
+  return 'inseason';
+}
+
+function buildCtx() {
+  const R = RAW, L = R.league;
+  const N = L.total_rosters || R.rosters.length;
+  const T = (R.d0.draft && R.d0.draft.settings && R.d0.draft.settings.rounds) || 15;
+
+  // Detected K
+  const kPerRoster = {};
+  for (const p of R.d0.list) if (p.is_keeper) kPerRoster[p.roster_id] = (kPerRoster[p.roster_id] || 0) + 1;
+  const detK = (L.settings && L.settings.max_keepers) || Math.max(0, ...Object.values(kPerRoster)) || 3;
+  const r = { ...DEFAULT_RULES, ...rules };
+  const K = r.K || detK;
+  const modeKey = r.seasonMode === 'auto' ? detectMode(L) : r.seasonMode;
+
+  // Players universe
+  const byId = new Map();
+  const add = (sid, name, pos, team, age) => {
+    if (!byId.has(sid)) byId.set(sid, { pid: sid, name, pos, team, age, vr: 0, vd: 0, vrFallback: 0 });
+    return byId.get(sid);
+  };
+  for (const e of R.fcDyn || []) {
+    const p = e.player || {}; if (!p.sleeperId || p.position === 'PICK') continue;
+    const o = add(String(p.sleeperId), p.name, p.position, p.maybeTeam, p.maybeAge);
+    o.vd = e.value || 0; o.vrFallback = e.redraftValue || 0;
+  }
+  for (const e of R.fcRed || []) {
+    const p = e.player || {}; if (!p.sleeperId || p.position === 'PICK') continue;
+    const o = add(String(p.sleeperId), p.name, p.position, p.maybeTeam, p.maybeAge);
+    o.vr = e.value || 0;
+  }
+  for (const o of byId.values()) {
+    if (!o.vr) o.vr = o.vrFallback;
+    if (!o.vd) o.vd = o.vr;
+    o.vy1 = 0.60 * o.vr + 0.40 * o.vd;
+    o.vy2 = 0.35 * o.vr + 0.65 * o.vd;
+  }
+  const universe = [...byId.values()];
+  // Names for rostered players FantasyCalc doesn't list
+  const meta = new Map();
+  for (const d of R.drafts) for (const p of d.list) if (p.player_id && p.metadata) meta.set(String(p.player_id), p.metadata);
+  const extraPlayers = [];
+
+  // Teams
+  const userById = new Map((R.users || []).map(u => [u.user_id, u]));
+  const teams = R.rosters.map(ro => {
+    const u = userById.get(ro.owner_id) || {};
+    const s = ro.settings || {};
+    const players = (ro.players || []).map(String);
+    for (const pid of players) if (!byId.has(pid)) {
+      const m = meta.get(pid) || {};
+      const o = { pid, name: m.first_name ? `${m.first_name} ${m.last_name}` : `Player ${pid}`, pos: m.position || '?', team: m.team || '', vr: 0, vd: 0, vy1: 0, vy2: 0 };
+      byId.set(pid, o); extraPlayers.push(o);
+    }
+    return {
+      rid: ro.roster_id, ownerId: ro.owner_id, players,
+      name: (u.metadata && u.metadata.team_name) || u.display_name || `Team ${ro.roster_id}`,
+      owner: u.display_name || '', wins: s.wins || 0, losses: s.losses || 0, ties: s.ties || 0,
+      fpts: (s.fpts || 0) + (s.fpts_decimal || 0) / 100,
+    };
+  });
+  const rosterOf = new Map();
+  for (const t of teams) for (const pid of t.players) rosterOf.set(pid, t.rid);
+
+  // Projected next-draft slot: worst record picks 1st (ties broken by points for)
+  const order = teams.slice().sort((a, b) => (a.wins - b.wins) || (b.losses - a.losses) || (a.fpts - b.fpts));
+  const teamSlot = {}; order.forEach((t, i) => teamSlot[t.rid] = i + 1);
+  const standRank = {}; order.slice().reverse().forEach((t, i) => standRank[t.rid] = i + 1);
+
+  // Pick ownership for next two seasons
+  const owned = {}, ownedBySeason = {};
+  for (const season of [R.nextSeason, R.nextSeason + 1]) {
+    const o = {}; for (const t of teams) { o[t.rid] = {}; for (let rr = 1; rr <= T; rr++) o[t.rid][rr] = [t.rid]; }
+    for (const tp of R.traded || []) {
+      if (Number(tp.season) !== season || tp.round > T) continue;
+      const orig = tp.roster_id, owner = tp.owner_id;
+      for (const t of teams) { const arr = o[t.rid][tp.round]; const ix = arr.indexOf(orig); if (ix >= 0) arr.splice(ix, 1); }
+      if (o[owner]) o[owner][tp.round].push(orig);
+    }
+    ownedBySeason[season] = o;
+  }
+  Object.assign(owned, ownedBySeason[R.nextSeason]);
+
+  // Clocks
+  const clocks = new Map();
+  const seqCache = new Map();
+  const seqOf = (pid) => {
+    if (seqCache.has(pid)) return seqCache.get(pid);
+    let c = clocks.get(pid);
+    if (!c) { c = baseClock(pid, R.d0.map, R.d1.map, R.acq, rosterOf.get(pid), r); c.base = costSeq(c.R, c.kept, r); clocks.set(pid, c); }
+    const s = applyOverride(c.base, overrides[pid]);
+    seqCache.set(pid, s); return s;
+  };
+
+  return {
+    N, T, K, detK, kPerRoster, rules: r, modeKey, weights: MODES[modeKey], byId, universe, extraPlayers, teams, rosterOf,
+    teamSlot, standRank, owned, ownedBySeason, nextSeason: R.nextSeason, clocks, seqOf, locks,
+    rosterPositions: L.roster_positions || [],
+  };
+}
+
+function recompute() {
+  CTX = buildCtx();
+  RES = solve(CTX);
+  renderAll();
+}
+
+/* ---------------- Helpers for UI ---------------- */
+const teamById = (rid) => CTX.teams.find(t => t.rid === rid);
+const teamName = (rid) => (teamById(rid) || {}).name || '—';
+function clockLabel(pid) {
+  const c = CTX.clocks.get(pid) || (CTX.seqOf(pid), CTX.clocks.get(pid));
+  if (!c) return '';
+  return { waiver: 'Waiver add', reset: `Dropped (drafted Rd ${c.draftRound}) → reset`, drafted: `Drafted Rd ${c.R}`, kept1: `Kept Rd ${c.R} (1×)`, kept2: `Kept Rd ${c.R} (2×)` }[c.source];
+}
+function poolPreview(overallOrRank, isRank) {
+  const rk = isRank ? overallOrRank : RES.curve.rank[overallOrRank];
+  return RES.curve.pool.slice(Math.max(0, rk - 1), rk + 2).map(p => lastName(p.name)).join(', ');
+}
+function lastName(n) { const parts = String(n || '').split(' '); return parts.length > 1 ? parts.slice(1).join(' ') : n; }
+function posBadge(pos) {
+  const c = { QB: 'bg-rose-500/15 text-rose-600 dark:text-rose-300', RB: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', WR: 'bg-sky-500/15 text-sky-700 dark:text-sky-300', TE: 'bg-amber-500/15 text-amber-700 dark:text-amber-300' }[pos] || 'bg-slate-500/15';
+  return `<span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${c}">${esc(pos)}</span>`;
+}
+function costSelect(pid) {
+  const seq = CTX.seqOf(pid), ov = overrides[pid] || {};
+  let o = `<option value="">${seq.length ? 'Rd ' + seq[0] : '—'}${ov.c1 == null ? ' (auto)' : ''}</option>`;
+  for (let r = 1; r <= CTX.T; r++) o += `<option value="${r}" ${ov.c1 === r ? 'selected' : ''}>Rd ${r}</option>`;
+  return `<select data-ov="c1" data-pid="${pid}" class="ovsel bg-transparent text-xs border border-slate-300 dark:border-slate-700 rounded px-1">${o}</select>`;
+}
+function ylSelect(pid) {
+  const seq = CTX.seqOf(pid), ov = overrides[pid] || {};
+  let o = `<option value="">${seq.length}${ov.yl == null ? ' (auto)' : ''}</option>`;
+  for (const y of [0, 1, 2, 3]) o += `<option value="${y}" ${ov.yl === y ? 'selected' : ''}>${y}</option>`;
+  return `<select data-ov="yl" data-pid="${pid}" class="ovsel bg-transparent text-xs border border-slate-300 dark:border-slate-700 rounded px-1">${o}</select>`;
+}
+const card = 'rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900';
+
+/* ---------------- Rules drawer ---------------- */
+function renderRules() {
+  const L = RAW.league, c = CTX, fp = RAW.fp;
+  const keeperRounds = RAW.d0.list.filter(p => p.is_keeper).map(p => p.round);
+  const rd1Keepers = RAW.drafts.flatMap(d => d.list).filter(p => p.is_keeper && p.round === 1).length;
+  $('#leagueName').textContent = `${L.name} · ${L.season}`;
+  $('#detectedLine').innerHTML = `${c.N} teams · ${fp.numQbs === 2 ? 'Superflex' : '1QB'} · ${fp.ppr} PPR · TEP ${fp.tep} · ${c.T} rounds · K = ${c.K} · Mode: <b>${c.weights.label}</b>${c.rules.seasonMode === 'auto' ? ' (auto)' : ''}`;
+  const inp = (k, label, extra = '') => `<label class="block"><span class="text-xs text-slate-500">${label}</span><input data-rule="${k}" type="number" ${extra} value="${rules[k] ?? ''}" placeholder="${k === 'K' ? 'auto (' + c.detK + ')' : DEFAULT_RULES[k]}" class="mt-1 w-full px-2 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"></label>`;
+  $('#rulesForm').innerHTML = `
+    ${inp('K', 'Max keepers per team (K)', 'min=0 max=8')}
+    ${inp('maxKeepYears', 'Max consecutive keeper years', 'min=1 max=5')}
+    ${inp('minRoundCost', 'Cost floor (Rd 10+ / waiver costs this round)', 'min=1 max=20')}
+    ${inp('waiverRound', 'Treat undrafted players as drafted in round', 'min=2 max=20')}
+    <label class="block"><span class="text-xs text-slate-500">1st-round rule</span>
+      <select data-rule="firstRoundRule" class="mt-1 w-full px-2 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+        <option value="B" ${c.rules.firstRoundRule === 'B' ? 'selected' : ''}>B · Only Rd 1 draftees ineligible (Rd 2 → keep for a 1st)</option>
+        <option value="A" ${c.rules.firstRoundRule === 'A' ? 'selected' : ''}>A · No 1st-round keeper cost (Rd 1 & 2 ineligible)</option>
+      </select></label>
+    <label class="block"><span class="text-xs text-slate-500">Season phase</span>
+      <select data-rule="seasonMode" class="mt-1 w-full px-2 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+        ${['auto', 'inseason', 'deadline', 'offseason'].map(m => `<option value="${m}" ${c.rules.seasonMode === m ? 'selected' : ''}>${m === 'auto' ? 'Auto (' + MODES[detectMode(L)].label + ')' : MODES[m].label}</option>`).join('')}
+      </select></label>
+    <label class="flex items-center gap-2 mt-5"><input data-rule="dropReset" type="checkbox" ${c.rules.dropReset ? 'checked' : ''}> <span>Drafted-then-dropped players reset to waiver cost</span></label>
+    <div class="text-xs text-slate-500 mt-1">Weights now: current season ×${c.weights.wNow}, Yr+1 surplus ×${c.weights.d1}, Yr+2 ×${c.weights.d2}, picks ×${c.weights.dp}.
+      <button id="resetRules" class="ml-1 underline text-emerald-600 dark:text-emerald-400">Reset rules</button>
+      <button id="resetOv" class="ml-1 underline text-emerald-600 dark:text-emerald-400">Clear overrides & locks</button></div>`;
+  const byRound = {}; keeperRounds.forEach(r => byRound[r] = (byRound[r] || 0) + 1);
+  $('#evidence').innerHTML = `Evidence from ${RAW.d0.league ? RAW.d0.league.season : ''} draft: ${keeperRounds.length} keepers (${Object.entries(byRound).map(([r, n]) => `Rd ${r}: ${n}`).join(', ') || 'none'}); most by one team: ${Math.max(0, ...Object.values(c.kPerRoster))}. Round-1 keepers across the last ${RAW.drafts.length} drafts: ${rd1Keepers}. Picks shown are for the ${c.nextSeason} draft; draft order is projected from current standings (worst record picks 1st). FantasyCalc query: numQbs=${fp.numQbs}, numTeams=${fp.numTeams}, ppr=${fp.ppr}${fp.tep !== 'none' ? ', tep=' + fp.tep : ''}.`;
+}
+
+/* ---------------- Trade tab ---------------- */
+function itemValue(it) {
+  if (it.kind === 'player') return (RES.values.get(it.pid) || { tv: 0 }).tv;
+  if (it.kind === 'pick') return pickValue(CTX, RES, it.round, it.orig, it.season).tv;
+  return genericPickValue(CTX, RES, it.round, it.part).tv;
+}
+function ownedPickItems(rid) {
+  const out = [];
+  for (const season of [CTX.nextSeason, CTX.nextSeason + 1]) {
+    const o = (CTX.ownedBySeason[season] || {})[rid] || {};
+    for (let r = 1; r <= CTX.T; r++) for (const orig of (o[r] || [])) out.push({ kind: 'pick', round: r, orig, season });
+  }
+  return out;
+}
+function itemKey(it) { return it.kind === 'player' ? 'p' + it.pid : it.kind === 'pick' ? `k${it.season}-${it.round}-${it.orig}` : `g${it.round}-${it.part}`; }
+
+function playerChip(pid, side, inTrade) {
+  const p = CTX.byId.get(pid), v = RES.values.get(pid) || { tv: 0, redraftPart: 0, keeperPart: 0, seq: [] };
+  const seq = v.seq, kept = RES.kept.has(pid), note = RES.notes.get(pid);
+  const yl = seq.length;
+  const ylCls = yl === 0 ? 'text-rose-500' : yl === 1 ? 'text-amber-500' : 'text-emerald-500';
+  return `<div class="rounded-lg border ${inTrade ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-slate-200 dark:border-slate-800'} px-2.5 py-2 text-sm">
+    <div class="flex items-center gap-2">
+      ${posBadge(p.pos)} <span class="font-medium truncate">${esc(p.name)}</span>
+      ${kept ? '<span title="Projected keeper" class="text-[10px] px-1 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">K</span>' : ''}
+      <span class="ml-auto font-bold num">${fmt(v.tv)}</span>
+      ${inTrade ? `<button data-rm="${side}" data-key="p${pid}" class="text-slate-400 hover:text-rose-500">✕</button>` : `<button data-add="${side}" data-pid="${pid}" class="text-emerald-600 dark:text-emerald-400 font-bold">＋</button>`}
+    </div>
+    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+      <span class="num">Redraft ${fmt(v.redraftPart)}</span><span>+</span><span class="num text-emerald-600 dark:text-emerald-400">Keeper ${fmt(v.keeperPart)}</span>
+      <span>· Cost: ${inTrade ? costSelect(pid) : (seq.length ? 'Rd ' + seq[0] : '—')}</span>
+      <span class="${ylCls}">· Yrs left: ${inTrade ? ylSelect(pid) : yl}</span>
+      ${note ? `<span class="text-amber-500">· ${esc(note)}</span>` : ''}
+    </div></div>`;
+}
+function pickChip(it, side, inTrade) {
+  let label, v, preview;
+  if (it.kind === 'pick') {
+    v = pickValue(CTX, RES, it.round, it.orig, it.season);
+    const via = it.orig !== (trade[side] || {}).rid && it.orig ? ` · via ${esc(teamName(it.orig))}` : '';
+    label = `${it.season} Rd ${it.round} ${it.season === CTX.nextSeason ? v.part : ''}${via}`;
+    preview = it.season === CTX.nextSeason && v.overall ? poolPreview(v.overall) : poolPreview(RES.curve.rank[(it.round - 1) * CTX.N + Math.ceil(CTX.N / 2)], true);
+  } else {
+    v = genericPickValue(CTX, RES, it.round, it.part);
+    label = `Rd ${it.round} ${it.part}`;
+    preview = poolPreview(RES.curve.rank[(it.round - 1) * CTX.N + Math.ceil(CTX.N / 2)], true);
+  }
+  return `<div class="rounded-lg border ${inTrade ? 'border-amber-500/40 bg-amber-500/5' : 'border-slate-200 dark:border-slate-800'} px-2.5 py-2 text-sm">
+    <div class="flex items-center gap-2"><span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-600 dark:text-violet-300">PICK</span>
+      <span class="font-medium">${label}</span><span class="ml-auto font-bold num">${fmt(v.tv)}</span>
+      ${inTrade ? `<button data-rm="${side}" data-key="${itemKey(it)}" class="text-slate-400 hover:text-rose-500">✕</button>` : `<button data-addpick="${side}" data-json='${esc(JSON.stringify(it))}' class="text-emerald-600 dark:text-emerald-400 font-bold">＋</button>`}</div>
+    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Unkept pool: ${esc(preview)}</div></div>`;
+}
+function chipFor(it, side, inTrade) { return it.kind === 'player' ? playerChip(it.pid, side, inTrade) : pickChip(it, side, inTrade); }
+
+function teamSnapshot(rid, addP, removeP) {
+  const t = teamById(rid); if (!t) return null;
+  const pids = t.players.filter(p => !removeP.has(p)).concat([...addP]);
+  const lineup = lineupValue(pids, CTX.byId, CTX.rosterPositions);
+  const keep = pids.map(pid => (RES.values.get(pid) || {}).keeperPart || 0).sort((a, b) => b - a).slice(0, CTX.K).reduce((a, b) => a + b, 0);
+  return { lineup, keep };
+}
+function rankOf(rid, metric, afterMap) {
+  const vals = CTX.teams.map(t => ({ rid: t.rid, v: afterMap && afterMap[t.rid] ? afterMap[t.rid][metric] : teamSnapshot(t.rid, new Set(), new Set())[metric] }));
+  vals.sort((a, b) => b.v - a.v);
+  return vals.findIndex(x => x.rid === rid) + 1;
+}
+
+function renderTrade() {
+  const el = $('#tab-trade');
+  for (const s of ['A', 'B']) {
+    trade[s].items = trade[s].items.filter(it => it.kind !== 'player' || CTX.byId.has(it.pid));
+    if (trade[s].rid && !teamById(trade[s].rid)) trade[s].rid = null;
+  }
+  const opts = (sel) => CTX.teams.map(t => `<option value="${t.rid}" ${t.rid === sel ? 'selected' : ''}>${esc(t.name)} (${t.wins}-${t.losses})</option>`).join('');
+  const sideHTML = (side) => {
+    const s = trade[side], other = side === 'A' ? 'B' : 'A';
+    const total = s.items.reduce((a, it) => a + itemValue(it), 0);
+    const t = teamById(s.rid);
+    const inTradeKeys = new Set(s.items.map(itemKey));
+    const roster = t ? t.players.slice().sort((a, b) => (RES.values.get(b)?.tv || 0) - (RES.values.get(a)?.tv || 0)) : [];
+    const picks = t ? ownedPickItems(t.rid) : [];
+    return `<div class="${card} p-4 space-y-3">
+      <div class="flex items-center gap-2"><span class="text-xs uppercase tracking-wide text-slate-500">${side === 'A' ? 'Side A' : 'Side B'} sends</span>
+        <select data-side="${side}" class="teamsel ml-auto px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm"><option value="">Any / no team</option>${opts(s.rid)}</select></div>
+      <div class="space-y-2 min-h-[3rem]">${s.items.map(it => chipFor(it, side, true)).join('') || '<div class="text-sm text-slate-400">Add players or picks below.</div>'}</div>
+      <div class="flex items-center justify-between text-sm border-t border-slate-200 dark:border-slate-800 pt-2"><span class="text-slate-500">Total</span><span class="font-bold text-lg num">${fmt(total)}</span></div>
+      <div class="relative"><input data-search="${side}" placeholder="Search any player…" class="w-full px-2 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm"><div data-results="${side}" class="absolute z-20 left-0 right-0 mt-1 hidden ${card} shadow-lg max-h-64 overflow-auto"></div></div>
+      <div class="flex gap-2 text-sm"><select data-genround="${side}" class="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">${Array.from({ length: CTX.T }, (_, i) => `<option value="${i + 1}">Rd ${i + 1}</option>`).join('')}</select>
+        <select data-genpart="${side}" class="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"><option>Early</option><option selected>Mid</option><option>Late</option></select>
+        <button data-addgen="${side}" class="px-2 py-1 rounded-md bg-slate-200 dark:bg-slate-800">＋ generic pick</button></div>
+      ${t ? `<details open><summary class="text-xs uppercase tracking-wide text-slate-500 py-1">${esc(t.name)} roster & picks ▾</summary>
+        <div class="space-y-1.5 max-h-[28rem] overflow-auto scroll-thin pr-1 mt-1">
+          ${roster.filter(pid => !inTradeKeys.has('p' + pid)).map(pid => playerChip(pid, side, false)).join('')}
+          ${picks.filter(it => !inTradeKeys.has(itemKey(it))).filter(it => it.round <= 9 || it.season === CTX.nextSeason).map(it => pickChip(it, side, false)).join('')}
+        </div></details>` : ''}
+    </div>`;
+  };
+  const a = trade.A.items.reduce((s, it) => s + itemValue(it), 0);
+  const b = trade.B.items.reduce((s, it) => s + itemValue(it), 0);
+  let verdict = '';
+  if (a || b) {
+    const diff = Math.abs(a - b) / Math.max(a, b, 1);
+    const cls = diff < 0.05 ? 'bg-emerald-500' : diff < 0.15 ? 'bg-amber-500' : 'bg-rose-500';
+    const winner = a > b ? 'B' : 'A';
+    const winName = trade[winner].rid ? teamName(trade[winner].rid) : 'Side ' + winner;
+    const text = diff < 0.05 ? 'Fair trade' : `${diff < 0.15 ? 'Leans' : 'Favors'} ${esc(winName)} by ${fmt(Math.abs(a - b))} (${Math.round(diff * 100)}%)`;
+    const pctA = a / Math.max(a + b, 1) * 100;
+    verdict = `<div class="${card} p-4 space-y-2">
+      <div class="flex items-center justify-between text-sm"><span>A sends <b class="num">${fmt(a)}</b></span><span class="font-semibold">${text}</span><span>B sends <b class="num">${fmt(b)}</b></span></div>
+      <div class="h-3 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden flex"><div class="${cls}" style="width:${pctA}%"></div><div class="bg-slate-400/40" style="width:${100 - pctA}%"></div></div>
+      ${impactHTML()}
+      <div class="flex gap-2"><button id="pitchBtn" class="px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white text-sm">Copy DM pitch</button><button id="clearTrade" class="px-3 py-1.5 rounded-md bg-slate-200 dark:bg-slate-800 text-sm">Clear</button><span id="pitchMsg" class="text-xs text-slate-500 self-center"></span></div>
+    </div>`;
+  }
+  el.innerHTML = `${verdict}<div class="grid md:grid-cols-2 gap-4 mt-4">${sideHTML('A')}${sideHTML('B')}</div>`;
+}
+
+function tradeDelta(side) {
+  const s = trade[side], o = trade[side === 'A' ? 'B' : 'A'];
+  const out = new Set(s.items.filter(i => i.kind === 'player').map(i => i.pid));
+  const inn = new Set(o.items.filter(i => i.kind === 'player').map(i => i.pid));
+  return { out, inn };
+}
+function impactHTML() {
+  const rows = [], afterMap = {};
+  for (const side of ['A', 'B']) {
+    const rid = trade[side].rid; if (!rid) continue;
+    const { out, inn } = tradeDelta(side);
+    afterMap[rid] = teamSnapshot(rid, inn, out);
+  }
+  for (const side of ['A', 'B']) {
+    const rid = trade[side].rid; if (!rid) continue;
+    const r1 = rankOf(rid, 'lineup'), r2 = rankOf(rid, 'lineup', afterMap);
+    const k1 = rankOf(rid, 'keep'), k2 = rankOf(rid, 'keep', afterMap);
+    const arrow = (x, y) => `${x} → <b class="${y < x ? 'text-emerald-500' : y > x ? 'text-rose-500' : ''}">${y}</b>`;
+    rows.push(`<div class="text-xs"><b>${esc(teamName(rid))}</b>: Win-now lineup rank ${arrow(r1, r2)} · Keeper-core rank ${arrow(k1, k2)}</div>`);
+  }
+  return rows.join('');
+}
+
+function buildPitch() {
+  const A = trade.A, B = trade.B;
+  const names = (items) => items.map(it => it.kind === 'player' ? CTX.byId.get(it.pid).name : it.kind === 'pick' ? `my ${it.season} ${ordinal(it.round)}` : `a ${ordinal(it.round)}`).join(', ');
+  const them = B.rid ? teamById(B.rid) : null;
+  const theirRank = B.rid ? rankOf(B.rid, 'lineup') : null;
+  const contender = theirRank != null && theirRank <= Math.ceil(CTX.N / 2);
+  let msg = `Hey${them ? ' ' + (them.owner || them.name) : ''}! Would you be open to ${names(A.items) || '…'} for ${names(B.items) || '…'}?`;
+  const keepers = A.items.filter(it => it.kind === 'player' && (RES.values.get(it.pid)?.seq.length || 0) > 0);
+  const rentals = A.items.filter(it => it.kind === 'player' && (RES.values.get(it.pid)?.seq.length || 0) === 0);
+  if (contender) {
+    msg += ` You're in the hunt this year, and this makes your starting lineup stronger right now.`;
+    if (rentals.length) msg += ` ${CTX.byId.get(rentals[0].pid).name} is a pure win-now piece for your playoff run.`;
+  } else {
+    msg += ` Thinking about next year for you:`;
+    if (keepers.length) { const k = keepers[0], v = RES.values.get(k.pid); msg += ` ${CTX.byId.get(k.pid).name} is keepable for a ${ordinal(v.seq[0])}${v.seq.length > 1 ? ' and can be kept again the year after' : ''}.`; }
+    else if (A.items.some(i => i.kind !== 'player')) msg += ` the picks give you more swings in next year's draft.`;
+  }
+  return msg + ' Let me know what you think!';
+}
+function ordinal(n) { return n + (['th', 'st', 'nd', 'rd'][(n % 100 - 20) % 10] || ['th', 'st', 'nd', 'rd'][n % 100] || 'th'); }
+
+/* ---------------- Keeper board ---------------- */
+function renderBoard() {
+  const el = $('#tab-board');
+  const crunch = [], rentals = [];
+  for (const t of CTX.teams) {
+    const over = RES.overflow.get(t.rid) || [];
+    if (over.length) crunch.push({ t, over });
+    if (CTX.standRank[t.rid] > CTX.N / 2) {
+      const r = t.players.filter(pid => (RES.values.get(pid)?.seq.length || 0) === 0 && (CTX.byId.get(pid)?.vr || 0) > 0)
+        .sort((a, b) => CTX.byId.get(b).vr - CTX.byId.get(a).vr).slice(0, 3);
+      if (r.length) rentals.push({ t, r });
+    }
+  }
+  const nm = (pid) => esc(CTX.byId.get(pid).name);
+  const teamsHTML = CTX.teams.slice().sort((a, b) => CTX.standRank[a.rid] - CTX.standRank[b.rid]).map(t => {
+    const list = t.players.slice().sort((a, b) => {
+      const va = RES.values.get(a), vb = RES.values.get(b);
+      return ((vb?.S1 || 0) + 0.5 * (vb?.S2 || 0)) - ((va?.S1 || 0) + 0.5 * (va?.S2 || 0)) || (CTX.byId.get(b)?.vr || 0) - (CTX.byId.get(a)?.vr || 0);
+    });
+    const keptN = list.filter(pid => RES.kept.has(pid)).length;
+    return `<div class="${card} p-3">
+      <div class="flex items-baseline gap-2 mb-2"><span class="font-semibold">${esc(t.name)}</span><span class="text-xs text-slate-500">${t.wins}-${t.losses} · #${CTX.standRank[t.rid]} · proj. pick ${CTX.teamSlot[t.rid]}</span><span class="ml-auto text-xs ${keptN >= CTX.K ? 'text-emerald-500' : 'text-slate-500'}">${keptN}/${CTX.K} kept</span></div>
+      <div class="space-y-0.5 text-sm max-h-80 overflow-auto scroll-thin">${list.map(pid => {
+        const p = CTX.byId.get(pid), v = RES.values.get(pid) || { S1: 0, S2: 0, seq: [] };
+        const sc = v.S1 + 0.5 * v.S2, eligible = CTX.seqOf(pid).length > 0, lock = locks[pid];
+        return `<label class="flex items-center gap-2 py-0.5 ${eligible ? '' : 'opacity-50'}">
+          <input type="checkbox" data-lock="${pid}" ${RES.kept.has(pid) ? 'checked' : ''} ${eligible ? '' : 'disabled'}>
+          ${posBadge(p.pos)}<span class="truncate">${esc(p.name)}</span>${lock ? `<span title="Manually ${lock === 'in' ? 'locked in' : 'excluded'}">🔒</span>` : ''}
+          <span class="ml-auto text-xs text-slate-500">${eligible ? 'Rd ' + (RES.effRound.get(pid) || v.seq[0]) + ' · ' + v.seq.length + 'y' : 'rental'}</span>
+          <span class="w-14 text-right num text-xs ${sc > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}">${fmt(sc)}</span></label>`;
+      }).join('')}</div></div>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="grid md:grid-cols-2 gap-4 mb-4">
+      <div class="${card} p-4 border-amber-500/40"><div class="font-semibold mb-1">🔥 Keeper crunch</div>
+        <div class="text-xs text-slate-500 mb-2">Teams with more than ${CTX.K} positive-surplus keepers. The extras get thrown back for nothing — prime trade targets.</div>
+        ${crunch.length ? crunch.map(c => `<div class="text-sm py-0.5"><b>${esc(c.t.name)}</b>: ${c.over.map(nm).join(', ')}</div>`).join('') : '<div class="text-sm text-slate-400">No team is over the limit right now.</div>'}</div>
+      <div class="${card} p-4 border-rose-500/40"><div class="font-semibold mb-1">💸 Rental sellers</div>
+        <div class="text-xs text-slate-500 mb-2">Bottom-half teams holding stars they can't keep (0 years left).</div>
+        ${rentals.length ? rentals.map(c => `<div class="text-sm py-0.5"><b>${esc(c.t.name)}</b> (#${CTX.standRank[c.t.rid]}): ${c.r.map(nm).join(', ')}</div>`).join('') : '<div class="text-sm text-slate-400">None found.</div>'}</div>
+    </div>
+    <div class="text-xs text-slate-500 mb-2">Check or uncheck to lock a keeper decision — the whole draft pool and every pick value recalculates. Number = keeper score (Yr+1 surplus + ½ Yr+2 surplus).</div>
+    <div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">${teamsHTML}</div>`;
+}
+
+/* ---------------- Picks tab ---------------- */
+function renderPicks() {
+  const el = $('#tab-picks'), N = CTX.N, c = RES.curve;
+  let rows = '';
+  for (let r = 1; r <= CTX.T; r++) {
+    const e = genericPickValue(CTX, RES, r, 'Early'), m = genericPickValue(CTX, RES, r, 'Mid'), l = genericPickValue(CTX, RES, r, 'Late');
+    const startRank = c.rank[(r - 1) * N + 1], endRank = c.rank[r * N];
+    const names = c.pool.slice(startRank - 1, Math.max(startRank, endRank)).map(p => esc(lastName(p.name))).join(', ');
+    const keepersHere = [...RES.effRound.values()].filter(x => x === r).length;
+    rows += `<tr class="border-t border-slate-200 dark:border-slate-800"><td class="py-2 pr-3 font-semibold">Rd ${r}</td>
+      <td class="pr-3 num text-right">${fmt(e.tv)}</td><td class="pr-3 num text-right">${fmt(m.tv)}</td><td class="pr-3 num text-right">${fmt(l.tv)}</td>
+      <td class="pr-3 num text-right text-slate-500">${fmt(c.roundAvg[r])}</td><td class="pr-3 text-center text-slate-500">${keepersHere || ''}</td>
+      <td class="text-xs text-slate-500">${names}</td></tr>`;
+  }
+  const grid = CTX.teams.map(t => `<tr class="border-t border-slate-200 dark:border-slate-800"><td class="py-1 pr-3 whitespace-nowrap">${esc(t.name)}</td>${Array.from({ length: Math.min(9, CTX.T) }, (_, i) => {
+    const n = (CTX.owned[t.rid][i + 1] || []).length;
+    return `<td class="text-center num ${n > 1 ? 'bg-emerald-500/20 font-bold' : n === 0 ? 'bg-rose-500/15 text-rose-500' : ''}">${n}</td>`;
+  }).join('')}</tr>`).join('');
+  el.innerHTML = `<div class="${card} p-4 overflow-auto"><div class="font-semibold mb-1">${CTX.nextSeason} draft pick values</div>
+    <div class="text-xs text-slate-500 mb-3">Trade value = (pick's pool value − a last-round pick) × ${CTX.weights.dp}. Trading for a pick upgrades your last-round pick rather than adding a free one. "Raw" = average value of who's available.</div>
+    <table class="w-full text-sm"><thead class="text-xs text-slate-500 text-left"><tr><th>Round</th><th class="text-right pr-3">Early</th><th class="text-right pr-3">Mid</th><th class="text-right pr-3">Late</th><th class="text-right pr-3">Raw avg</th><th class="pr-3">Keepers</th><th>Projected unkept pool in this round</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="${card} p-4 mt-4 overflow-auto"><div class="font-semibold mb-1">Pick ownership · ${CTX.nextSeason} rounds 1–${Math.min(9, CTX.T)}</div>
+    <div class="text-xs text-slate-500 mb-2">Green = holding extra picks in that round, red = traded it away.</div>
+    <table class="text-sm"><thead class="text-xs text-slate-500"><tr><th class="text-left pr-3">Team</th>${Array.from({ length: Math.min(9, CTX.T) }, (_, i) => `<th class="px-2">${i + 1}</th>`).join('')}</tr></thead><tbody>${grid}</tbody></table></div>`;
+}
+
+/* ---------------- Players tab ---------------- */
+function renderPlayers() {
+  const el = $('#tab-players');
+  const f = playerFilter;
+  let list = [...CTX.rosterOf.keys()];
+  if (f.view === 'bargain') list = list.filter(pid => (RES.values.get(pid)?.keeperPart || 0) > 0);
+  if (f.view === 'rental') list = list.filter(pid => (RES.values.get(pid)?.seq.length || 0) === 0);
+  if (f.team) list = list.filter(pid => String(CTX.rosterOf.get(pid)) === f.team);
+  if (f.q) { const q = f.q.toLowerCase(); list = list.filter(pid => CTX.byId.get(pid).name.toLowerCase().includes(q)); }
+  const sortKey = f.view === 'bargain' ? 'keeperPart' : 'tv';
+  list.sort((a, b) => (RES.values.get(b)?.[sortKey] || 0) - (RES.values.get(a)?.[sortKey] || 0));
+  const rows = list.slice(0, 400).map(pid => {
+    const p = CTX.byId.get(pid), v = RES.values.get(pid) || { seq: [], redraftPart: 0, keeperPart: 0, tv: 0 };
+    const note = RES.notes.get(pid);
+    return `<tr class="border-t border-slate-200 dark:border-slate-800">
+      <td class="py-1.5 pr-2">${posBadge(p.pos)} ${esc(p.name)} ${RES.kept.has(pid) ? '<span class="text-[10px] px-1 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">K</span>' : ''}</td>
+      <td class="pr-2 text-xs whitespace-nowrap">${esc(teamName(CTX.rosterOf.get(pid)))}</td>
+      <td class="pr-2 text-xs text-slate-500 whitespace-nowrap">${esc(clockLabel(pid))}</td>
+      <td class="pr-2">${costSelect(pid)}${note ? `<div class="text-[10px] text-amber-500">${esc(note)}</div>` : ''}</td>
+      <td class="pr-2">${ylSelect(pid)}</td>
+      <td class="pr-2 num text-right">${fmt(p.vr)}</td>
+      <td class="pr-2 num text-right text-emerald-600 dark:text-emerald-400">${fmt(v.keeperPart)}</td>
+      <td class="num text-right font-bold">${fmt(v.tv)}</td></tr>`;
+  }).join('');
+  el.innerHTML = `<div class="${card} p-4">
+    <div class="flex flex-wrap gap-2 mb-3 text-sm">
+      <input id="pq" value="${esc(f.q)}" placeholder="Search…" class="px-2 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+      ${[['all', 'All'], ['bargain', 'Bargain keepers'], ['rental', 'Rentals (0 yrs left)']].map(([k, l]) => `<button data-view="${k}" class="px-3 py-1.5 rounded-md ${f.view === k ? 'bg-emerald-600 text-white' : 'bg-slate-200 dark:bg-slate-800'}">${l}</button>`).join('')}
+      <select id="pteam" class="px-2 py-1.5 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"><option value="">All teams</option>${CTX.teams.map(t => `<option value="${t.rid}" ${f.team === String(t.rid) ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select>
+    </div>
+    <div class="overflow-auto max-h-[70vh] scroll-thin"><table class="kt w-full text-sm"><thead class="text-xs text-slate-500 text-left bg-white dark:bg-slate-900"><tr><th class="py-1">Player</th><th>Owner</th><th>Acquired</th><th>Next cost</th><th>Yrs left</th><th class="text-right pr-2">Redraft</th><th class="text-right pr-2">Keeper surplus</th><th class="text-right">Trade value</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="text-xs text-slate-500 mt-2">Keeper surplus and trade value use the ${CTX.weights.label} weights. Change cost or years left to override a player's clock.</div></div>`;
+}
+
+/* ---------------- Render + events ---------------- */
+function renderAll() {
+  renderRules(); renderTrade(); renderBoard(); renderPicks(); renderPlayers();
+  document.querySelectorAll('.tabbtn').forEach(b => {
+    const on = b.dataset.tab === activeTab;
+    b.className = 'tabbtn px-3 py-1.5 rounded-md ' + (on ? 'bg-emerald-600 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800');
+  });
+  document.querySelectorAll('.tabpane').forEach(p => p.classList.toggle('hidden', p.id !== 'tab-' + activeTab));
+}
+function saveTrade() { store.set(lk('trade'), trade); }
+
+document.addEventListener('click', async (e) => {
+  const t = e.target.closest('[data-add],[data-addpick],[data-addgen],[data-rm],[data-res],[data-view],button') || e.target;
+  if (t.closest('.tabbtn')) { activeTab = t.closest('.tabbtn').dataset.tab; store.set('keeper:tab', activeTab); renderAll(); return; }
+  if (t.dataset.add) { trade[t.dataset.add].items.push({ kind: 'player', pid: t.dataset.pid }); saveTrade(); renderTrade(); return; }
+  if (t.dataset.addpick) { trade[t.dataset.addpick].items.push(JSON.parse(t.dataset.json)); saveTrade(); renderTrade(); return; }
+  if (t.dataset.addgen) {
+    const s = t.dataset.addgen;
+    trade[s].items.push({ kind: 'gen', round: Number($(`[data-genround="${s}"]`).value), part: $(`[data-genpart="${s}"]`).value });
+    saveTrade(); renderTrade(); return;
+  }
+  if (t.dataset.rm) { const s = trade[t.dataset.rm]; s.items = s.items.filter(it => itemKey(it) !== t.dataset.key); saveTrade(); renderTrade(); return; }
+  if (t.dataset.res) {
+    const [side, pid] = t.dataset.res.split('|');
+    trade[side].items.push({ kind: 'player', pid }); saveTrade(); renderTrade(); return;
+  }
+  if (t.id === 'clearTrade') { trade.A.items = []; trade.B.items = []; saveTrade(); renderTrade(); return; }
+  if (t.id === 'pitchBtn') {
+    const msg = buildPitch();
+    try { await navigator.clipboard.writeText(msg); $('#pitchMsg').textContent = 'Copied!'; } catch (err) { $('#pitchMsg').textContent = msg; }
+    return;
+  }
+  if (t.dataset.view) { playerFilter.view = t.dataset.view; renderPlayers(); return; }
+  if (t.id === 'resetRules') { rules = {}; store.set(lk('rules'), rules); recompute(); return; }
+  if (t.id === 'resetOv') { overrides = {}; locks = {}; store.set(lk('ov'), overrides); store.set(lk('locks'), locks); recompute(); return; }
+  if (t.id === 'loadBtn') { const v = $('#leagueInput').value.trim(); if (v) { leagueId = v; store.set('keeper:league', v); boot(); } return; }
+  if (t.id === 'refreshBtn') { Object.keys(localStorage).filter(k => k.startsWith('kc:')).forEach(k => localStorage.removeItem(k)); boot(); return; }
+  if (t.id === 'themeBtn') { const d = document.documentElement.classList.toggle('dark'); store.set('theme', d ? 'dark' : 'light'); try { localStorage.setItem('theme', d ? 'dark' : 'light'); } catch (e2) {} return; }
+  if (!t.closest('[data-results]') && !t.dataset.search) document.querySelectorAll('[data-results]').forEach(r => r.classList.add('hidden'));
+});
+
+document.addEventListener('change', (e) => {
+  const t = e.target;
+  if (t.classList.contains('teamsel')) { trade[t.dataset.side] = { rid: t.value ? Number(t.value) : null, items: [] }; saveTrade(); renderTrade(); return; }
+  if (t.classList.contains('ovsel')) {
+    const pid = t.dataset.pid, k = t.dataset.ov;
+    overrides[pid] = overrides[pid] || {};
+    overrides[pid][k] = t.value === '' ? null : Number(t.value);
+    if (overrides[pid].c1 == null && overrides[pid].yl == null) delete overrides[pid];
+    store.set(lk('ov'), overrides); recompute(); return;
+  }
+  if (t.dataset.lock) {
+    const pid = t.dataset.lock;
+    locks[pid] = t.checked ? 'in' : 'out';
+    store.set(lk('locks'), locks); recompute(); return;
+  }
+  if (t.dataset.rule) {
+    const k = t.dataset.rule;
+    if (t.type === 'checkbox') rules[k] = t.checked;
+    else if (t.type === 'number') { if (t.value === '') delete rules[k]; else rules[k] = Number(t.value); }
+    else rules[k] = t.value;
+    store.set(lk('rules'), rules); recompute(); return;
+  }
+  if (t.id === 'pteam') { playerFilter.team = t.value; renderPlayers(); }
+});
+
+document.addEventListener('input', (e) => {
+  const t = e.target;
+  if (t.id === 'pq') { playerFilter.q = t.value; renderPlayers(); const el = $('#pq'); el.focus(); el.setSelectionRange(t.value.length, t.value.length); return; }
+  if (t.dataset.search) {
+    const side = t.dataset.search, q = t.value.toLowerCase().trim(), box = $(`[data-results="${side}"]`);
+    if (q.length < 2) { box.classList.add('hidden'); return; }
+    const hits = [...CTX.byId.values()].filter(p => p.name.toLowerCase().includes(q)).sort((a, b) => (RES.values.get(b.pid)?.tv || 0) - (RES.values.get(a.pid)?.tv || 0)).slice(0, 10);
+    box.innerHTML = hits.map(p => `<button data-res="${side}|${p.pid}" class="w-full text-left px-3 py-1.5 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 flex gap-2">${posBadge(p.pos)} ${esc(p.name)} <span class="text-xs text-slate-500">${esc(teamName(CTX.rosterOf.get(p.pid)) === '—' ? 'FA' : teamName(CTX.rosterOf.get(p.pid)))}</span><span class="ml-auto num">${fmt(RES.values.get(p.pid)?.tv)}</span></button>`).join('') || '<div class="px-3 py-2 text-sm text-slate-400">No match</div>';
+    box.classList.remove('hidden');
+  }
+});
+
+async function boot() {
+  $('#leagueInput').value = leagueId;
+  rules = store.get(lk('rules'), {});
+  overrides = store.get(lk('ov'), {});
+  locks = store.get(lk('locks'), {});
+  try {
+    RAW = await loadLeague(leagueId);
+    const saved = store.get(lk('trade'), null);
+    if (saved && saved.A) trade = saved;
+    else {
+      const me = (RAW.users || []).find(u => (u.display_name || '').toLowerCase() === 'calverrd');
+      const myRoster = me && RAW.rosters.find(r => r.owner_id === me.user_id);
+      trade = { A: { rid: myRoster ? myRoster.roster_id : null, items: [] }, B: { rid: null, items: [] } };
+    }
+    recompute();
+    setStatus(`Loaded ${RAW.league.name}. ${RES.kept.size} projected keepers league-wide.`);
+  } catch (err) {
+    console.error(err);
+    setStatus('Could not load: ' + err.message, true);
+  }
+}
+boot();
+</script>
+</body>
+</html>
