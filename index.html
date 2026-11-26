@@ -1091,7 +1091,7 @@
     // bucket (no bar for value-based guesses).
     let BUCKET_BAR = null;
     fetch(`./data/bucket-stats.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
-      if (d && d.buckets) { BUCKET_BAR = d.buckets; try { if (st.pm && st.pm.id != null) renderPlayerModal(); } catch (e) { /* not open */ } }
+      if (d && d.buckets) { BUCKET_BAR = d.buckets; sendDraftCtx(); try { if (st.pm && st.pm.id != null) renderPlayerModal(); } catch (e) { /* not open */ } }
     }).catch(() => {});
     function bucketBar(p) {
       if (!p || p.pick || !BUCKET_BAR) return '';
@@ -1278,10 +1278,20 @@
       try { fr.contentDocument.documentElement.classList.toggle('dark', dark); } catch (e) {}
     }
     // league, me and the projected next-draft order (standings + lottery) for the board
+    // + each player's market value and Profile Bucket odds (named buckets only) for Best Available and ghost picks
     function sendDraftCtx() {
       const fr = document.getElementById('draft-frame');
       if (!fr || !fr.getAttribute('src') || !fr.contentWindow) return;
-      try { fr.contentWindow.postMessage({ type: 'dtc-draft-ctx', leagueId: activeLeague.id, me: ME, slotByRid: SLOT_BY_RID, nextSeason: DRAFT_YEARS[0] }, location.origin); } catch (e) {}
+      const values = {};
+      try {
+        P.forEach(p => {
+          if (p.pick || !V[p.id]) return;
+          const b = getBucket(p), s = !b.guess && BUCKET_BAR ? BUCKET_BAR[`${p.pos}|${b.name}`] : null;
+          values[`${p.pos}|${keyName(p.name)}`] = [Math.round(V[p.id]), b.guess ? null : b.name, s && s.n ? Math.round(s.hit) : null, s && s.n ? s.n : null];
+        });
+      } catch (e) { /* values not ready */ }
+      const label = st.src === 'blend' ? `Blend (${st.w}% KTC)` : (SRC_NAME[st.src] || 'KTC');
+      try { fr.contentWindow.postMessage({ type: 'dtc-draft-ctx', leagueId: activeLeague.id, me: ME, slotByRid: SLOT_BY_RID, nextSeason: DRAFT_YEARS[0], values, valueLabel: label }, location.origin); } catch (e) {}
     }
 
     // ---- Rookie TEs iframe ----
@@ -1525,6 +1535,7 @@
       MODE_CACHE = {};
       all();
       sendValuesToFrames();
+      sendDraftCtx();
     }
 
     // FC -> KTC scale mapping built from players both sources value (quantile matching).

@@ -50,8 +50,14 @@
     <div id="chips" class="flex flex-wrap gap-1.5"></div>
     <div id="summary" class="hidden flex flex-wrap items-center gap-2 rounded-xl border border-violet-300 dark:border-violet-500/40 bg-violet-50 dark:bg-violet-500/10 px-3 py-2 text-sm"></div>
 
-    <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2">
-      <div id="board" class="overflow-x-auto scroll-thin"></div>
+    <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_17.5rem] items-start">
+      <div class="min-w-0 space-y-2">
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2">
+          <div id="board" class="overflow-x-auto scroll-thin"></div>
+        </div>
+        <label class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer"><input id="ghostChk" type="checkbox" class="accent-violet-600"> Ghost picks: fill open picks with the best available player by market rank</label>
+      </div>
+      <aside id="rail" class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 lg:sticky lg:top-2"></aside>
     </div>
 
     <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
@@ -62,6 +68,7 @@
       <span class="flex items-center gap-1"><span class="px-1 rounded bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100 font-semibold">→ team</span>traded pick, now owned by that team</span>
       <span class="flex items-center gap-1"><span class="px-1 rounded bg-violet-600 text-white font-semibold">→ you</span>a pick you own</span>
       <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded on-clock"></span>on the clock</span>
+      <span class="flex items-center gap-1"><span class="italic font-semibold opacity-70">Name</span>ghost pick (projection, not a real pick)</span>
       <span>Click a team or a pick to highlight that team's picks; click again to clear.</span>
     </div>
     <p id="note" class="text-[11px] text-slate-500 dark:text-slate-400"></p>
@@ -89,6 +96,11 @@
     let CTX = { leagueId: params.get('league') || '1334642025076621312', me: (params.get('me') || 'calverrd').toLowerCase(), slotByRid: null, nextSeason: null };
     const S = { league: null, users: [], rosters: [], drafts: [], sel: null, draft: null, picks: [], traded: [], leagueTraded: [],
                 lastSync: 0, paused: false, replay: null, hl: undefined, err: '', loading: false, loadSeq: 0 };
+    // Phase 2: market values + bucket odds (hub, or ktc.json standalone), prospect list (prospects.html), rail options
+    const keyName = s => String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\b(jr|sr|ii|iii|iv|v)\b\.?/g, '').replace(/[^a-z]/g, '');
+    let VALUES = null, VALUE_LABEL = '', PROS = null;
+    const OPT = Object.assign({ ghost: true, sort: 'market', pos: 'ALL', more: false }, store.get('dtc_db_opts', {}));
+    const saveOpt = () => store.set('dtc_db_opts', { ghost: OPT.ghost, sort: OPT.sort, pos: OPT.pos });
     let pollTimer = null, tickTimer = null;
 
     const getJSON = async (path) => {
@@ -239,6 +251,55 @@
       return { N, R, type, rev, season, team, slotRid, orderSrc, rows, madeCount, madeShown, total, clock, d };
     }
 
+    // ---------- Phase 2: player pool, Best Available, ghost picks ----------
+    const TIERS = ['Cornerstone', 'Elite', 'Upside', 'Depth', 'Clogger'];
+    const tierIx = t => { const i = TIERS.indexOf(t); return i < 0 ? 9 : i; };
+    const byMarket = (a, b) => (b.val ?? -1) - (a.val ?? -1) || (a.board ?? 9999) - (b.board ?? 9999) || tierIx(a.tier) - tierIx(b.tier) || a.name.localeCompare(b.name);
+    const byOdds = (a, b) => (b.hit ?? -1) - (a.hit ?? -1) || byMarket(a, b);
+    // a prospect's odds from his tier + type, like the Prospects tab: the bucket when it has 5+ past players, else the whole tier, else the whole type
+    function prosOdds(e) {
+      const st = PROS.stats.find(x => x.pos === e.pos && x.type === e.type), c = st && st.tiers[e.tier];
+      if (c && c.n >= 5) return { hit: c.hit, n: c.n, src: `${e.tier} ${e.type}` };
+      let n = 0, h = 0;
+      PROS.stats.filter(x => x.pos === e.pos).forEach(x => { const t = x.tiers[e.tier]; if (t) { n += t.n; h += t.hit * t.n; } });
+      if (n >= 5) return { hit: Math.round(h / n), n, src: `every ${e.tier}-tier ${e.pos}` };
+      return st ? { hit: st.l2, n: st.n, src: `every ${e.type} ${e.pos}` } : null;
+    }
+    // pool = this class's prospects (Prospects tab) + everyone actually drafted here; taken = picks made up to the replay point
+    function pool(M) {
+      const ent = new Map();
+      const add = (pos, name, extra) => {
+        if (!POS[pos] || !name) return;
+        const k = `${pos}|${keyName(name)}`;
+        ent.set(k, Object.assign(ent.get(k) || { k, pos, name }, extra));
+      };
+      if (PROS) PROS.pros.filter(p => p.yr === M.season).forEach(p => add(p.pos, p.n, { tier: p.tier, type: p.type, board: PROS.board[keyName(p.n)] ?? null }));
+      S.picks.forEach(p => add(p.metadata?.position, pickName(p), {}));
+      const taken = new Set();
+      S.picks.forEach(p => { if (S.replay == null || p.pick_no <= S.replay) taken.add(`${p.metadata?.position}|${keyName(pickName(p))}`); });
+      let hasVal = false;
+      ent.forEach(e => {
+        const v = VALUES && VALUES[e.k];
+        e.val = v ? v[0] : null; if (e.val) hasVal = true;
+        if (v && v[2] != null) { e.hit = v[2]; e.n = v[3]; e.src = v[1]; e.bucket = v[1]; }
+        else if (e.tier && PROS) { const o = prosOdds(e); e.bucket = `${e.tier} ${e.type}`; if (o) { e.hit = o.hit; e.n = o.n; e.src = o.src; } }
+        else if (v && v[1]) e.bucket = v[1];
+      });
+      const avail = [...ent.values()].filter(e => !taken.has(e.k)).sort(byMarket);
+      avail.forEach((e, i) => { e.mk = i + 1; });
+      return { avail, hasVal, size: ent.size };
+    }
+    // ghost picks: open picks in order, each takes the best player left by market rank
+    function ghosts(M, avail) {
+      const g = {}, at = {};
+      if (!OPT.ghost) return { g, at };
+      const open = [];
+      M.rows.forEach(row => row.cells.forEach(c => { if (c && !c.made) open.push(c); }));
+      open.sort((a, b) => a.no - b.no).forEach((c, i) => { const e = avail[i]; if (e) { g[c.no] = e; at[e.k] = c; } });
+      return { g, at };
+    }
+    const fmtV = v => v == null ? '' : Number(v).toLocaleString();
+
     const meRid = M => { const t = Object.values(M.team).find(t => t.dn.toLowerCase() === CTX.me); return t ? t.rid : null; };
 
     // ---------- render ----------
@@ -307,6 +368,9 @@
         sum.classList.remove('hidden');
       } else sum.classList.add('hidden');
 
+      const PL = pool(M), GH = ghosts(M, PL.avail);
+      renderRail(M, PL, GH, me);
+
       // grid: columns = draft slots (like Sleeper), rows = rounds
       const W = M.N > 14 ? 'w-[6.25rem]' : 'w-[7.25rem]';
       const head = [];
@@ -326,14 +390,19 @@
           if (p) {
             inner = `<div class="font-bold truncate">${esc(pickName(p))}</div><div class="text-[10px] truncate ${POS[pos]?.txt || 'text-slate-500'}">${esc(pos || '')}${p.metadata?.team ? ' · ' + esc(p.metadata.team) : ''}</div>`;
           } else if (onClock) {
-            inner = `<div class="font-bold text-sky-700 dark:text-sky-300">On the clock</div><div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${esc(name(c.owner))}</div>`;
+            const e = GH.g[c.no];
+            inner = `<div class="font-bold text-sky-700 dark:text-sky-300">On the clock</div><div class="text-[10px] truncate ${e ? 'italic ' + POS[e.pos].txt : 'text-slate-500 dark:text-slate-400'}">${e ? 'ghost: ' + esc(e.name) : esc(name(c.owner))}</div>`;
+          } else if (GH.g[c.no]) {
+            const e = GH.g[c.no];
+            inner = `<div class="italic font-semibold truncate opacity-75 ${POS[e.pos].txt}">${esc(e.name)}</div><div class="text-[10px] text-slate-400 truncate"><span class="italic">ghost</span> · ${esc(e.pos)} · ${esc(short(name(c.owner), 12))}</div>`;
           } else {
             inner = `<div class="font-medium ${c.owner === me ? 'text-violet-700 dark:text-violet-300' : 'text-slate-500 dark:text-slate-400'}">Open</div><div class="text-[10px] text-slate-400 truncate">${esc(short(name(c.owner), 16))}</div>`;
           }
           const base = p ? `border border-l-4 ${POS[pos]?.cell || 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 border-l-slate-400'}`
                          : 'border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60';
           const hlCls = mine ? 'ring-2 ring-violet-500 shadow-md shadow-violet-500/30' : hl != null && !onClock ? 'opacity-30 hover:opacity-70' : 'hover:ring-1 hover:ring-violet-400';
-          const title = `${c.label} (#${c.no}) · ${name(c.owner)}${traded ? ` via ${name(c.orig)}` : ''}${p ? ` · ${pickName(p)} ${pos || ''}` : onClock ? ' · on the clock' : ' · open'}`;
+          const gh = !p && GH.g[c.no];
+          const title = `${c.label} (#${c.no}) · ${name(c.owner)}${traded ? ` via ${name(c.orig)}` : ''}${p ? ` · ${pickName(p)} ${pos || ''}` : onClock ? ' · on the clock' : ' · open'}${gh ? ` · ghost pick: ${gh.name} (best left by market rank, not a real pick)` : ''}`;
           cells.push(`<td class="p-0.5 align-top"><div data-hl="${c.owner}" title="${esc(title)}" class="${W} h-[3.4rem] cursor-pointer transition-opacity rounded px-1.5 py-1 text-[11px] leading-tight ${base} ${hlCls} ${onClock ? 'on-clock' : ''}">
             <div class="flex items-center gap-1"><span class="text-[9px] text-slate-400 num">${c.label}</span><span class="ml-auto"></span>${badge}</div>${inner}</div></td>`);
         }
@@ -348,6 +417,30 @@
       $('#note').textContent = notes.join(' ');
       post();
     }
+    function renderRail(M, PL, GH, me) {
+      const rail = $('#rail');
+      const list = (OPT.sort === 'odds' ? PL.avail.slice().sort(byOdds) : PL.avail).filter(e => OPT.pos === 'ALL' || e.pos === OPT.pos);
+      const shown = OPT.more ? list : list.slice(0, 20);
+      const basis = PL.hasVal ? `${VALUE_LABEL || 'KTC'} value` : `the NFL big board (Prospects tab); no ${M.season} rookie values yet`;
+      const btn = (k, v, t) => `<button data-opt="${k}" data-val="${v}" class="px-2 py-0.5 rounded-md text-[11px] font-semibold ${OPT[k] === v ? 'bg-sky-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}">${t}</button>`;
+      const row = e => {
+        const at = GH.at[e.k], mine = at && at.owner === me;
+        const hitCls = e.hit == null ? 'text-slate-400' : e.hit >= 50 ? 'text-emerald-600 dark:text-emerald-400' : e.hit >= 25 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400';
+        const tip = `${e.name} · ${e.pos}${e.bucket ? ' · ' + e.bucket : ''}${e.hit != null ? ` · hit ${e.hit}% (${e.src}, n = ${e.n})` : ' · no profile odds'}${e.val ? ' · value ' + fmtV(e.val) : ''}${e.board ? ' · big board #' + e.board : ''}`;
+        return `<div class="flex items-center gap-2 py-1.5 border-b border-slate-100 dark:border-slate-800 last:border-0" title="${esc(tip)}">
+          <span class="w-6 shrink-0 text-right num text-[11px] text-slate-400">${e.mk}</span>
+          <span class="shrink-0 w-7 text-center text-[10px] font-bold rounded px-0.5 ${POS[e.pos].cell.split(' ').filter(x => x.startsWith('bg-')).join(' ')} ${POS[e.pos].txt}">${e.pos}</span>
+          <div class="min-w-0 flex-1"><div class="flex items-center gap-1 min-w-0"><span class="text-[12.5px] font-semibold truncate">${esc(e.name)}</span>${at ? `<span class="shrink-0 px-1 rounded text-[9px] font-bold num ${mine ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}" title="Ghost pick: projected to go at ${at.label}${mine ? ' (your pick)' : ''}">${at.label}</span>` : ''}</div>
+            <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${esc(e.bucket || 'no profile')}</div></div>
+          <div class="shrink-0 text-right"><div class="num text-[11px] font-semibold">${e.val ? fmtV(e.val) : e.board ? 'BB #' + e.board : '—'}</div>
+            <div class="num text-[10px] font-bold ${hitCls}">${e.hit != null ? e.hit + '% hit' : '—'}</div></div></div>`;
+      };
+      rail.innerHTML = `<div class="flex items-baseline gap-2"><h2 class="text-sm font-extrabold">Best available</h2><span class="text-xs text-slate-500">${list.length}${OPT.pos !== 'ALL' ? ' ' + OPT.pos : ''}</span></div>
+        <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">${OPT.sort === 'odds' ? 'Sorted by hit odds; # is still the market rank' : `Ranked by ${esc(basis)}`}. Hit % = how often past players with his profile reached his position's hit line (Profile Buckets; sample size in the tooltip).</p>
+        <div class="flex flex-wrap gap-1 mt-2">${btn('sort', 'market', 'Market')}${btn('sort', 'odds', 'Hit odds')}<span class="w-2"></span>${['ALL', 'QB', 'RB', 'WR', 'TE'].map(p => btn('pos', p, p === 'ALL' ? 'All' : p)).join('')}</div>
+        <div class="mt-2 lg:max-h-[34rem] lg:overflow-y-auto scroll-thin pr-1">${shown.length ? shown.map(row).join('') : `<div class="text-xs text-slate-500 py-3">${PL.size ? 'Everyone in the pool has been drafted.' : `No ${M.season} player list yet. Prospects come from the Prospects tab; drafted players appear as picks are made.`}</div>`}
+          ${list.length > shown.length ? `<button data-opt="more" class="mt-2 w-full text-xs font-semibold py-1 rounded-md bg-slate-100 dark:bg-slate-800">Show all ${list.length}</button>` : ''}</div>`;
+    }
     const pickName = p => [p.metadata?.first_name, p.metadata?.last_name].filter(Boolean).join(' ') || `Player ${p.player_id}`;
 
     // ---------- events ----------
@@ -358,6 +451,13 @@
       store.set(`dtc_db_hl_${CTX.leagueId}`, S.hl);
       render();
     });
+    document.addEventListener('click', e => {
+      const b = e.target.closest('[data-opt]'); if (!b) return;
+      if (b.dataset.opt === 'more') OPT.more = true; else { OPT[b.dataset.opt] = b.dataset.val; OPT.more = false; }
+      saveOpt(); render();
+    });
+    $('#ghostChk').checked = !!OPT.ghost;
+    $('#ghostChk').addEventListener('change', e => { OPT.ghost = e.target.checked; saveOpt(); render(); });
     $('#syncBtn').addEventListener('click', () => { if (S.league) syncDraft(); else loadLeague(); });
     $('#pauseBtn').addEventListener('click', () => { S.paused = !S.paused; schedule(); render(); });
     $('#draftSel').addEventListener('change', e => { S.sel = e.target.value; S.replay = null; S.draft = null; S.picks = []; S.traded = []; render(); syncDraft(true); });
@@ -368,6 +468,24 @@
     $('#rpAll').addEventListener('click', () => { S.replay = null; schedule(); render(); });
     document.addEventListener('visibilitychange', () => { if (!document.hidden && S.draft?.status === 'drafting' && !S.paused) syncDraft(); else schedule(); });
     tickTimer = setInterval(() => { if (S.draft?.status === 'drafting' && S.replay == null) render(); }, 1000);
+
+    // prospects list + big board come from the Prospects tab's page (one source of truth)
+    fetch(`./prospects.html?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.text() : '')).then(t => {
+      const d = t.match(/const D = (\{.*?\});\n/s), b = t.match(/const BOARD = (\{.*?\});/s);
+      if (!d) return;
+      const D = JSON.parse(d[1]), board = {};
+      if (b) Object.entries(JSON.parse(b[1])).forEach(([n, r]) => { board[keyName(n)] = r; });
+      PROS = { pros: D.pros || [], stats: D.stats || [], board };
+      render();
+    }).catch(() => {});
+    function loadKtcStandalone() {
+      fetch(`./ktc.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
+        if (!d || VALUES) return;
+        const v = {};
+        (d.players || []).forEach(p => { const x = p.superflexValues?.value; if (x) v[`${p.position}|${keyName(p.playerName)}`] = [x, null, null, null]; });
+        VALUES = v; VALUE_LABEL = 'KTC superflex'; render();
+      }).catch(() => {});
+    }
 
     // ---------- hub embedding ----------
     function post() {
@@ -381,6 +499,7 @@
         if (e.data.type === 'dtc-draft-ctx') {
           const c = e.data, changed = c.leagueId && c.leagueId !== CTX.leagueId;
           CTX = { leagueId: c.leagueId || CTX.leagueId, me: String(c.me || CTX.me).toLowerCase(), slotByRid: c.slotByRid || null, nextSeason: Number(c.nextSeason) || null };
+          if (c.values && Object.keys(c.values).length) { VALUES = c.values; VALUE_LABEL = c.valueLabel || ''; }
           if (changed || !S.league) loadLeague(); else { buildDraftSelect(); render(); }
         }
       });
@@ -390,6 +509,7 @@
       setTimeout(() => { if (!S.league && !S.loading) loadLeague(); }, 1500);
     } else {
       document.documentElement.classList.toggle('dark', params.get('theme') !== 'light');
+      loadKtcStandalone();
       loadLeague();
     }
   })();
