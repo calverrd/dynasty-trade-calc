@@ -1426,6 +1426,7 @@
       V_MAX = 0;
       MODE_CACHE = {};
       all();
+      sendValuesToFrames();
     }
 
     // FC -> KTC scale mapping built from players both sources value (quantile matching).
@@ -1705,8 +1706,34 @@
       return fit;
     }
 
+    // Share the calculator's own values with the embedded pages (rookie tabs, Profile Buckets) so every tab shows the
+    // same number in the same format: the active source (Blend / KTC / FC), the active league's SF/1QB and TE premium.
+    // Key = position | name with only letters left (suffixes like Jr / III dropped) — the same rule the pages use.
+    const keyName = s => String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\b(jr|sr|ii|iii|iv|v)\b\.?/g, '').replace(/[^a-z]/g, '');
+    function sendValuesToFrames() {
+      try {
+        if (!P.length || !V.length) return;
+        const posRank = {}, seen = {};
+        P.filter(p => !p.pick).sort((a, b) => (V[b.id] || 0) - (V[a.id] || 0)).forEach(p => { seen[p.pos] = (seen[p.pos] || 0) + 1; posRank[p.id] = seen[p.pos]; });
+        const players = {};
+        P.forEach(p => {
+          if (p.pick || !V[p.id]) return;
+          // [value, KTC, FantasyCalc (as published), position rank, KTC only]
+          players[`${p.pos}|${keyName(p.name)}`] = [Math.round(V[p.id]), Number(p.k) || 0, Number(p.fRaw) || 0, posRank[p.id] || null, (Number(p.fRaw) > 0) ? 0 : 1];
+        });
+        const label = st.src === 'blend' ? `Blend (${st.w}% KTC)` : (SRC_NAME[st.src] || 'KTC');
+        const msg = { type: 'dtc-values', src: st.src, label, short: st.src === 'blend' ? 'Blend' : (SRC_NAME[st.src] || 'KTC'),
+          fmt: useSfValues(activeLeague) ? 'SF' : '1QB', league: activeLeague.name || '', players };
+        ['rookies-frame', 'rbs-frame', 'tes-frame', 'buckets-frame'].forEach(id => {
+          const fr = document.getElementById(id);
+          if (fr && fr.getAttribute('src') && fr.contentWindow) fr.contentWindow.postMessage(msg, location.origin);
+        });
+      } catch (e) { /* frames not ready */ }
+    }
+
     // Share league ownership with the embedded Rookie WR + Profile Buckets pages
     function sendLeagueToFrames() {
+      sendValuesToFrames();
       try {
         if (!owners.length) return;
         const { rows } = getLeaguePartnerProfiles();

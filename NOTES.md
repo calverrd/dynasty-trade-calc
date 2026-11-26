@@ -54,6 +54,8 @@ Every page has `<meta name="robots" content="noindex, nofollow">` in its `<head>
 
 The embedded tabs are iframes. They talk to the hub with `postMessage`: `dtc-league` (teams with fit/send/recv/arch, plus players), `dtc-theme`, `dtc-height`.
 
+**One market value everywhere (Nov 26):** the hub also sends `dtc-values` (`sendValuesToFrames`, on every recompute and frame load): the calculator's own value for every player under the active source (Blend by default), in the active league's SF/1QB and TE format, keyed `POS|letters-only name` (suffixes dropped — the same key the rookie tabs, Compare and `scripts/check_names.py` use), as `[value, KTC, FantasyCalc, position rank, KTC only]`. The rookie tabs show it as the market column (header follows the source; KTC / FC on hover; a "KTC only" tag when FantasyCalc doesn't list him); CHEAP / PRICEY still compare odds with the KTC rank (`p.kFlag`), the price that rule was backtested on. Compare ranks the market by that one value (standalone: a 50/50 Blend built the hub's way from ktc.json + the FC cache). Opened outside the hub, the rookie tabs fall back to KTC superflex. Trend arrows were already Blend-to-Blend (`srcHistVal` skips dates without FC). The daily workflow logs current rookies KTC / FC can't match by name (`scripts/check_names.py`).
+
 Main features and where they live:
 
 | Feature | Code |

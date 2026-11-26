@@ -288,7 +288,7 @@
         <input id="cmpC" list="cmpList" type="search" autocomplete="off" placeholder="Player 3 (optional)" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
         <input id="cmpD" list="cmpList" type="search" autocomplete="off" placeholder="Player 4 (optional)" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
       </div>
-      <label class="inline-flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none"><input id="cmpMkt" type="checkbox" class="accent-sky-600"> Show market values (KTC + FantasyCalc) next to the ranking
+      <label class="inline-flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none"><input id="cmpMkt" type="checkbox" class="accent-sky-600"> Show market values (Blend of KTC + FantasyCalc; your league's values inside the site) next to the ranking
         <select id="cmpMktFmt" class="hidden bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-md px-1.5 py-0.5 text-xs"><option value="sf">SF · 1 PPR</option><option value="1qb">1QB · 1 PPR</option></select></label>
       <datalist id="cmpList"></datalist>
       <div id="cmpOut" class="text-sm"></div>
@@ -3768,12 +3768,32 @@
       const k = new Map(), f = new Map();
       (ktc?.players || []).forEach(p => { const v = (fmt === 'sf' ? p.superflexValues : p.oneQBValues)?.value; if (v) k.set(`${p.position}|${cmpNorm(p.playerName)}`, v); });
       if (fc?.players) { const c = x => fc.fields.indexOf(x); fc.players.forEach(r => { if (r[c('val')] > 0) f.set(`${r[c('pos')]}|${cmpNorm(r[c('name')])}`, r[c('val')]); }); }
-      return (CMP.mktCache[fmt] = { k, f, updated: fc?.updated || null });
+      // Numeric Blend, built the way the calculator builds it: FantasyCalc mapped onto KTC's scale by rank among players
+      // both value, then 50% KTC + 50% mapped FantasyCalc (KTC alone when FantasyCalc doesn't list him)
+      const both = [...f.keys()].filter(key => k.has(key));
+      const F = both.map(key => f.get(key)).sort((a, b) => b - a), K = both.map(key => k.get(key)).sort((a, b) => b - a), n = Math.min(F.length, K.length);
+      const toK = x => {
+        if (n < 25) return x;
+        if (x >= F[0]) return K[0] * x / F[0];
+        if (x <= F[n - 1]) return K[n - 1] * x / F[n - 1];
+        let lo = 0, hi = n - 1; while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (F[mid] >= x) lo = mid; else hi = mid; }
+        return K[lo] + (K[hi] - K[lo]) * ((F[lo] - x) / ((F[lo] - F[hi]) || 1));
+      };
+      const b = new Map();
+      new Set([...k.keys(), ...f.keys()]).forEach(key => { const kv = k.get(key), fv = f.get(key);
+        b.set(key, kv && fv ? Math.round(0.5 * kv + 0.5 * toK(fv)) : (kv || Math.round(toK(fv)))); });
+      return (CMP.mktCache[fmt] = { k, f, b, updated: fc?.updated || null, label: 'Blend (50% KTC)', short: 'Blend', fmt: fmt === 'sf' ? 'SF' : '1QB' });
+    }
+    // The hub's values (message "dtc-values"): key = position | letters-only name, value = [value, KTC, FantasyCalc, ...]
+    function hubOf(d) {
+      const names = [d.p.name, d.tr?.n].filter(Boolean).map(cmpNorm);
+      for (const n of names) { const v = CMP.hub.players[`${d.p.pos}|${n}`]; if (v) return { v: v[0], k: v[1] || null, f: v[2] || null }; }
+      return {};
     }
     const mktOf = (d, m) => {
       const names = [d.p.name, d.tr?.n].filter(Boolean).map(cmpNorm);   // bucket names can differ (Kevin vs KC Concepcion)
       const find = map => { for (const n of names) { const v = map.get(`${d.p.pos}|${n}`); if (v) return v; } return null; };
-      return { k: find(m.k), f: find(m.f) };
+      return { k: find(m.k), f: find(m.f), v: find(m.b) };
     };
 
     // Elite odds (WR 14+ / RB 15+): the 12+ model rescaled (backtested Nov 2026; same order as 12+, better
@@ -3796,15 +3816,13 @@
       const r = ds.map(d => ({ d, o: rankOdds(d, ex) }));
       const ranked = r.filter(x => x.o.p != null), unranked = r.filter(x => x.o.p == null);
       const cohorts = [...new Set(ranked.map(x => x.o.cohort))];
-      const m = CMP.market && CMP.mkt ? CMP.mkt : null;
-      // Market rank: average of each player's KTC and FantasyCalc rank within this group
+      // Market: inside the hub, the calculator's own values (same source, same league format); on its own, a Blend
+      // built from KTC + the FantasyCalc cache the same way. Market rank = rank by that one number, as on every other tab.
+      const m = CMP.market ? (CMP.hub || CMP.mkt) : null;
       const mrank = {};
       if (m) {
-        const vals = ranked.map(x => ({ x, v: mktOf(x.d, m) }));
-        const rk = key => { const s = vals.filter(y => y.v[key]).sort((a, b) => b.v[key] - a.v[key]); const o = {}; s.forEach((y, i) => { o[y.x.d.p.id] = i + 1; }); return o; };
-        const rk1 = rk('k'), rk2 = rk('f');
-        const avg = vals.map(y => ({ id: y.x.d.p.id, a: [rk1[y.x.d.p.id], rk2[y.x.d.p.id]].filter(Boolean) })).filter(y => y.a.length).map(y => ({ id: y.id, s: y.a.reduce((p, q) => p + q, 0) / y.a.length }));
-        avg.sort((a, b) => a.s - b.s).forEach((y, i) => { mrank[y.id] = i + 1; });
+        const vals = ranked.map(x => ({ x, v: m === CMP.hub ? hubOf(x.d) : mktOf(x.d, m) }));
+        vals.filter(y => y.v.v).sort((a, b) => b.v.v - a.v.v).forEach((y, i) => { mrank[y.x.d.p.id] = i + 1; });
         vals.forEach(y => { y.x.mv = y.v; });
       }
       const list = (items, head) => {
@@ -3818,7 +3836,8 @@
             if (diff >= (n >= 3 ? 2 : 1)) flag = `<span class="text-[10px] font-bold px-1.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">cheap for his odds</span>`;
             else if (-diff >= (n >= 3 ? 2 : 1)) flag = `<span class="text-[10px] font-bold px-1.5 rounded bg-rose-500/15 text-rose-700 dark:text-rose-300">priced above his odds</span>`;
           }
-          const mkt = m ? ` <span class="text-[11px] text-slate-500 dark:text-slate-400">· market #${mr || '—'} (KTC ${x.mv?.k ? x.mv.k.toLocaleString() : '—'} / FC ${x.mv?.f ? x.mv.f.toLocaleString() : '—'})</span> ${flag}` : '';
+          const nf = v => v ? v.toLocaleString() : '—';
+          const mkt = m ? ` <span class="text-[11px] text-slate-500 dark:text-slate-400">· market #${mr || '—'} (${esc(m.short)} ${nf(x.mv?.v)}: KTC ${nf(x.mv?.k)} / FC ${nf(x.mv?.f)}${x.mv?.v && !x.mv?.f && m.short !== 'KTC' ? ', KTC only' : ''})</span> ${flag}` : '';
           return `<div class="flex flex-wrap items-baseline gap-x-2 py-1 border-t border-slate-100 dark:border-slate-800">
             <span class="font-extrabold tabular-nums w-5">#${i + 1}</span>
             <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${POS_META[x.d.p.pos].badgeCls}">${x.d.p.pos}</span>
@@ -3840,7 +3859,7 @@
       }
       if (ranked.some(x => x.o.cohort === 'rookie' && ['WR', 'RB'].includes(x.d.p.pos))) h += `<p class="text-[10px] text-slate-500 dark:text-slate-400 pt-1">Second number: chance of an elite season (WR 14+, RB 15+), same model rescaled, so the order doesn't change. A separate elite model ranked the same players the same way and was less accurate. TEs and veterans: 12+ only.</p>`;
       if (unranked.length) h += `<p class="text-[11px] text-slate-500 dark:text-slate-400 pt-1">Not ranked: ${unranked.map(x => `${esc(x.d.p.name)} (${esc(x.o.why)})`).join('; ')}.</p>`;
-      if (m) h += `<p class="text-[10px] text-slate-500 dark:text-slate-400 pt-1">Market: ${CMP.mktFmt === 'sf' ? 'SF' : '1QB'} · 1 PPR values (KTC and the daily <a href="https://fantasycalc.com" target="_blank" rel="noopener" class="underline">FantasyCalc</a> cache${m.updated ? `, ${new Date(m.updated).toLocaleDateString()}` : ''}). "Cheap" / "priced above" compare the market rank with the odds rank in this group.</p>`;
+      if (m) h += `<p class="text-[10px] text-slate-500 dark:text-slate-400 pt-1">Market: ${esc(m.label)} · ${m.fmt}${m === CMP.hub ? ` — the calculator's own values for ${m.league ? esc(m.league) : 'your league'}` : ` · 1 PPR (KTC and the daily <a href="https://fantasycalc.com" target="_blank" rel="noopener" class="underline">FantasyCalc</a> cache${m.updated ? `, ${new Date(m.updated).toLocaleDateString()}` : ''})`}. Market rank is by that one value. "Cheap" / "priced above" compare it with the odds rank in this group.</p>`;
       return h ? cmpStrip('Ranking', h) : '';
     }
 
@@ -3852,7 +3871,7 @@
         btn.className = `cmp-mode px-3 py-1.5 cursor-pointer ${on ? 'bg-sky-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`;
       });
       const fmtSel = document.getElementById('cmpMktFmt');
-      if (fmtSel) fmtSel.classList.toggle('hidden', !CMP.market);
+      if (fmtSel) fmtSel.classList.toggle('hidden', !CMP.market || !!CMP.hub);   // inside the hub the league sets the format
       const players = CMP.ids.map(id => (id ? PLAYER_BY_ID.get(id) : null)).filter(Boolean);
       if (!players.length) { out.innerHTML = `<p class="text-xs text-slate-500 dark:text-slate-400">Pick two to four players. Their profile buckets are compared right away; usage, draft-slot history and model odds load the first time.</p>`; return; }
       if (!CMP.extra) {
@@ -4081,6 +4100,11 @@
       window.addEventListener('message', e => {
         if (e.origin !== location.origin) return;
         if (e.data && e.data.type === 'dtc-league') { setLeague(e.data); return; }
+        if (e.data && e.data.type === 'dtc-values' && e.data.players) {
+          CMP.hub = { players: e.data.players, label: e.data.label || 'Blend', short: e.data.short || 'Blend', fmt: e.data.fmt || 'SF', league: e.data.league || '' };
+          if (CMP.ids.some(Boolean)) renderCompare();
+          return;
+        }
         if (e.data && e.data.type === 'dtc-theme' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
           state.theme = e.data.theme;
           applyTheme();
