@@ -41,6 +41,17 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
     /* Modal enter/exit transitions */
+    /* Season-count cells in the bucket detail table: 0 = soft red (Bust family), 1+ = light → deep green */
+    :root { --sc0-bg: rgba(244, 63, 94, .10); --sc0-fg: #be123c; --sc1-bg: rgba(16, 185, 129, .12); --sc2-bg: rgba(16, 185, 129, .26);
+            --sc4-bg: rgba(16, 185, 129, .42); --sc7-bg: rgba(5, 150, 105, .62); --sc-fg: #065f46; --sc7-fg: #ffffff; }
+    .dark { --sc0-bg: rgba(244, 63, 94, .14); --sc0-fg: #fda4af; --sc1-bg: rgba(16, 185, 129, .14); --sc2-bg: rgba(16, 185, 129, .28);
+            --sc4-bg: rgba(16, 185, 129, .45); --sc7-bg: rgba(16, 185, 129, .70); --sc-fg: #d1fae5; --sc7-fg: #ffffff; }
+    .sc { display: inline-block; min-width: 1.75rem; padding: 0 .35rem; border-radius: .375rem; text-align: center; }
+    .sc0 { background: var(--sc0-bg); color: var(--sc0-fg); }
+    .sc1 { background: var(--sc1-bg); color: var(--sc-fg); }
+    .sc2 { background: var(--sc2-bg); color: var(--sc-fg); font-weight: 700; }
+    .sc4 { background: var(--sc4-bg); color: var(--sc-fg); font-weight: 700; }
+    .sc7 { background: var(--sc7-bg); color: var(--sc7-fg); font-weight: 800; }
     #outcomeModal {
       transition: opacity 0.2s ease, visibility 0.2s ease;
     }
@@ -2370,6 +2381,7 @@
         const near = (isRookie || noNear) ? 0 : Number(tuple[2] || 0);
         const hit = isRookie ? 0 : Number(tuple[noNear ? 2 : 3] || 0);
         const elite = isRookie ? 0 : Number(tuple[4] || 0);
+        const te14 = (raw.pos === 'TE' && !isRookie) ? Number(tuple[3] || 0) : 0;   // TE tuple: [12+, 14+, 17+]
         const superElite = (!isRookie && raw.pos === 'WR') ? Number(tuple[5] || 0) : 0;
 
         let status = 'bust';
@@ -2390,6 +2402,7 @@
           hit,
           elite,
           superElite,
+          te14,
           status
         };
         ALL_PLAYERS.push(playerObj);
@@ -2901,7 +2914,9 @@
     // =========================================================================
     const bucketModalEl = document.getElementById('bucketModal');
     const bucketModalBody = document.getElementById('bucketModalBody');
-    const bm = { id: null, sort: 'outcome', dir: -1 };
+    const bm = { id: null, sort: 'outcome', dir: -1, filter: null };
+    // Season count at the matrix's i-th PPG mark (QB 16/20/24, RB 12/15/18, WR 12/14/16/18, TE 12/14/17)
+    const markCount = (p, i) => p.pos === 'TE' ? [p.hit, p.te14, p.elite][i] : [p.near, p.hit, p.elite, p.superElite][i];
 
     function bmTierBar(parts) { // parts: [{v, cls, label}]
       const tot = parts.reduce((a, p) => a + p.v, 0) || 1;
@@ -2986,28 +3001,32 @@
       // --- Sortable player table ---
       const order = { hit: 0, near: 1, rookie: 2, bust: 3 };
       const key = {
-        name: p => p.norm, year: p => p.year, near: p => p.near, hit: p => p.hit, elite: p => p.elite, superElite: p => p.superElite,
+        name: p => p.norm, year: p => p.year, near: p => p.near, hit: p => p.hit, elite: p => p.elite, superElite: p => p.superElite, te14: p => p.te14,
         outcome: p => -(order[p.status] * 1000) + p.hit * 10 + p.elite
       }[bm.sort];
-      const players = [...b.players].sort((x, y) => {
+      const flt = bm.filter;
+      const players = [...b.players].filter(p => !flt || (!p.isRookie && markCount(p, flt.i) >= flt.min)).sort((x, y) => {
         const a = key(x), c = key(y);
         return (a < c ? -1 : a > c ? 1 : 0) * bm.dir || (y.year - x.year);
       });
       const sm = s => statusMeta(s);
+      // Season counts: 0 soft red, then 1 / 2–3 / 4–6 / 7+ from light to deep green; rookies show a dash
+      const scCell = (p, n) => p.isRookie ? '–' : `<span class="sc ${n <= 0 ? 'sc0' : n === 1 ? 'sc1' : n <= 3 ? 'sc2' : n <= 6 ? 'sc4' : 'sc7'}">${n}</span>`;
       const cols = [['name', 'Player', 'text-left'], ['year', 'Draft', 'text-right'], ['outcome', 'Outcome', 'text-left'],
         ...(b.noNear ? [] : [['near', pm.nearLbl.replace(' PPG', '') + ' seasons', 'text-right']]),
-        ['hit', hitLbl + ' seasons', 'text-right'], ['elite', pm.eliteLbl.replace(' PPG', '') + ' seasons', 'text-right'],
+        ['hit', hitLbl + ' seasons', 'text-right'], ...(b.pos === 'TE' ? [['te14', '14+ seasons', 'text-right']] : []), ['elite', pm.eliteLbl.replace(' PPG', '') + ' seasons', 'text-right'],
         ...(b.pos === 'WR' ? [['superElite', '18+ seasons', 'text-right']] : [])];
       const th = cols.map(([k, l, a]) => `<th class="bm-sort py-2 px-2 ${a} ${bm.sort === k ? 'text-sky-600 dark:text-sky-400' : ''}" data-bm-sort="${k}">${esc(l)} ${bm.sort === k ? (bm.dir === 1 ? '▲' : '▼') : ''}</th>`).join('');
       const tr = players.map(p => `
-        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer" data-bm-player="${esc(p.id)}">
+        <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer ${flt && flt.hl && markCount(p, flt.i) >= flt.hl ? 'bg-emerald-500/10' : ''}" data-bm-player="${esc(p.id)}">
           <td class="py-1.5 px-2 font-semibold whitespace-nowrap">${esc(p.name)}${ownerBadge(p)}</td>
           <td class="py-1.5 px-2 text-right tabular-nums">${p.year}</td>
           <td class="py-1.5 px-2"><span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${sm(p.status).badgeCls}">${esc(sm(p.status).label)}</span></td>
-          ${b.noNear ? '' : `<td class="py-1.5 px-2 text-right tabular-nums">${p.isRookie ? '–' : p.near}</td>`}
-          <td class="py-1.5 px-2 text-right tabular-nums font-bold">${p.isRookie ? '–' : p.hit}</td>
-          <td class="py-1.5 px-2 text-right tabular-nums">${p.isRookie ? '–' : p.elite}</td>
-          ${b.pos === 'WR' ? `<td class="py-1.5 px-2 text-right tabular-nums">${p.isRookie ? '–' : p.superElite}</td>` : ''}
+          ${b.noNear ? '' : `<td class="py-1.5 px-2 text-right tabular-nums">${scCell(p, p.near)}</td>`}
+          <td class="py-1.5 px-2 text-right tabular-nums font-bold">${scCell(p, p.hit)}</td>
+          ${b.pos === 'TE' ? `<td class="py-1.5 px-2 text-right tabular-nums">${scCell(p, p.te14)}</td>` : ''}
+          <td class="py-1.5 px-2 text-right tabular-nums">${scCell(p, p.elite)}</td>
+          ${b.pos === 'WR' ? `<td class="py-1.5 px-2 text-right tabular-nums">${scCell(p, p.superElite)}</td>` : ''}
         </tr>`).join('');
 
       bucketModalBody.innerHTML = `
@@ -3035,8 +3054,13 @@
           <div class="flex flex-wrap gap-1.5">${rookies.map(r => `<span class="inline-flex items-center">${renderPlayerChip(r)}${ownerBadge(r)}</span>`).join('')}</div>
         </section>` : ''}
 
-        <section class="space-y-2">
-          <h3 class="text-sm font-extrabold">All named players <span class="font-normal text-slate-500 dark:text-slate-400">· tap a column to sort, tap a player for his range of outcomes</span></h3>
+        <section id="bmTable" class="space-y-2 scroll-mt-2">
+          <h3 class="text-sm font-extrabold">${flt ? 'Players' : 'All named players'} <span class="font-normal text-slate-500 dark:text-slate-400">· tap a column to sort, tap a player for his range of outcomes</span></h3>
+          ${flt ? `<div class="flex flex-wrap items-center gap-2 text-xs"><span class="px-2 py-1 rounded-full font-bold bg-sky-500/15 text-sky-700 dark:text-sky-300">Showing: ${esc(flt.label)} · ${players.length} of ${b.players.filter(p => !p.isRookie).length}</span>${flt.hl ? (() => {
+            const lastYr = Math.max(...ALL_PLAYERS.filter(q => !q.isRookie).map(q => q.year));
+            const elig = players.filter(p => p.year < lastYr), rep = elig.filter(p => markCount(p, flt.i) >= flt.hl).length, one = players.length - elig.length;
+            return `<span class="text-[11px] text-slate-500 dark:text-slate-400">Green = did it in 2+ seasons: ${rep} of ${elig.length}${elig.length ? ` (${(100 * rep / elig.length).toFixed(1)}%)` : ''}${one ? `; ${one} from the ${lastYr} class ${one === 1 ? 'has' : 'have'} played one season, so ${one === 1 ? "he isn't" : "they aren't"} counted` : ''}</span>`;
+          })() : ''}<button type="button" data-bm-clearfilter class="px-2 py-1 rounded-lg font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">Show all in bucket</button></div>` : ''}
           <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
             <table class="w-full text-xs">
               <thead class="bg-slate-50 dark:bg-slate-950/60 text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400"><tr>${th}</tr></thead>
@@ -3052,15 +3076,16 @@
     }
 
     let bucketLastFocus = null;
-    function openBucketModal(id) {
+    function openBucketModal(id, filter) {
       if (!BUCKET_BY_ID.has(id)) return;
       if (!bm.id) bucketLastFocus = document.activeElement;
-      bm.id = id; bm.sort = 'outcome'; bm.dir = -1;
+      bm.id = id; bm.sort = 'outcome'; bm.dir = -1; bm.filter = filter || null;
       renderBucketModal();
       positionModalForEmbed(bucketModalEl, 'bucketModalPanel');
       bucketModalEl.classList.remove('modal-closed'); bucketModalEl.classList.add('modal-open');
       document.body.style.overflow = 'hidden'; setParentScrollLock(true);
       bucketModalBody.scrollTop = 0;
+      if (bm.filter) setTimeout(() => document.getElementById('bmTable')?.scrollIntoView({ block: 'start' }), 60);   // jump to the filtered list
       setTimeout(() => document.getElementById('bucketModalClose')?.focus(), 50);
     }
     function closeBucketModal(restoreFocus = true) {
@@ -3095,8 +3120,9 @@
       if (of) { e.stopPropagation(); try { window.parent.postMessage({ type: 'dtc-build-offer', name: of.dataset.bmOffer }, location.origin); } catch (err) {} return; }
       const s = e.target.closest('[data-bm-sort]');
       if (s) { const k = s.dataset.bmSort; if (bm.sort === k) bm.dir *= -1; else { bm.sort = k; bm.dir = (k === 'name') ? 1 : -1; } renderBucketModal(); return; }
+      if (e.target.closest('[data-bm-clearfilter]')) { bm.filter = null; renderBucketModal(); document.getElementById('bmTable')?.scrollIntoView({ block: 'start' }); return; }
       const sw = e.target.closest('[data-bm-switch]');
-      if (sw) { bm.id = sw.dataset.bmSwitch; bm.sort = 'outcome'; bm.dir = -1; renderBucketModal(); bucketModalBody.scrollTop = 0; return; }
+      if (sw) { bm.id = sw.dataset.bmSwitch; bm.sort = 'outcome'; bm.dir = -1; bm.filter = null; renderBucketModal(); bucketModalBody.scrollTop = 0; return; }
       const pl = e.target.closest('[data-bm-player], [data-player-id]');
       if (pl) { const pid = pl.dataset.bmPlayer || pl.dataset.playerId; closeBucketModal(false); openPlayerModal(pid, true); }
     });
@@ -3464,7 +3490,8 @@
 
         const bucketBtn = e.target.closest('[data-open-bucket]');
         if (bucketBtn) {
-          openBucketModal(bucketBtn.dataset.openBucket);
+          const f = bucketBtn.dataset.mxFilter ? JSON.parse(bucketBtn.dataset.mxFilter) : null;   // a matrix cell: open filtered
+          openBucketModal(bucketBtn.dataset.openBucket, f);
           return;
         }
 
@@ -3997,14 +4024,14 @@
       const G = '16,185,129', A = '245,158,11', S = '14,165,233';
       // column model: key -> getter
       const cols = [
-        { k: 'hitRate', g: r => r.hitRate, grp: 'hit', label: `Headline (${hit})`, tip: 'Share of the bucket with a season at the hit mark', hue: G, bold: 1, keep: 1 },
+        { k: 'hitRate', f: { i: sec.marks.indexOf(hit), min: 1, label: `${hit} PPG hitters` }, g: r => r.hitRate, grp: 'hit', label: `Headline (${hit})`, tip: 'Share of the bucket with a season at the hit mark', hue: G, bold: 1, keep: 1 },
         { k: 'tier', g: r => r.tierOverall, grp: 'hit', label: 'Tier overall', tip: 'Every bucket in this tier combined' },
-        ...sec.marks.map((m, i) => ({ k: 'm' + i, g: r => r.rates[i], grp: 'ceil', label: m, tip: `Share with a season at ${m} PPG`, hue: S })),
-        { k: 'low2', g: r => r.low2, grp: 'rep', label: `${low} (2+ yrs)`, tip: `Share of the bucket with 2+ seasons at ${low}` },
-        { k: 'low3', g: r => r.low3, grp: 'rep', label: `${low} (3+ yrs)`, tip: `Share of the bucket with 3+ seasons at ${low}` },
-        { k: 'lowRep', g: r => r.lowRep, grp: 'rep', label: `${low} Repeater`, tip: `Of the players with a ${low} season, the share who did it in 2+ seasons`, hue: A, bold: 1, keep: 1, line: 'border-amber-500' },
-        { k: 'hit2', g: r => r.hit2, grp: 'rep', label: `${rep2} (2+ yrs)`, tip: `Share of the bucket with 2+ seasons at ${rep2}` },
-        { k: 'hitRep', g: r => r.hitRep, grp: 'rep', label: `${rep2} Repeater`, tip: `Of the players with a ${rep2} season, the share who did it in 2+ seasons. ${MX.pos === 'TE' ? 'TE bucket cards use the 12+ column instead.' : 'This is the Repeater % on the bucket cards.'}`, hue: G, bold: 1, keep: 1, line: 'border-emerald-500' },
+        ...sec.marks.map((m, i) => ({ k: 'm' + i, f: { i, min: 1, label: `a ${m} PPG season` }, g: r => r.rates[i], grp: 'ceil', label: m, tip: `Share with a season at ${m} PPG`, hue: S })),
+        { k: 'low2', f: { i: 0, min: 2, label: `2+ seasons at ${low}` }, g: r => r.low2, grp: 'rep', label: `${low} (2+ yrs)`, tip: `Share of the bucket with 2+ seasons at ${low}` },
+        { k: 'low3', f: { i: 0, min: 3, label: `3+ seasons at ${low}` }, g: r => r.low3, grp: 'rep', label: `${low} (3+ yrs)`, tip: `Share of the bucket with 3+ seasons at ${low}` },
+        { k: 'lowRep', f: { i: 0, min: 1, hl: 2, label: `${low} hitters (repeaters in green)` }, g: r => r.lowRep, grp: 'rep', label: `${low} Repeater`, tip: `Of the players with a ${low} season, the share who did it in 2+ seasons`, hue: A, bold: 1, keep: 1, line: 'border-amber-500' },
+        { k: 'hit2', f: { i: 1, min: 2, label: `2+ seasons at ${rep2}` }, g: r => r.hit2, grp: 'rep', label: `${rep2} (2+ yrs)`, tip: `Share of the bucket with 2+ seasons at ${rep2}` },
+        { k: 'hitRep', f: { i: 1, min: 1, hl: 2, label: `${rep2} hitters (repeaters in green)` }, g: r => r.hitRep, grp: 'rep', label: `${rep2} Repeater`, tip: `Of the players with a ${rep2} season, the share who did it in 2+ seasons. ${MX.pos === 'TE' ? 'TE bucket cards use the 12+ column instead.' : 'This is the Repeater % on the bucket cards.'}`, hue: G, bold: 1, keep: 1, line: 'border-emerald-500' },
       ].filter(x => !c || x.keep);
       let rows = sec.rows.slice();
       if (MX.tier !== 'All') rows = rows.filter(r => r.tier === MX.tier);
@@ -4032,7 +4059,7 @@
         const newTier = !sorting && r.tier !== lastTier; lastTier = r.tier;
         h += `<tr class="${newTier ? 'border-t-2 border-slate-200 dark:border-slate-700' : 'border-t border-slate-100 dark:border-slate-800'}">
           <td class="px-2 py-1.5 sticky left-0 bg-white dark:bg-slate-900 z-10 min-w-[7rem] sm:whitespace-nowrap"><div class="leading-tight">${nm}</div><div class="flex flex-wrap items-center gap-1 mt-0.5 text-[10px]"><span class="px-1 rounded font-bold ${MX_TIER_CLS[r.tier] || ''}">${esc(r.tier)}</span><span class="text-slate-500">${r.hits}/${r.n}</span>${tag}</div></td>
-          ${cols.map((x, i) => { const v = x.g(r); const show = x.k === 'tier' ? (sorting || newTier) : true; return `<td class="px-1.5 sm:px-2 py-1.5 text-right ${x.bold ? 'font-bold' : ''} ${x.muted ? 'text-slate-500' : ''} ${i && cols[i - 1].grp !== x.grp ? 'border-l border-slate-100 dark:border-slate-800' : ''}" style="${show ? heat(v) : ''}">${show ? pct(v) : ''}</td>`; }).join('')}
+          ${cols.map((x, i) => { const v = x.g(r); const show = x.k === 'tier' ? (sorting || newTier) : true; return `<td class="px-1.5 sm:px-2 py-1.5 text-right ${x.bold ? 'font-bold' : ''} ${x.muted ? 'text-slate-500' : ''} ${i && cols[i - 1].grp !== x.grp ? 'border-l border-slate-100 dark:border-slate-800' : ''}" style="${show ? heat(v) : ''}">${!show ? '' : (b && x.f && v != null) ? `<button type="button" data-open-bucket="${esc(b.id)}" data-mx-filter='${JSON.stringify(x.f).replace(/'/g, '&#39;')}' class="cursor-pointer hover:underline" title="Show the players behind this number">${pct(v)}</button>` : pct(v)}</td>`; }).join('')}
         </tr>`;
       });
       if (!rows.length) h += `<tr><td colspan="${cols.length + 1}" class="px-2 py-4 text-center text-slate-500">No buckets match.</td></tr>`;
