@@ -3029,14 +3029,15 @@
       const { m, rows } = x;
       const cell = (c, muted) => {
         const d = c.delta, cls = Math.abs(d) < 0.5 ? 'text-[#5d6672] dark:text-[#98a2ae]' : d > 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
-        return `<td class="py-1 px-1.5 text-center whitespace-nowrap ${muted ? 'opacity-60' : ''}">${Math.round(c.before)}% → <strong>${Math.round(c.after)}%</strong> <span class="${cls} font-bold">${Math.abs(d) < 0.5 ? '±0' : (d > 0 ? '+' : '') + d.toFixed(1)}</span></td>`;
+        // Phones: before → after on one line, the change under it, so all three columns fit at 375–390px
+        return `<td class="py-1 px-0.5 sm:px-1.5 text-center tabular-nums leading-tight sm:whitespace-nowrap ${muted ? 'opacity-60' : ''}"><span class="whitespace-nowrap">${Math.round(c.before)}%<span class="mx-0.5 sm:mx-1">→</span><strong>${Math.round(c.after)}%</strong></span><span class="block sm:inline sm:ml-1 ${cls} font-bold">${Math.abs(d) < 0.5 ? '±0' : (d > 0 ? '+' : '') + d.toFixed(1)}</span></td>`;
       };
-      const row = r => `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1 pr-2 font-semibold whitespace-nowrap">${esc(T[r.key].n)}${r.key === ME ? ' <span class="text-[10px] px-1 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td>
+      const row = r => `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1 pr-1 sm:pr-2 font-semibold"><span class="block max-w-[5.5rem] sm:max-w-none truncate sm:inline" title="${esc(T[r.key].n)}">${esc(T[r.key].n)}</span>${r.key === ME ? '<span class="sm:ml-1 text-[10px] px-1 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td>
         ${cell(r.po, r.po.before >= 95 && r.po.after >= 95)}${m.byes ? cell(r.bye) : ''}${cell(r.title)}</tr>`;
       return `<div class="pt-1">
         <div class="font-bold mb-1">Playoff odds before → after</div>
         <div class="overflow-x-auto"><table class="w-full text-[11px] sm:text-xs border-collapse">
-          <thead><tr class="text-[10px] uppercase tracking-wider text-[#5d6672] dark:text-[#98a2ae]"><th class="text-left py-1 pr-2">Team</th><th class="py-1 px-1.5 text-center font-semibold">Playoffs</th>${m.byes ? '<th class="py-1 px-1.5 text-center font-semibold">Bye</th>' : ''}<th class="py-1 px-1.5 text-center font-semibold">Title</th></tr></thead>
+          <thead><tr class="text-[10px] uppercase sm:tracking-wider text-[#5d6672] dark:text-[#98a2ae]"><th class="text-left py-1 pr-1 sm:pr-2">Team</th><th class="py-1 px-0.5 sm:px-1.5 text-center font-semibold">Playoffs</th>${m.byes ? '<th class="py-1 px-0.5 sm:px-1.5 text-center font-semibold">Bye</th>' : ''}<th class="py-1 px-0.5 sm:px-1.5 text-center font-semibold">Title</th></tr></thead>
           <tbody>${rows.map(row).join('')}</tbody>
         </table></div>
         <div class="text-[10px] mt-1 text-[#5d6672] dark:text-[#98a2ae]">${m.left} regular-season week${m.left === 1 ? '' : 's'} left, then the playoff bracket. Both columns replay the same 2,000 simulated seasons; only these two teams' expected weekly scores change, by the change in their best this-season lineup (FantasyCalc redraft values; picks don't score this year). Playoffs is faded when a team is at 95%+ either way.</div>
