@@ -2607,10 +2607,12 @@
     // Season count at the matrix's i-th PPG mark (QB 16/20/24, RB 12/15/18, WR 12/14/16/18, TE 12/14/17)
     const markCount = (p, i) => p.pos === 'TE' ? [p.hit, p.te14, p.elite][i] : [p.near, p.hit, p.elite, p.superElite][i];
 
-    function bmTierBar(parts) { // parts: [{v, cls, label}]
+    function bmTierBar(parts, dp = 1) { // parts: [{v, cls, label}]; each segment shows its share when it's wide enough to read
       const tot = parts.reduce((a, p) => a + p.v, 0) || 1;
-      return `<div class="w-full h-4 rounded-full overflow-hidden flex bg-slate-200 dark:bg-slate-800">${parts.filter(p => p.v > 0).map(p =>
-        `<div class="${p.cls} h-full" style="width:${100 * p.v / tot}%" title="${esc(p.label)}: ${p.v}"></div>`).join('')}</div>`;
+      return `<div class="w-full h-6 rounded-full overflow-hidden flex bg-slate-200 dark:bg-slate-800">${parts.filter(p => p.v > 0).map(p => {
+        const pct = 100 * p.v / tot, txt = pct.toFixed(dp) + '%', ink = /rose/.test(p.cls) ? 'text-white' : 'text-slate-950';
+        return `<div class="${p.cls} h-full flex items-center justify-center overflow-hidden text-[11px] font-extrabold ${ink} whitespace-nowrap" style="width:${pct}%" title="${esc(p.label)}: ${txt}">${pct >= 8 ? txt : ''}</div>`;
+      }).join('')}</div>`;
     }
     function bmPct(n, d) { return d ? Math.round(100 * n / d) : 0; }
 
@@ -2672,7 +2674,7 @@
         const h = g.filter(p => p.status === 'hit').length, nr = g.filter(p => p.status === 'near').length;
         return `<div class="rounded-xl border border-slate-200 dark:border-slate-800 p-3 space-y-1.5">
           <div class="flex items-baseline justify-between"><span class="text-xs font-bold">${lbl}</span><span class="text-[11px] text-slate-500 dark:text-slate-400">${g.length} named</span></div>
-          ${g.length ? bmTierBar([{ v: h, cls: 'bg-emerald-500', label: 'Hit' }, { v: nr, cls: 'bg-amber-400', label: 'Starter' }, { v: g.length - h - nr, cls: 'bg-rose-500', label: 'Bust' }]) : '<div class="text-[11px] text-slate-400">No named players</div>'}
+          ${g.length ? bmTierBar([{ v: h, cls: 'bg-emerald-500', label: 'Hit' }, { v: nr, cls: 'bg-amber-400', label: 'Starter' }, { v: g.length - h - nr, cls: 'bg-rose-500', label: 'Bust' }], 0) : '<div class="text-[11px] text-slate-400">No named players</div>'}
           ${g.length ? `<div class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">${h} hit (${bmPct(h, g.length)}%)</div>` : ''}
         </div>`;
       }).join('');
