@@ -167,6 +167,8 @@ Rookie refresh safety (`scripts/refresh/check_outputs.py`, runs before the commi
 
 ## 8. Open items
 
+- **League tab team detail** (Nov 25): a Value / Position toggle (`st.rosterSort`) sorts the opened team's players (QB, RB, WR, TE, then value, with position labels) and picks (by year, round, slot, with year labels).
+
 - **FantasyCalc API terms** (https://fantasycalc.com/terms-of-usage, https://fantasycalc.com/api-docs, effective Oct 10, 2026; free under 1,000 monthly users with attribution):
     - A visible "FantasyCalc" link to https://fantasycalc.com near the data on every page using it, with at least one in the static HTML. Done: `index.html` header next to the Blend/KTC/FC toggle (Nov 25); `keeper.html` footer already had one.
     - Only `GET /values/current`. Responses must be cached and reused across users; each unique query may be refreshed at most once every 3 hours. Done Nov 25: `index.html` and `keeper.html` read `data/fc/` (see section 4); neither calls the API.
@@ -199,6 +201,7 @@ Rookie refresh safety (`scripts/refresh/check_outputs.py`, runs before the commi
     - **Maintenance:** the Year 2 cutoff is pinned (`Y2_BULLET_CUTOFF = 2023` in all three rookie pages) to match the static Year 2 bullet text. When the Year 2 bullets are regenerated with newer classes, update that constant in the same push. Otherwise the bar's settled count won't match the bullets.
 - **Fixed Nov 25 — dead-looking presets:** four "best filter combination" bullets had no `data-preset`, so tapping did nothing: WR "Usage 8–15 · Day 3 or undrafted"; TE "Games 1–8 · Usage 9+ · Round 4 or later", "MISSED TIME · Round 1–3" and "Round 4 or later · Games 1–8 usage under 6". All 39 presets now load, and their settled-class numbers match the text.
 - **Done Nov 25 — ideas with one team** (`partnerIdeas`): owner asked for trade ideas with one chosen team, based on what each team needs.
+    - **Focus player** (Nov 25, `#ideaFocusSel`, shown in one-team mode): "Any player" (default) is the unchanged generator. Picking one of your assets ("Move from") or one of theirs ("Target from") builds only packages containing it (same shapes and sweeteners, same offer-check window), skips the need-fit gates (they still rank), ignores Target Pos when the focus is what you get, lets the focus asset repeat across cards, and requires it to be the most valuable piece on its side (so a deep stash isn't shopped as filler). Empty state names the player. Resets to Any when he's on neither roster.
     - Uses both full rosters (assets worth 700+): 1-for-1, 2-for-1 / player + pick, and 1-for-2 / get player + pick.
     - Keeps a deal only if, on the selected source, you don't lose by more than Fair and don't win by more than max(12%, 2 × Fair).
     - It must help you (need score ≥ 0), cost them at most a little (≥ −4), and help overall. Picks-only swaps are dropped.

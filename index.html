@@ -310,6 +310,7 @@
           <select id="ideaPartnerSel" title="Pick one team to get ideas between your roster and theirs, based on both teams' needs" class="bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#d6dbe3] dark:border-[#2e3540] rounded-lg px-2.5 py-2 text-xs font-semibold cursor-pointer"></select>
           <select id="ideaTeamSel" class="bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#d6dbe3] dark:border-[#2e3540] rounded-lg px-2.5 py-2 text-xs font-semibold cursor-pointer"></select>
           <select id="ideaPlayerSel" class="bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#d6dbe3] dark:border-[#2e3540] rounded-lg px-2.5 py-2 text-xs font-semibold cursor-pointer"></select>
+          <select id="ideaFocusSel" title="Build every idea around one player: one of yours to move, or one of theirs to target" class="hidden max-w-full bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#d6dbe3] dark:border-[#2e3540] rounded-lg px-2.5 py-2 text-xs font-semibold cursor-pointer"></select>
           <select id="ideaGoalSel" class="bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#d6dbe3] dark:border-[#2e3540] rounded-lg px-2.5 py-2 text-xs font-semibold cursor-pointer">
             <option value="repeater">Goal: Upgrade Hit &amp; Repeater %</option>
             <option value="rebuild">Goal: Rebuild (Youth + Picks)</option>
@@ -779,6 +780,7 @@
       pos: 'ALL',
       ownerFilter: 'ALL',
       leagueFilter: 'ALL',
+      rosterSort: 'value',   // League tab, opened team: 'value' or 'pos'
       radarTeam: '',
       waiverQ: '',
       waiverPos: 'ALL',
@@ -2736,6 +2738,23 @@
         ptSel.value = others.includes(prev) ? prev : '';
         pSel.disabled = !!ptSel.value;
         pSel.classList.toggle('opacity-50', !!ptSel.value);
+        // One-team mode: "Focus player" builds ideas around one of your assets (to move) or one of theirs (to target)
+        const fSel = document.getElementById('ideaFocusSel');
+        if (fSel) {
+          const partner = ptSel.value;
+          pSel.classList.toggle('hidden', !!partner);
+          fSel.classList.toggle('hidden', !partner);
+          if (partner) {
+            const prevF = fSel.value;
+            const assets = key => [...(T[key].ids || []).filter(id => P[id]), ...(T[key].pk || []).map(([id]) => id).filter(id => P[id])]
+              .filter(id => (V[id] || 0) > 0).sort((a, b) => (V[b] || 0) - (V[a] || 0)).slice(0, 30);
+            const opt = (side, id) => `<option value="${side}:${id}">${esc(P[id].name)} (${P[id].pick ? 'pick' : P[id].pos} · ${fmt(V[id])})</option>`;
+            fSel.innerHTML = `<option value="">Focus player: Any player</option>`
+              + `<optgroup label="Move from ${esc(T[curTeam].n)}">${assets(curTeam).map(id => opt('send', id)).join('')}</optgroup>`
+              + `<optgroup label="Target from ${esc(T[partner].n)}">${assets(partner).map(id => opt('recv', id)).join('')}</optgroup>`;
+            fSel.value = [...fSel.options].some(o => o.value === prevF) ? prevF : '';   // reset if he's not on either roster
+          } else fSel.value = '';
+        }
       }
     }
 
@@ -3289,7 +3308,8 @@
     // Partner mode: ideas between one team and one partner only, ranked by how well each side's
     // incoming assets fill its weak positions (value vs league average) without opening new holes,
     // and by each team's contend / rebuild timeline. Value-balanced with the current source + adjustment.
-    function partnerIdeas(meKey, partner, posF, goal) {
+    // focus (optional): { side: 'send' | 'recv', id } — every idea is built around that asset (seeded, not filtered)
+    function partnerIdeas(meKey, partner, posF, goal, focus) {
       if (!T[meKey] || !T[partner] || meKey === partner) return [];
       const { rows, posRanks } = getLeaguePartnerProfiles();
       const FIT_POS = ['QB', 'RB', 'WR', 'TE'];
@@ -3320,6 +3340,11 @@
         ...(T[key].pk || []).filter(([id]) => P[id] && (V[id] || 0) >= 700).map(([id, via]) => ({ id, via }))
       ].sort((x, y) => (V[y.id] || 0) - (V[x.id] || 0)).slice(0, 30);
       const mine = assetsOf(meKey), theirs = assetsOf(partner);
+      const F = focus ? { id: focus.id, via: focus.side === 'send' ? ((T[meKey].pk || []).find(([id]) => id === focus.id) || [])[1] || '' : ((T[partner].pk || []).find(([id]) => id === focus.id) || [])[1] || '' } : null;
+      if (F) {   // the focused asset is always in play, even if it's outside the usual top-30 / 700+ pool
+        const pool = focus.side === 'send' ? mine : theirs;
+        if (!pool.some(x => x.id === F.id)) pool.push({ ...F });
+      }
       const rejectAt = Math.max(12, st.fair * 2);
       const SRC = ['ktc', 'fc', 'blend'], SRC_L = { ktc: 'KTC', fc: 'FantasyCalc', blend: 'Blend' };
       const curI = Math.max(0, SRC.indexOf(st.src));
@@ -3354,10 +3379,16 @@
         return b;
       };
       const keep = (send, recv, type, g) => {
-        if (posF !== 'ALL' && !recv.some(x => (posF === 'PICK' ? P[x.id].pick : P[x.id].pos === posF && !P[x.id].pick))) return;
+        // Target Pos still shapes what you get back, except when the focus player IS what you get back
+        if (posF !== 'ALL' && !(F && focus.side === 'recv') && !recv.some(x => (posF === 'PICK' ? P[x.id].pick : P[x.id].pos === posF && !P[x.id].pick))) return;
         if ([...send, ...recv].every(x => P[x.id].pick)) return;                        // picks-for-picks only: not a real idea
         const f = fitsOf(send, recv);
-        if (f.my < 0 || f.their < -4 || f.my + f.their < 2) return;                     // must help you; only a small cost to them
+        // With a focus player you've already chosen the piece, so the need-fit gates only rank, never drop;
+        // the value window (offer check) still applies in full
+        if (!F && (f.my < 0 || f.their < -4 || f.my + f.their < 2)) return;            // must help you; only a small cost to them
+        // The focus player must be the headline of his side (no bigger piece next to him), so a deep stash isn't
+        // "shopped" as filler in someone else's deal
+        if (F) { const side = focus.side === 'send' ? send : recv; if (side.some(x => x.id !== F.id && (V[x.id] || 0) > (V[F.id] || 0))) return; }
         const off = Math.max(...g.map(outBy));
         const rr = sum(recv), rs = sum(send);
         const size = 6 * Math.max(0, Math.min(1.2, Math.log10(Math.max(rr, rs) / 1500)));
@@ -3394,12 +3425,17 @@
         });
         if (best) keep(best.s2, best.r2, iGetMore ? `${type} + your sweetener` : `${type} + their sweetener`, best.g2);
       };
-      mine.forEach(a => theirs.forEach(b => tryPkg([{ ...a }], [{ ...b }], '1-for-1')));
+      // With a focus player, only packages that contain it are built (same shapes, same sweeteners)
+      const okS = arr => !F || focus.side !== 'send' || arr.some(x => x.id === F.id);
+      const okR = arr => !F || focus.side !== 'recv' || arr.some(x => x.id === F.id);
+      mine.forEach(a => theirs.forEach(b => { if (okS([a]) && okR([b])) tryPkg([{ ...a }], [{ ...b }], '1-for-1'); }));
       for (let i = 0; i < mine.length; i++) for (let j = i + 1; j < mine.length; j++) theirs.forEach(b => {
+        if (!okS([mine[i], mine[j]]) || !okR([b])) return;
         const t = P[mine[i].id].pick || P[mine[j].id].pick ? 'Player + pick' : '2-for-1';
         tryPkg([{ ...mine[i] }, { ...mine[j] }], [{ ...b }], t);
       });
       for (let i = 0; i < theirs.length; i++) for (let j = i + 1; j < theirs.length; j++) mine.forEach(a => {
+        if (!okS([a]) || !okR([theirs[i], theirs[j]])) return;
         const t = P[theirs[i].id].pick || P[theirs[j].id].pick ? 'Get player + pick' : '1-for-2';
         tryPkg([{ ...a }], [{ ...theirs[i] }, { ...theirs[j] }], t);
       });
@@ -3409,7 +3445,7 @@
       for (const x of ideas) {
         const ids = [...x.send, ...x.recv].map(y => y.id);
         const k = ids.slice().sort().join('_');
-        if (seen.has(k) || ids.some(id => (used[id] || 0) >= 2)) continue;
+        if (seen.has(k) || ids.some(id => (used[id] || 0) >= 2 && !(F && id === F.id))) continue;   // the focus player may repeat
         seen.add(k); ids.forEach(id => { used[id] = (used[id] || 0) + 1; }); top.push(x);
         if (top.length >= 12) break;
       }
@@ -3480,7 +3516,9 @@
         const posF0 = document.getElementById('ideaPosSel')?.value || 'ALL';
         if (!tKey0 || !T[tKey0]) return;
         const goal0 = document.getElementById('ideaGoalSel')?.value || 'repeater';
-        const top = partnerIdeas(tKey0, partnerKey, posF0, goal0);
+        const fv = document.getElementById('ideaFocusSel')?.value || '';
+        const focus = fv ? { side: fv.split(':')[0], id: Number(fv.split(':')[1]) } : null;
+        const top = partnerIdeas(tKey0, partnerKey, posF0, goal0, focus && P[focus.id] ? focus : null);
         listEl._ideas = { tKey: tKey0, top };
         const archL = k => teamArchetype(k).label;
         const head = `<div class="col-span-full flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/25 text-xs">
@@ -3506,7 +3544,7 @@
             </div>
             <button type="button" data-loadidea="${idx}" class="w-full py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Load in calculator (offer check + DM pitch) →</button>
           </div>`;
-        }).join('') : `<div class="col-span-full text-xs text-[#5d6672] dark:text-[#98a2ae] py-3">No fair deals that help both teams. Try Target Pos "Any", or widen the Fair ± slider.</div>`);
+        }).join('') : `<div class="col-span-full text-xs text-[#5d6672] dark:text-[#98a2ae] py-3">${focus && P[focus.id] ? `No fair deals found involving ${esc(P[focus.id].name)} with ${esc(T[partnerKey].n)}. Try another player, set Focus back to Any player, or widen the Fair ± slider.` : 'No fair deals that help both teams. Try Target Pos "Any", or widen the Fair ± slider.'}</div>`);
         listEl._ideas.partner = partnerKey;
         fillIdeaOdds();
         return;
@@ -3814,8 +3852,18 @@
 
         let detail = '';
         if (isOpen) {
-          const pl = (r.t.ids || []).filter(id => P[id]).sort((a, b) => V[b] - V[a]);
-          const pks = (r.t.pk || []).filter(([id]) => P[id]).sort((a, b) => V[b[0]] - V[a[0]]);
+          // Sort header: by value, or by position (QB, RB, WR, TE, then value; picks by year, round, slot)
+          const POS_ORDER = { QB: 0, RB: 1, WR: 2, TE: 3 };
+          const byPos = st.rosterSort === 'pos';
+          const pl = (r.t.ids || []).filter(id => P[id]).sort((a, b) => byPos ? ((POS_ORDER[P[a].pos] ?? 9) - (POS_ORDER[P[b].pos] ?? 9)) || (V[b] - V[a]) : V[b] - V[a]);
+          const pks = (r.t.pk || []).filter(([id]) => P[id]).sort((a, b) => byPos ? (P[a[0]].year - P[b[0]].year) || (P[a[0]].rd - P[b[0]].rd) || ((P[a[0]].slot || 99) - (P[b[0]].slot || 99)) : V[b[0]] - V[a[0]]);
+          const sortBtn = (k, l) => `<button type="button" data-rostersort="${k}" class="px-2.5 py-1 font-semibold cursor-pointer ${st.rosterSort === k ? 'bg-blue-600 text-white' : 'text-[#5d6672] dark:text-[#98a2ae] hover:bg-[#eef0f4] dark:hover:bg-[#232933]'}">${l}</button>`;
+          const sortBar = `<div class="flex items-center gap-2 text-xs"><span class="font-semibold text-[#5d6672] dark:text-[#98a2ae]">Sort players and picks by</span><div class="inline-flex rounded-lg border border-[#d6dbe3] dark:border-[#2e3540] overflow-hidden bg-white dark:bg-[#171b21]">${sortBtn('value', 'Value')}${sortBtn('pos', 'Position')}</div></div>`;
+          // In position order, a small label starts each position group
+          let lastPos = null;
+          const posHead = id => { if (!byPos || P[id].pos === lastPos) return ''; lastPos = P[id].pos; return `<div class="pt-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#5d6672] dark:text-[#98a2ae]">${esc(P[id].pos)}</div>`; };
+          let lastYr = null;
+          const yrHead = id => { if (!byPos || P[id].year === lastYr) return ''; lastYr = P[id].year; return `<div class="pt-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#5d6672] dark:text-[#98a2ae]">${P[id].year}</div>`; };
           const posCards = ['QB', 'RB', 'WR', 'TE', 'PICK'].map(pos => {
             const rk = posRanks[pos][r.o];
             const rkCls = rk <= topQ ? 'text-emerald-600 dark:text-emerald-400' : rk >= botQ ? 'text-rose-600 dark:text-rose-400' : 'text-[#5d6672] dark:text-[#98a2ae]';
@@ -3827,11 +3875,12 @@
           detail = `<tr class="bg-[#f6f7f9]/80 dark:bg-[#0f1216]/70">
             <td colspan="16" class="p-3 space-y-3">
               <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">${posCards}</div>
+              ${sortBar}
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                 <div>
                   <div class="font-bold mb-1.5">Roster (${pl.length})</div>
                   <div class="space-y-1 max-h-56 overflow-y-auto pr-1">
-                    ${pl.map(id => `<div class="flex items-center justify-between gap-2 py-1 border-b border-[#e3e6eb] dark:border-[#232933]">
+                    ${pl.map(id => `${posHead(id)}<div class="flex items-center justify-between gap-2 py-1 border-b border-[#e3e6eb] dark:border-[#232933]">
                       <span class="flex items-center gap-1.5 min-w-0">${posTag(P[id].pos)} <span class="font-semibold truncate">${esc(P[id].name)}</span></span>
                       <span class="font-bold">${fmt(V[id])}</span>
                     </div>`).join('')}
@@ -3840,7 +3889,7 @@
                 <div>
                   <div class="font-bold mb-1.5">Draft Picks (${pks.length})</div>
                   <div class="space-y-1 max-h-56 overflow-y-auto pr-1">
-                    ${pks.length ? pks.map(([id, via]) => `<div class="flex items-center justify-between gap-2 py-1 border-b border-[#e3e6eb] dark:border-[#232933]">
+                    ${pks.length ? pks.map(([id, via]) => `${yrHead(id)}<div class="flex items-center justify-between gap-2 py-1 border-b border-[#e3e6eb] dark:border-[#232933]">
                       <span class="flex items-center gap-1.5">${posTag('PICK')} <span class="font-semibold">${esc(P[id].name)}${via && via !== 'own' ? ` (${esc(via)})` : ''}</span></span>
                       <span class="font-bold">${fmt(V[id])}</span>
                     </div>`).join('') : '<div class="text-[#5d6672] dark:text-[#98a2ae] italic">No tracked picks</div>'}
@@ -4848,6 +4897,7 @@
 
       document.getElementById('ideaTeamSel')?.addEventListener('change', () => { st.acquire = null; populateIdeaSelectors(); renderTradeIdeas(); });
       document.getElementById('ideaPartnerSel')?.addEventListener('change', () => { st.acquire = null; populateIdeaSelectors(); renderTradeIdeas(); });
+      document.getElementById('ideaFocusSel')?.addEventListener('change', () => { st.acquire = null; renderTradeIdeas(); });
       ['ideaPlayerSel', 'ideaGoalSel', 'ideaPosSel'].forEach(id => document.getElementById(id)?.addEventListener('change', () => { st.acquire = null; renderTradeIdeas(); }));
 
       document.getElementById('leagueSel')?.addEventListener('change', e => {
@@ -5036,6 +5086,13 @@
           all();
           switchTab('calc');
           window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+        const rosterSortBtn = e.target.closest('[data-rostersort]');
+        if (rosterSortBtn) {
+          e.stopPropagation();
+          st.rosterSort = rosterSortBtn.dataset.rostersort;
+          renderLeague();
           return;
         }
         const openRow = e.target.closest('[data-openrow]');
