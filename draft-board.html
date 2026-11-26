@@ -21,6 +21,8 @@
     .rd-col { position: sticky; left: 0; z-index: 2; }
     @keyframes clock { 0%, 100% { box-shadow: 0 0 0 2px #38bdf8; } 50% { box-shadow: 0 0 0 4px rgba(56,189,248,.35); } }
     .on-clock { animation: clock 1.6s ease-in-out infinite; }
+    @keyframes findp { 0%, 100% { box-shadow: 0 0 0 3px #f59e0b; } 50% { box-shadow: 0 0 0 6px rgba(245,158,11,.35); } }
+    .find-hit { animation: findp 1.2s ease-in-out 4; box-shadow: 0 0 0 3px #f59e0b; opacity: 1 !important; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased">
@@ -49,6 +51,8 @@
 
     <div id="chips" class="flex flex-wrap gap-1.5"></div>
     <div id="summary" class="hidden flex flex-wrap items-center gap-2 rounded-xl border border-violet-300 dark:border-violet-500/40 bg-violet-50 dark:bg-violet-500/10 px-3 py-2 text-sm"></div>
+
+    <div id="nextpick" class="hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm"></div>
 
     <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_17.5rem] items-start">
       <div class="min-w-0 space-y-2">
@@ -101,6 +105,13 @@
     let VALUES = null, VALUE_LABEL = '', PROS = null;
     const OPT = Object.assign({ ghost: true, sort: 'market', pos: 'ALL', more: false }, store.get('dtc_db_opts', {}));
     const saveOpt = () => store.set('dtc_db_opts', { ghost: OPT.ghost, sort: OPT.sort, pos: OPT.pos });
+    // starred targets, per league; click-to-find target (a player key)
+    let STARS = new Set();
+    const loadStars = () => { STARS = new Set(store.get(`dtc_db_star_${CTX.leagueId}`, [])); };
+    const saveStars = () => store.set(`dtc_db_star_${CTX.leagueId}`, [...STARS]);
+    let FIND = null, FIND_SCROLL = false;
+    loadStars();
+    const pkKey = p => `${p.metadata?.position}|${keyName(pickName(p))}`;
     let pollTimer = null, tickTimer = null;
 
     const getJSON = async (path) => {
@@ -121,7 +132,7 @@
         ]);
         if (seq !== S.loadSeq) return;
         Object.assign(S, { league, users: users || [], rosters: rosters || [], drafts: (drafts || []).slice().sort((a, b) => Number(b.season) - Number(a.season) || (b.start_time || 0) - (a.start_time || 0)), leagueTraded: lt || [] });
-        S.hl = undefined; S.replay = null;
+        S.hl = undefined; S.replay = null; loadStars(); FIND = null;
         S.sel = pickDefaultDraft();
         buildDraftSelect();
         await syncDraft(true);
@@ -284,15 +295,15 @@
         if (v && v[2] != null) { e.hit = v[2]; e.n = v[3]; e.src = v[1]; e.bucket = v[1]; }
         else if (e.tier && PROS) { const o = prosOdds(e); e.bucket = `${e.tier} ${e.type}`; if (o) { e.hit = o.hit; e.n = o.n; e.src = o.src; } }
         else if (v && v[1]) e.bucket = v[1];
+        if (!e.tier && e.bucket) { const t = e.bucket.split(' ')[0]; if (TIERS.includes(t)) e.tier = t; }
       });
       const avail = [...ent.values()].filter(e => !taken.has(e.k)).sort(byMarket);
       avail.forEach((e, i) => { e.mk = i + 1; });
-      return { avail, hasVal, size: ent.size };
+      return { avail, hasVal, size: ent.size, all: ent };
     }
     // ghost picks: open picks in order, each takes the best player left by market rank
     function ghosts(M, avail) {
       const g = {}, at = {};
-      if (!OPT.ghost) return { g, at };
       const open = [];
       M.rows.forEach(row => row.cells.forEach(c => { if (c && !c.made) open.push(c); }));
       open.sort((a, b) => a.no - b.no).forEach((c, i) => { const e = avail[i]; if (e) { g[c.no] = e; at[e.k] = c; } });
@@ -368,8 +379,11 @@
         sum.classList.remove('hidden');
       } else sum.classList.add('hidden');
 
-      const PL = pool(M), GH = ghosts(M, PL.avail);
-      renderRail(M, PL, GH, me);
+      const PL = pool(M), GALL = ghosts(M, PL.avail), GH = OPT.ghost ? GALL : { g: {}, at: {} };
+      const madeAt = {};
+      M.rows.forEach(row => row.cells.forEach(c => { if (c && c.made) madeAt[pkKey(c.made)] = c; }));
+      renderRail(M, PL, GH, me, madeAt, name);
+      renderNext(M, PL, GALL, hl != null ? hl : me, me, name);
 
       // grid: columns = draft slots (like Sleeper), rows = rounds
       const W = M.N > 14 ? 'w-[6.25rem]' : 'w-[7.25rem]';
@@ -387,14 +401,16 @@
           const badge = traded ? `<span class="shrink-0 max-w-[4.2rem] truncate px-1 rounded text-[9px] font-bold ${c.owner === me ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100'}" title="Now owned by ${esc(name(c.owner))} (originally ${esc(name(c.orig))})">→ ${esc(c.owner === me ? 'you' : short(name(c.owner), 9))}</span>` : '';
           const onClock = M.clock === c.no;
           let inner;
+          const ckey = p ? pkKey(p) : (GH.g[c.no] ? GH.g[c.no].k : null);
+          const star = ckey && STARS.has(ckey) ? '<span class="text-amber-500" title="Starred target">★</span> ' : '';
           if (p) {
-            inner = `<div class="font-bold truncate">${esc(pickName(p))}</div><div class="text-[10px] truncate ${POS[pos]?.txt || 'text-slate-500'}">${esc(pos || '')}${p.metadata?.team ? ' · ' + esc(p.metadata.team) : ''}</div>`;
+            inner = `<div class="font-bold truncate">${star}${esc(pickName(p))}</div><div class="text-[10px] truncate ${POS[pos]?.txt || 'text-slate-500'}">${esc(pos || '')}${p.metadata?.team ? ' · ' + esc(p.metadata.team) : ''}</div>`;
           } else if (onClock) {
             const e = GH.g[c.no];
             inner = `<div class="font-bold text-sky-700 dark:text-sky-300">On the clock</div><div class="text-[10px] truncate ${e ? 'italic ' + POS[e.pos].txt : 'text-slate-500 dark:text-slate-400'}">${e ? 'ghost: ' + esc(e.name) : esc(name(c.owner))}</div>`;
           } else if (GH.g[c.no]) {
             const e = GH.g[c.no];
-            inner = `<div class="italic font-semibold truncate opacity-75 ${POS[e.pos].txt}">${esc(e.name)}</div><div class="text-[10px] text-slate-400 truncate"><span class="italic">ghost</span> · ${esc(e.pos)} · ${esc(short(name(c.owner), 12))}</div>`;
+            inner = `<div class="italic font-semibold truncate ${star ? '' : 'opacity-75'} ${POS[e.pos].txt}">${star}${esc(e.name)}</div><div class="text-[10px] text-slate-400 truncate"><span class="italic">ghost</span> · ${esc(e.pos)} · ${esc(short(name(c.owner), 12))}</div>`;
           } else {
             inner = `<div class="font-medium ${c.owner === me ? 'text-violet-700 dark:text-violet-300' : 'text-slate-500 dark:text-slate-400'}">Open</div><div class="text-[10px] text-slate-400 truncate">${esc(short(name(c.owner), 16))}</div>`;
           }
@@ -403,12 +419,18 @@
           const hlCls = mine ? 'ring-2 ring-violet-500 shadow-md shadow-violet-500/30' : hl != null && !onClock ? 'opacity-30 hover:opacity-70' : 'hover:ring-1 hover:ring-violet-400';
           const gh = !p && GH.g[c.no];
           const title = `${c.label} (#${c.no}) · ${name(c.owner)}${traded ? ` via ${name(c.orig)}` : ''}${p ? ` · ${pickName(p)} ${pos || ''}` : onClock ? ' · on the clock' : ' · open'}${gh ? ` · ghost pick: ${gh.name} (best left by market rank, not a real pick)` : ''}`;
-          cells.push(`<td class="p-0.5 align-top"><div data-hl="${c.owner}" title="${esc(title)}" class="${W} h-[3.4rem] cursor-pointer transition-opacity rounded px-1.5 py-1 text-[11px] leading-tight ${base} ${hlCls} ${onClock ? 'on-clock' : ''}">
+          const found = FIND && ckey === FIND;
+          cells.push(`<td class="p-0.5 align-top"><div data-hl="${c.owner}" ${found ? 'data-found="1"' : ''} title="${esc(title)}" class="${W} h-[3.4rem] cursor-pointer transition-opacity rounded px-1.5 py-1 text-[11px] leading-tight ${base} ${hlCls} ${onClock ? 'on-clock' : ''} ${found ? 'find-hit' : ''}">
             <div class="flex items-center gap-1"><span class="text-[9px] text-slate-400 num">${c.label}</span><span class="ml-auto"></span>${badge}</div>${inner}</div></td>`);
         }
         return `<tr><td class="rd-col bg-white dark:bg-slate-900 pr-1.5 pl-1 text-[11px] font-semibold text-slate-500 align-middle whitespace-nowrap">Rd ${row.r}${M.type === 'snake' ? (row.fwd ? ' →' : ' ←') : ''}</td>${cells.join('')}</tr>`;
       }).join('');
       $('#board').innerHTML = `<table class="border-separate" style="border-spacing:0"><thead><tr><th class="rd-col bg-white dark:bg-slate-900"></th>${head.join('')}</tr></thead><tbody>${body}</tbody></table>`;
+      if (FIND_SCROLL) {
+        FIND_SCROLL = false;
+        const el = $('#board [data-found]');
+        if (el) { const bx = $('#board'), r = el.getBoundingClientRect(), br = bx.getBoundingClientRect(); bx.scrollLeft += (r.left + r.width / 2) - (br.left + br.width / 2); }
+      }
 
       const notes = [`Order: ${M.orderSrc}.`];
       if (!d) notes.push(`No ${M.season} draft exists on Sleeper yet, so this is the projected board: today's traded ${M.season} picks placed in the projected order. It switches to the real draft once Sleeper creates it.`);
@@ -417,34 +439,75 @@
       $('#note').textContent = notes.join(' ');
       post();
     }
-    function renderRail(M, PL, GH, me) {
+    function renderRail(M, PL, GH, me, madeAt, name) {
       const rail = $('#rail');
-      const list = (OPT.sort === 'odds' ? PL.avail.slice().sort(byOdds) : PL.avail).filter(e => OPT.pos === 'ALL' || e.pos === OPT.pos);
+      const list = (OPT.sort === 'odds' ? PL.avail.slice().sort(byOdds) : PL.avail).filter(e => (OPT.pos === 'ALL' || e.pos === OPT.pos) && !STARS.has(e.k));
+      const starred = [...STARS].map(k => PL.all.get(k)).filter(Boolean).sort((a, b) => !!madeAt[a.k] - !!madeAt[b.k] || byMarket(a, b));
       const shown = OPT.more ? list : list.slice(0, 20);
       const basis = PL.hasVal ? `${VALUE_LABEL || 'KTC'} value` : `the NFL big board (Prospects tab); no ${M.season} rookie values yet`;
       const btn = (k, v, t) => `<button data-opt="${k}" data-val="${v}" class="px-2 py-0.5 rounded-md text-[11px] font-semibold ${OPT[k] === v ? 'bg-sky-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}">${t}</button>`;
       const row = e => {
-        const at = GH.at[e.k], mine = at && at.owner === me;
+        const at = GH.at[e.k], mine = at && at.owner === me, gone = madeAt[e.k], on = STARS.has(e.k);
         const hitCls = e.hit == null ? 'text-slate-400' : e.hit >= 50 ? 'text-emerald-600 dark:text-emerald-400' : e.hit >= 25 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400';
         const tip = `${e.name} · ${e.pos}${e.bucket ? ' · ' + e.bucket : ''}${e.hit != null ? ` · hit ${e.hit}% (${e.src}, n = ${e.n})` : ' · no profile odds'}${e.val ? ' · value ' + fmtV(e.val) : ''}${e.board ? ' · big board #' + e.board : ''}`;
-        return `<div class="flex items-center gap-2 py-1.5 border-b border-slate-100 dark:border-slate-800 last:border-0" title="${esc(tip)}">
-          <span class="w-6 shrink-0 text-right num text-[11px] text-slate-400">${e.mk}</span>
+        return `<div data-find="${esc(e.k)}" class="flex items-center gap-1.5 py-1.5 border-b border-slate-100 dark:border-slate-800 last:border-0 cursor-pointer rounded hover:bg-slate-50 dark:hover:bg-slate-800/60 ${FIND === e.k ? 'bg-amber-50 dark:bg-amber-500/10' : ''} ${gone ? 'opacity-55' : ''}" title="${esc(tip)} · click to find him on the board">
+          <button data-star="${esc(e.k)}" aria-pressed="${on}" aria-label="${on ? 'Unstar' : 'Star'} ${esc(e.name)}" class="shrink-0 w-5 text-[15px] leading-none ${on ? 'text-amber-500' : 'text-slate-300 dark:text-slate-600 hover:text-amber-400'}">${on ? '★' : '☆'}</button>
+          <span class="w-6 shrink-0 text-right num text-[11px] text-slate-400">${gone ? '' : e.mk}</span>
           <span class="shrink-0 w-7 text-center text-[10px] font-bold rounded px-0.5 ${POS[e.pos].cell.split(' ').filter(x => x.startsWith('bg-')).join(' ')} ${POS[e.pos].txt}">${e.pos}</span>
           <div class="min-w-0 flex-1"><div class="flex items-center gap-1 min-w-0"><span class="text-[12.5px] font-semibold truncate">${esc(e.name)}</span>${at ? `<span class="shrink-0 px-1 rounded text-[9px] font-bold num ${mine ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}" title="Ghost pick: projected to go at ${at.label}${mine ? ' (your pick)' : ''}">${at.label}</span>` : ''}</div>
-            <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${esc(e.bucket || 'no profile')}</div></div>
+            <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${gone ? `<b>Drafted at ${gone.label}</b> · ${esc(name(gone.owner))}` : esc(e.bucket || 'no profile')}</div></div>
           <div class="shrink-0 text-right"><div class="num text-[11px] font-semibold">${e.val ? fmtV(e.val) : e.board ? 'BB #' + e.board : '—'}</div>
             <div class="num text-[10px] font-bold ${hitCls}">${e.hit != null ? e.hit + '% hit' : '—'}</div></div></div>`;
       };
       rail.innerHTML = `<div class="flex items-baseline gap-2"><h2 class="text-sm font-extrabold">Best available</h2><span class="text-xs text-slate-500">${list.length}${OPT.pos !== 'ALL' ? ' ' + OPT.pos : ''}</span></div>
         <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">${OPT.sort === 'odds' ? 'Sorted by hit odds; # is still the market rank' : `Ranked by ${esc(basis)}`}. Hit % = how often past players with his profile reached his position's hit line (Profile Buckets; sample size in the tooltip).</p>
         <div class="flex flex-wrap gap-1 mt-2">${btn('sort', 'market', 'Market')}${btn('sort', 'odds', 'Hit odds')}<span class="w-2"></span>${['ALL', 'QB', 'RB', 'WR', 'TE'].map(p => btn('pos', p, p === 'ALL' ? 'All' : p)).join('')}</div>
-        <div class="mt-2 lg:max-h-[34rem] lg:overflow-y-auto scroll-thin pr-1">${shown.length ? shown.map(row).join('') : `<div class="text-xs text-slate-500 py-3">${PL.size ? 'Everyone in the pool has been drafted.' : `No ${M.season} player list yet. Prospects come from the Prospects tab; drafted players appear as picks are made.`}</div>`}
+        ${OPT.sort === 'odds' && OPT.pos === 'ALL' ? '<p class="mt-1.5 text-[10.5px] leading-snug rounded bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-200 px-2 py-1">Each position uses its own hit line (WR/TE 14+, RB 15+, QB 20+). Pick a position to compare like with like.</p>' : ''}
+        <div class="mt-2 lg:max-h-[34rem] lg:overflow-y-auto scroll-thin pr-1">
+          ${starred.length ? `<div class="text-[10.5px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400 mt-1">★ Your targets (${starred.length})</div>${starred.map(row).join('')}<div class="text-[10.5px] font-bold uppercase tracking-wide text-slate-400 mt-2">Everyone else</div>` : '<p class="text-[10.5px] text-slate-400 mb-1">☆ Star 4–6 targets to pin them here (saved for this league).</p>'}
+          ${shown.length ? shown.map(row).join('') : `<div class="text-xs text-slate-500 py-3">${PL.size ? 'Everyone in the pool has been drafted.' : `No ${M.season} player list yet. Prospects come from the Prospects tab; drafted players appear as picks are made.`}</div>`}
           ${list.length > shown.length ? `<button data-opt="more" class="mt-2 w-full text-xs font-semibold py-1 rounded-md bg-slate-100 dark:bg-slate-800">Show all ${list.length}</button>` : ''}</div>`;
+    }
+    // next open pick for the highlighted team (or you) + tier runout before it, using the market-rank projection
+    function renderNext(M, PL, G, rid, me, name) {
+      const box = $('#nextpick');
+      const open = [];
+      M.rows.forEach(row => row.cells.forEach(c => { if (c && !c.made) open.push(c); }));
+      open.sort((a, b) => a.no - b.no);
+      const mine = open.filter(c => c.owner === rid);
+      if (rid == null || !open.length) { box.classList.add('hidden'); return; }
+      const who = rid === me ? 'Your' : `${esc(name(rid))}'s`;
+      if (!mine.length) { box.innerHTML = `<span class="text-slate-500">${rid === me ? 'You have' : esc(name(rid)) + ' has'} no open picks left in this draft.</span>`; box.classList.remove('hidden'); return; }
+      const next = mine[0], away = open.filter(c => c.no < next.no).length;
+      const head = M.clock === next.no ? `<b>${rid === me ? "You're" : esc(name(rid)) + ' is'} on the clock</b> at <b class="num">${next.label}</b>`
+        : away === 0 ? `<b>${who} next pick: <span class="num">${next.label}</span></b> <span class="text-slate-500">(#${next.no})</span> · up first`
+        : `<b>${who} next pick: <span class="num">${next.label}</span></b> <span class="text-slate-500">(#${next.no})</span> · <b class="num">${away}</b> pick${away === 1 ? '' : 's'} away`;
+      const then = mine.slice(1, 4).map(c => c.label).join(', ');
+      // runout: Upside-or-better players at each position now, and how many the market-rank projection leaves at this pick
+      const alerts = [];
+      ['QB', 'RB', 'WR', 'TE'].forEach(pos => {
+        const top = PL.avail.filter(e => e.pos === pos && tierIx(e.tier) <= 2);
+        if (!top.length) { if ([...PL.all.values()].some(e => e.pos === pos && tierIx(e.tier) <= 2)) alerts.push({ pos, now: 0, left: [] }); return; }
+        const left = top.filter(e => !(G.at[e.k] && G.at[e.k].no < next.no));
+        if (left.length <= 2) alerts.push({ pos, now: top.length, left });
+      });
+      const chip = a => `<span class="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold ${a.left.length ? 'bg-amber-100 text-amber-900 dark:bg-amber-500/15 dark:text-amber-200' : 'bg-rose-100 text-rose-800 dark:bg-rose-500/15 dark:text-rose-200'}" title="${esc(a.left.map(e => e.name + ' (' + e.tier + ')').join(', ') || 'none projected')}">${a.pos}: ${a.now ? `${a.now} Upside-or-better left now, ~${a.left.length} by ${next.label}` : 'Upside-or-better all gone'}${a.left.length ? ' (' + esc(a.left.map(e => e.name).join(', ')) + ')' : ''}</span>`;
+      box.innerHTML = `<div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">${head}${then ? `<span class="text-slate-500 text-xs">then ${then}</span>` : ''}</div>
+        ${alerts.length ? `<div class="flex flex-wrap items-center gap-1.5 mt-1.5"><span class="text-[11px] font-bold text-slate-500">Tier runout:</span>${alerts.map(chip).join('')}</div>
+          <p class="text-[10.5px] text-slate-400 mt-1">Projection: each pick before yours takes the best player left by market rank, like the ghost picks. Tiers are within position (Cornerstone / Elite / Upside), not hit %.</p>` : `<p class="text-[11px] text-slate-500 mt-1">No position is projected to run out of Upside-or-better players before ${next.label}.</p>`}`;
+      box.classList.remove('hidden');
     }
     const pickName = p => [p.metadata?.first_name, p.metadata?.last_name].filter(Boolean).join(' ') || `Player ${p.player_id}`;
 
     // ---------- events ----------
     document.addEventListener('click', e => {
+      const st = e.target.closest('[data-star]');
+      if (st) { const k = st.dataset.star; STARS.has(k) ? STARS.delete(k) : STARS.add(k); saveStars(); render(); return; }
+      const f = e.target.closest('[data-find]');
+      if (f) { FIND = FIND === f.dataset.find ? null : f.dataset.find; FIND_SCROLL = !!FIND; render(); }
+    });
+    document.addEventListener('click', e => {
+      if (e.target.closest('[data-star],[data-find]')) return;
       const b = e.target.closest('[data-hl]'); if (!b) return;
       const v = b.dataset.hl;
       S.hl = v === 'none' ? null : (S.hl === Number(v) ? null : Number(v));
