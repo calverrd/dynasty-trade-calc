@@ -724,6 +724,13 @@
       }
     ];
 
+    // League-specific playoff rules Sleeper's settings don't express. Keyed by league ID, so add the new ID at each
+    // season rollover (Sleeper issues a new one every year; see NOTES.md).
+    // Dirty Double Dozen (rules sheet): 8 teams make it, the top 6 of the Top Division (Sleeper division 2) and the
+    // top 2 of the Bottom Division (division 1), seeded in that order (matches Sleeper's 2025 bracket exactly).
+    const DDD_PLAYOFFS = { quota: [[2, 6, 'Top Division'], [1, 2, 'Bottom Division']] };
+    const LEAGUE_RULES = { '1312492943805779968': DDD_PLAYOFFS, '1180587471338332160': DDD_PLAYOFFS };
+
     let savedLeagues = [];
     let activeLeague = { ...DEFAULT_LEAGUES[0] };
     let ME = 'calverrd';
@@ -2082,6 +2089,7 @@
             n: teamName,
             u: uname,
             rid: r.roster_id,
+            div: Number(r.settings?.division) || 0,
             r: `${w}-${l}`,
             pf,
             mpf,
@@ -4358,7 +4366,9 @@
       const keys = owners.slice();
       const n = keys.length;
       const wn = {}; keys.forEach(k => { wn[k] = winNowOf(T[k].ids); });
-      const key = `${PLAYOFF.key}|${keys.map(k => `${T[k].r}:${Math.round(wn[k])}:${Math.round(T[k].pf || 0)}`).join(',')}|${activeLeague.playoffType}|${activeLeague.playoffReseed}`;
+      const rules = LEAGUE_RULES[activeLeague.id] || null;
+      const quota = rules && rules.quota && keys.some(k => T[k].div) ? rules.quota : null;   // only if Sleeper reports divisions
+      const key = `${PLAYOFF.key}|${keys.map(k => `${T[k].r}:${Math.round(wn[k])}:${Math.round(T[k].pf || 0)}:${T[k].div || 0}`).join(',')}|${activeLeague.playoffType}|${activeLeague.playoffReseed}|${quota ? JSON.stringify(quota) : ''}`;
       if (PO_MODEL.key === key) return PO_MODEL.m;
       const rec = k => { const [w = 0, l = 0, t = 0] = String(T[k].r || '0-0').split('-').map(Number); return { w, l, t, g: w + l + t }; };
       // Weeks played = the last week with matchup points, minus the NFL week still in progress.
@@ -4404,7 +4414,7 @@
         remaining.push(Object.values(byM).filter(pr => pr.length === 2 && pr[0] && pr[1]).map(([a, b]) => [ix[a], ix[b]]));
       }
       const left = remaining.length;
-      const pt = Math.min(n, Number(activeLeague.playoffTeams) || 6);
+      const pt = quota ? quota.reduce((a, q) => a + q[1], 0) : Math.min(n, Number(activeLeague.playoffTeams) || 6);
       let S = 1; while (S < pt) S *= 2;
       const byes = S - pt;
       const R = Math.round(Math.log2(S));
@@ -4422,15 +4432,23 @@
       for (let i = 0; i < Zp.length; i++) Zp[i] = gauss();
       const w0 = new Float64Array(n), pf0 = new Float64Array(n), mp0 = new Float64Array(n);
       keys.forEach((k, i) => { const r = rec(k); w0[i] = r.w + 0.5 * r.t; pf0[i] = T[k].pf || 0; mp0[i] = T[k].mpf || 0; });
-      const m = { keys, ix, n, G, regEnd: d.regEnd, left, remaining, pt, byes, S, R, wpr, PW, order, mu, mpg, sd, mean, wn, wnMean, wPpg, wFrac, ptsPerWn, Z, Zm, Zp, w0, pf0, mp0,
+      const div = Int32Array.from(keys, k => T[k].div || 0);
+      const m = { keys, ix, n, G, regEnd: d.regEnd, left, remaining, pt, byes, S, R, wpr, PW, order, mu, mpg, sd, mean, wn, wnMean, wPpg, wFrac, ptsPerWn, quota, div, Z, Zm, Zp, w0, pf0, mp0,
         median: !!activeLeague.median, maxpf: activeLeague.draftOrder === 'maxpf', reseed: !!activeLeague.playoffReseed };
       m.base = runPlayoffSim(m, mu);
       PO_MODEL = { key, m };
       return m;
     }
+    // Playoff field in seed order: the overall top `pt`, or with division quotas each division's top teams in quota order
+    function playoffSeeds(idx, pt, quota, div) {
+      if (!quota) return idx.slice(0, pt);
+      const out = [];
+      quota.forEach(([d, spots]) => { let c = 0; for (let i = 0; i < idx.length && c < spots; i++) if (div[idx[i]] === d) { out.push(idx[i]); c++; } });
+      return out;
+    }
     // One pass over the shared 2,000 seasons with the given scoring means. Returns % per team (1 decimal).
     function runPlayoffSim(m, mu) {
-      const { n, left, remaining, pt, byes, S, R, wpr, PW, order, mpg, sd, Z, Zm, Zp, w0, pf0, mp0, median, maxpf, reseed } = m;
+      const { n, left, remaining, pt, byes, S, R, wpr, PW, order, mpg, sd, Z, Zm, Zp, w0, pf0, mp0, median, maxpf, reseed, quota, div } = m;
       const po = new Float64Array(n), bye = new Float64Array(n), title = new Float64Array(n), last = new Float64Array(n);
       const w = new Float64Array(n), pf = new Float64Array(n), mp = new Float64Array(n), sc = new Float64Array(n), has = new Uint8Array(n);
       const idx = Array.from({ length: n }, (_, i) => i);
@@ -4455,9 +4473,11 @@
           for (let t = 0; t < n; t++) mp[t] += mpg[t] + 0.7 * sd * Zm[base + t];
         }
         idx.sort((a, b) => w[b] - w[a] || pf[b] - pf[a]);
-        for (let s2 = 0; s2 < n; s2++) seedOf[idx[s2]] = s2 + 1;
-        for (let s2 = 0; s2 < pt; s2++) po[idx[s2]]++;
-        for (let s2 = 0; s2 < byes; s2++) bye[idx[s2]]++;
+        const seeds = playoffSeeds(idx, pt, quota, div);
+        seedOf.fill(n + 1);
+        for (let s2 = 0; s2 < seeds.length; s2++) seedOf[seeds[s2]] = s2 + 1;
+        for (let s2 = 0; s2 < seeds.length; s2++) po[seeds[s2]]++;
+        for (let s2 = 0; s2 < byes; s2++) bye[seeds[s2]]++;
         let lastT = idx[n - 1];
         if (maxpf) { lastT = 0; for (let t = 1; t < n; t++) if (mp[t] < mp[lastT]) lastT = t; }
         last[lastT]++;
@@ -4469,7 +4489,7 @@
           return x > y || (x === y && seedOf[a] < seedOf[b]) ? a : b;
         };
         if (reseed) {
-          let alive = idx.slice(0, pt);   // already in seed order
+          let alive = seeds.slice();   // already in seed order
           for (let r = 0; r < R; r++) {
             const free = r === 0 ? alive.slice(0, byes) : [];
             const pool = r === 0 ? alive.slice(byes) : alive;
@@ -4480,7 +4500,7 @@
           }
           title[alive[0]]++;
         } else {
-          let slots = order.map(sd2 => (sd2 <= pt ? idx[sd2 - 1] : -1));
+          let slots = order.map(sd2 => (sd2 <= pt ? seeds[sd2 - 1] : -1));
           for (let r = 0; r < R; r++) {
             const next = [];
             for (let q = 0; q < slots.length; q += 2) {
@@ -4523,7 +4543,7 @@
       if (!m) return null;
       const res = {};
       m.keys.forEach((k, i) => { res[k] = { po: Math.round(m.base.po[i]), bye: Math.round(m.base.bye[i]), title: Math.round(m.base.title[i]), last: Math.round(m.base.last[i]) }; });
-      return { res, G: m.G, regEnd: m.regEnd, pt: m.pt, byes: m.byes, left: m.left, sd: Math.round(m.sd), wn: m.wn, wPpg: Math.round(100 * m.wPpg) };
+      return { res, G: m.G, regEnd: m.regEnd, pt: m.pt, byes: m.byes, left: m.left, quota: m.quota, sd: Math.round(m.sd), wn: m.wn, wPpg: Math.round(100 * m.wPpg) };
     }
     function renderPlayoffCard() {
       const el = document.getElementById('playoffCard');
@@ -4550,7 +4570,7 @@
       const lastLbl = activeLeague.draftOrder === 'maxpf' ? 'Lowest Max PF' : activeLeague.draftLottery ? 'Last place' : 'Worst record';
       const bar = x => `<div class="flex items-center gap-1.5 justify-end"><span class="tabular-nums font-semibold w-8 text-right">${x}%</span><div class="w-12 h-1.5 rounded bg-[#e3e6eb] dark:bg-[#2a3039] overflow-hidden hidden sm:block"><div class="h-full bg-blue-600" style="width:${x}%"></div></div></div>`;
       const keys = owners.slice().sort((a, b) => sim.res[b].po - sim.res[a].po || sim.res[b].bye - sim.res[a].bye);
-      el.innerHTML = cardHead('Playoff odds', `${sim.left} regular-season week${sim.left === 1 ? '' : 's'} left; top ${sim.pt} make the playoffs${sim.byes ? ` (top ${sim.byes} get byes)` : ''}. 2,000 simulations of the remaining Sleeper matchups and the playoff bracket${activeLeague.playoffReseed ? ' (re-seeded each round)' : ''}${activeLeague.playoffType === 2 ? ', two weeks per round' : activeLeague.playoffType === 1 ? ', two-week final' : ''}; the same seeded seasons are replayed for every trade check, so a trade's change is never random noise. Each team's weekly score is drawn around a blend of its points per game so far (${sim.wPpg}% weight, growing each week) and its Win Now lineup, with this league's week-to-week spread (±${sim.sd})${activeLeague.median ? ', plus the weekly game against the league median' : ''}. ${activeLeague.draftLottery ? 'Last place % is the chance of finishing last, which gets the best lottery odds (the lottery itself isn\'t simulated).' : `${lastLbl} % is the chance of the 1.01 under your draft-order setting.`} <strong>Bubble</strong> teams (25–75%) are the most likely to pay for veterans; <strong>unlucky</strong> teams (top-5 Win Now, under 15%) may sell theirs.`) +
+      el.innerHTML = cardHead('Playoff odds', `${sim.left} regular-season week${sim.left === 1 ? '' : 's'} left; ${sim.quota ? `${sim.quota.map(q => `top ${q[1]} of the ${esc(q[2])}`).join(' and ')} make the playoffs, seeded in that order` : `top ${sim.pt} make the playoffs`}${sim.byes ? ` (top ${sim.byes} get byes)` : ''}. 2,000 simulations of the remaining Sleeper matchups and the playoff bracket${activeLeague.playoffReseed ? ' (re-seeded each round)' : ''}${activeLeague.playoffType === 2 ? ', two weeks per round' : activeLeague.playoffType === 1 ? ', two-week final' : ''}; the same seeded seasons are replayed for every trade check, so a trade's change is never random noise. Each team's weekly score is drawn around a blend of its points per game so far (${sim.wPpg}% weight, growing each week) and its Win Now lineup, with this league's week-to-week spread (±${sim.sd})${activeLeague.median ? ', plus the weekly game against the league median' : ''}. ${activeLeague.draftLottery ? 'Last place % is the chance of finishing last, which gets the best lottery odds (the lottery itself isn\'t simulated).' : `${lastLbl} % is the chance of the 1.01 under your draft-order setting.`} <strong>Bubble</strong> teams (25–75%) are the most likely to pay for veterans; <strong>unlucky</strong> teams (top-5 Win Now, under 15%) may sell theirs.`) +
         `<div class="overflow-x-auto"><table class="w-full text-xs border-collapse">
           <thead><tr class="text-[10px] uppercase tracking-wider ${MUTED}"><th class="text-left py-1 pr-2">Team</th><th class="px-1.5 text-left">Record</th><th class="px-1.5 text-right">Playoffs</th>${sim.byes ? '<th class="px-1.5 text-right">Bye</th>' : ''}<th class="px-1.5 text-right">Title</th><th class="px-1.5 text-right">${lastLbl}</th><th class="pl-2 text-left">Trade read</th></tr></thead>
           <tbody>${keys.map(k => { const r = sim.res[k]; const f = flag(k); return `<tr class="border-t border-[#eef0f4] dark:border-[#232933]"><td class="py-1.5 pr-2 font-semibold whitespace-nowrap">${esc(T[k].n)}${k === ME ? ' <span class="text-[10px] px-1 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">YOU</span>' : ''}</td><td class="px-1.5 ${MUTED} whitespace-nowrap">${esc(T[k].r)}</td><td class="px-1.5">${bar(r.po)}</td>${sim.byes ? `<td class="px-1.5 text-right tabular-nums">${r.bye}%</td>` : ''}<td class="px-1.5 text-right tabular-nums">${r.title}%</td><td class="px-1.5 text-right tabular-nums">${r.last}%</td><td class="pl-2">${f ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap ${f[1]}">${f[0]}</span>` : ''}</td></tr>`; }).join('')}</tbody>
