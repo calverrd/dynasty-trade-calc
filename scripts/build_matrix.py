@@ -1,4 +1,6 @@
-"""Build the Profile Bucket matrix dataset from the owner's Hit Rates spreadsheet (the bucket summary rows).
+"""SUPERSEDED by scripts/build_buckets.py (builds the matrix AND the bucket cards from one source). Kept for reference.
+
+Build the Profile Bucket matrix dataset from the owner's Hit Rates spreadsheet (the bucket summary rows).
 
 Usage: python scripts/build_matrix.py "Updated Hit Rates.xlsx" > /tmp/matrix.json
 Then paste the JSON into `const BUCKET_MATRIX = ...` in bucket-explorer.html (one line).
