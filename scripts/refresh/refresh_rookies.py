@@ -471,25 +471,38 @@ def logit_fit(X, y, l2=1e-3, iters=50):
 
 
 def add_odds(rows, pos):
-    hit = lambda o: o["tier"] not in ("red", "tbd")
+    # WR / RB ("Model B", Nov 2026): target = a 12+ PPG season in Years 1-3 (b3 >= 12), trained only on classes with
+    # three completed seasons (yr <= LAST_DONE - 2), the same target and window as the Projected best season ladder.
+    # Backtest 2019-23: Brier/AUC a wash vs the old "12+ ever" model, but WR odds/ladder clashes 13 -> 1 (G1-8).
+    # TE ("Model A"): target = a 12+ season in any year, trained through LAST_DONE - 1 (B was worse for TEs).
+    years13 = pos in ("WR", "RB")
+    ELITE = {"WR": 14, "RB": 15}.get(pos)
+    if years13:
+        hit = lambda o: (o.get("b3") or 0) >= 12
+        elite = lambda o: (o.get("b3") or 0) >= ELITE
+        in_train = lambda o: o["yr"] <= LAST_DONE - 2 and o.get("b3") is not None
+    else:
+        hit = lambda o: o["tier"] not in ("red", "tbd")
+        elite = None
+        in_train = lambda o: o["tier"] != "tbd" and o["yr"] <= LAST_DONE - 1
     lp = lambda o: math.log(o.get("pk") or 262)
     for o in rows:
         o.pop("hp", None)
         o.pop("he", None)
     for key, uk, gk in WINDOWS[pos]:
-        tr = [o for o in rows if o["tier"] != "tbd" and o["yr"] <= LAST_DONE - 1 and (o.get(gk) or 0) >= 2 and o.get(uk) is not None]
+        tr = [o for o in rows if in_train(o) and (o.get(gk) or 0) >= 2 and o.get(uk) is not None]
         if len(tr) < 30:
             continue
         X = np.array([[o[uk], lp(o)] for o in tr], dtype=float)
         mu, sd = X.mean(0), X.std(0) + 1e-9
         w = logit_fit((X - mu) / sd, np.array([1.0 if hit(o) else 0.0 for o in tr]))
-        # Elite odds (WR 14+, RB 15+ = tier "green") = the 12+ model rescaled: a 1-input logistic of elite on the
+        # Elite odds (WR 14+, RB 15+ in Years 1-3) = the 12+ model rescaled: a 1-input logistic of elite on the
         # 12+ model's score. Backtested Nov 2026 (walk-forward 2019-23): best Brier / log-loss in every WR/RB
         # window; a separate elite model ranked the same (Spearman 0.94-1.00) with no AUC gain. TE: too few elite hits.
         we = None
-        if pos in ("WR", "RB"):
+        if elite is not None:
             Zs = (X - mu) / sd
-            we = logit_fit((w[0] + Zs @ w[1:])[:, None], np.array([1.0 if o["tier"] == "green" else 0.0 for o in tr]))
+            we = logit_fit((w[0] + Zs @ w[1:])[:, None], np.array([1.0 if elite(o) else 0.0 for o in tr]))
         for o in rows:
             if o["tier"] != "tbd" or (o.get(gk) or 0) < 2 or o.get(uk) is None:   # same 2-game floor as training
                 continue
