@@ -93,7 +93,7 @@
           <p class="font-bold text-slate-900 dark:text-slate-100">Tiers and tags</p>
           <p>Career tiers come from your Hit Rates sheet (your scoring) when the player is in it; otherwise they use completed nflverse seasons of 8+ games: <strong>green</strong> = a 15+ PPG season, <strong>yellow</strong> = Starter (best season 12–14.9), <strong>red</strong> = never 12, <strong>gray</strong> = 2025–26 rookie who hasn't hit yet.</p>
           <p class="mt-1"><span class="tag-missed">MISSED TIME</span> <strong class="mt" data-w4="Drafted, touched the ball in 2 or fewer of his team's first 4 games." data-w8="Drafted, touched the ball in 4 or fewer of his team's first 8 games." data-wl="Drafted, touched the ball in 2 or fewer of his team's first 4 games.">Drafted, touched the ball in 2 or fewer of his team's first 4 games.</strong> Round 1–3 RBs like this hit 12+ PPG 37% of the time (vs 74%) and 15+ only 11% (vs 57%), from 19 players. A caution, not a red flag like on the WR and TE tabs: more than a third still became starters, but the ceiling drops.</p>
-          <p class="mt-1"><span class="px-1 rounded bg-emerald-600 text-white text-[10px] font-bold">CHEAP</span> / <span class="px-1 rounded bg-rose-500 text-white text-[10px] font-bold">PRICEY</span> <strong>Model vs market.</strong> Under each unsettled rookie's market value (the calculator's Blend of KTC and FantasyCalc by default, in your league's format; the flags below still compare against KTC, the price the rule was backtested on) is his odds of a 12+ PPG season in his first 3 years, from his usage and draft slot in the current view (the two inputs the backtests validated; trained on classes with 3 completed seasons, the same as the projected best season; refit every week). Only the current rookie class gets flags, and only with 2+ games in the view. Among them, CHEAP means KTC ranks him well below where his odds rank him (by at least a fifth of the list) <em>and</em> his value is at least 500 points (or 15%) below what a player at his odds rank is worth; PRICEY is the reverse. Older unsettled players show a "Y1 baseline" (odds from their rookie usage) with no flag, since the market also prices everything since then. Flags show only in the Games 1–4 view. Backtested against DynastyProcess market values (2020–2025 classes, rerun Nov 26): PRICEY is the strongest market signal we have; all 5 PRICEY rookies under this rule lost value against similar rookies (median −60% at 12 months). CHEAP is worth a look, not a buy call: CHEAP rookies gained on average (+53% at 12 months), but the range runs from −29% to +253% and nearly every CHEAP flag is a late pick. By Weeks 1–8 the market has caught up and the flags didn't help, so they're hidden there. Each flag also says whether the same rule on FantasyCalc values agrees (<em>KTC + FC agree</em>) or not (<em>KTC only</em>); agreeing flags are being tracked to see if they do better.</p>
+          <p class="mt-1"><span class="px-1 rounded bg-emerald-600 text-white text-[10px] font-bold">CHEAP</span> / <span class="px-1 rounded bg-rose-500 text-white text-[10px] font-bold">PRICEY</span> <strong>Model vs market.</strong> Under each unsettled rookie's market value (the calculator's Blend of KTC and FantasyCalc by default, in your league's format; the flags below still compare against KTC, the price the rule was backtested on) is his odds of a 12+ PPG season in his first 3 years, from his usage and draft slot in the current view (the two inputs the backtests validated; trained on classes with 3 completed seasons, the same as the projected best season; refit every week). Only the current rookie class gets flags, and only with 2+ games in the view. Among them, CHEAP means KTC ranks him well below where his odds rank him (by at least a fifth of the list) <em>and</em> his value is at least 500 points (or 15%) below what a player at his odds rank is worth; PRICEY is the reverse. Older unsettled players show a "Y1 baseline" (odds from their rookie usage) with no flag, since the market also prices everything since then. Flags show only in the Games 1–4 view. Backtested against DynastyProcess market values (2020–2025 classes, rerun Nov 26): PRICEY is the strongest market signal we have; all 5 PRICEY rookies under this rule lost value against similar rookies (median −60% at 12 months). CHEAP is worth a look, not a buy call: CHEAP rookies gained on average (+53% at 12 months), but the range runs from −29% to +253% and nearly every CHEAP flag is a late pick. By Weeks 1–8 the market has caught up and the flags didn't help, so they're hidden there, and they switch off after Week 8 even in the Weeks 1–4 view (the backtest set them at Week 5 against Week 5 prices; by late season most were contradicted by what happened since). Each flag also says whether the same rule on FantasyCalc values agrees (<em>KTC + FC agree</em>) or not (<em>KTC only</em>); agreeing flags are being tracked to see if they do better.</p>
         </div>
         <div>
           <p class="font-bold text-slate-900 dark:text-slate-100">Best filter combinations</p>
@@ -448,6 +448,15 @@
     // among unsettled rookies at this position. CHEAP / PRICEY = the two ranks are far apart.
     function mvmKey() { return st.mode === 8 ? '8' : st.mode === 9 ? 'L' : '4'; }
     // CHEAP / PRICEY stay on KTC (the rule was backtested on KTC prices), even when the column shows Blend
+    // CHEAP / PRICEY are only backtested at Week 5 (Weeks 1–4 usage vs the market then) and found no edge by Week 9,
+    // so they run Weeks 5–8 only: off from the Tuesday after Week 8 (Week 1 = the Thursday after Labor Day). Calendar,
+    // not games played, so a rookie who stopped playing expires with everyone else. Same rule in scripts/log_signals.py.
+    function mvExpired(cls) {
+      const d = new Date(cls, 8, 1);
+      while (d.getDay() !== 1) d.setDate(d.getDate() + 1);   // Labor Day
+      d.setDate(d.getDate() + 3 + 54);                       // Week 1 Thursday + 54 days = Tuesday after Week 8
+      return Date.now() >= d.getTime();
+    }
     function computeMvm() {
       const key = mvmKey();
       DATA.forEach(p => { p.mv = null; });
@@ -469,6 +478,7 @@
       });
       // Same rule on FantasyCalc (KTC scale, sent by the hub): a flag that holds on both is "KTC + FC agree", as on the hub
       const fp = pool.filter(p => p.fK), fn = fp.length;
+      if (mvExpired(cls)) { pool.forEach(p => { if (p.mv) { p.mv.flag = ''; p.mv.expired = true; } }); return; }
       if (key === '4' && fn >= 6) {
         const fth = Math.max(3, Math.round(fn * 0.2)), byF = fp.slice().sort((a, b) => b.fK - a.fK);
         fp.slice().sort((a, b) => b.hp[key] - a.hp[key] || b.fK - a.fK).forEach((p, i) => {
@@ -561,7 +571,7 @@
         return `<div class="text-[10px] text-slate-400" title="Odds from his rookie-year usage. No CHEAP / PRICEY flag: the market also prices everything since then">${p.hp[mvmKey()]}% Y1 baseline</div>` + bestLine(p);
       }
       const m = p.mv;
-      const tip = `Odds of a 12+ PPG season in Years 1–3: ${m.hp}% (#${m.hr} of ${m.n} unsettled ${m.cls} rookie RBs) vs KTC #${m.kr} of ${m.n} (flags use KTC, the price the rule was tested on). A player valued at his odds rank would be worth about ${m.kAt.toLocaleString()} on KTC.`;
+      const tip = `${m.expired ? `CHEAP / PRICEY are off after Week 8 (only backtested for Weeks 5–8). ` : ''}Odds of a 12+ PPG season in Years 1–3: ${m.hp}% (#${m.hr} of ${m.n} unsettled ${m.cls} rookie RBs) vs KTC #${m.kr} of ${m.n} (flags use KTC, the price the rule was tested on). A player valued at his odds rank would be worth about ${m.kAt.toLocaleString()} on KTC.`;
       const agree = m.flag && m.fchk ? ` <span class="text-[9px] font-semibold text-slate-500 dark:text-slate-400" title="${m.both ? 'The same rule on FantasyCalc values also flags him' : 'On FantasyCalc values he would not be flagged'}">${m.both ? 'KTC + FC agree' : 'KTC only'}</span>` : '';
       const badge = (m.flag === 'cheap' ? ' <span class="px-1 rounded bg-emerald-600 text-white font-bold" title="Worth a look, not a buy call: the weaker side of the backtest">CHEAP</span>'
         : m.flag === 'pricey' ? ' <span class="px-1 rounded bg-rose-500 text-white font-bold" title="The strongest market signal in the backtests">PRICEY</span>' : '') + agree;

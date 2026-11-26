@@ -429,7 +429,7 @@
     <section id="view-scout" class="hidden space-y-4">
       <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
         <summary class="cursor-pointer font-bold">How to use this tab</summary>
-        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Buys &amp; sells — one list:</strong> every backtested signal on the site (WR BUY, Year 2 JUMPED, CHEAP / PRICEY, SELL NOW / SELL WINDOW) with each player's odds of 12+ and 14+ PPG and his class average. Buys are on other rosters, sells on yours; tick Whole league to see everyone. Open "What each signal is worth" for the backtest numbers.</li><li><strong>Rookie Buy Targets:</strong> rookies and second-year players on other teams with a BUY, Year 2 JUMPED or CHEAP flag from the rookie tabs.</li><li><strong>Risers and Fallers:</strong> the biggest recent value moves on rostered players in your league.</li><li><strong>Backfield Stash Alerts:</strong> free-agent RB2s behind aging starters, worth a bench spot before the starter gets hurt or falls off.</li><li><strong>Best Available:</strong> the most valuable unrostered players in your league, with Sleeper add trends. Check it before waivers run.</li><li>Tap any name for his value history and odds; everything follows the value mix you set at the top.</li></ul>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Buys &amp; sells — one list:</strong> every backtested signal on the site (WR BUY, Year 2 JUMPED, CHEAP / PRICEY, SELL NOW / SELL WINDOW) with each player's odds of 12+ and 14+ PPG and his class average. Buys are on other rosters, sells on yours; tick Whole league to see everyone. Open "What each signal is worth" for the backtest numbers.</li><li><strong>Risers and Fallers:</strong> the biggest recent value moves on rostered players in your league.</li><li><strong>Backfield Stash Alerts:</strong> free-agent RB2s behind aging starters, worth a bench spot before the starter gets hurt or falls off.</li><li><strong>Best Available:</strong> the most valuable unrostered players in your league, with Sleeper add trends. Check it before waivers run.</li><li>Tap any name for his value history and odds; everything follows the value mix you set at the top.</li></ul>
       </details>
       <!-- Buys & sells: every backtested signal on the site in one list, with each player's odds -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
@@ -445,6 +445,7 @@
           <ul class="list-disc pl-5 mt-1.5 space-y-1 leading-relaxed">
             <li><strong>WR BUY</strong> (role ahead of points: usage 15+, PPG under 10): 13 of 21 historical BUYs reached 12+ PPG, against about 7 of 21 rookies with the same early PPG.</li>
             <li><strong>Y2 JUMPED</strong> (second-year usage jump): 79% of RBs, 31% of WRs, 33% of TEs went on to a 12+ season.</li>
+            <li><strong>When CHEAP / PRICEY show</strong>: Weeks 5–8 only. The backtest set them at Week 5 against Week 5 prices and found no edge by Week 9; later in the season the market has priced what happened since Week 4 (Nov 26 check: 5 of the 6 flags still showing in Week 12 were contradicted by Weeks 5–11 usage).</li>
             <li><strong>PRICEY</strong> (KTC ranks him far above his odds, Weeks 1–4): the strongest market signal we have. Rerun Nov 26 on 2020–2025 rookies: all 5 PRICEY rookies under the live rule lost value against similar rookies (median −60% at 12 months); with a looser cutoff, 17 PRICEY rookies trailed by 56% at 12 months (95% range −72% to −31%).</li>
             <li><strong>CHEAP</strong> (KTC ranks him far below his odds, Weeks 1–4): worth a look, not a buy call. On average CHEAP rookies gained (+53% at 12 months), but the range runs from −29% to +253%: big hits (Puka Nacua, Chase Claypool) and busts. Nearly every CHEAP flag is a 3rd-round-or-later pick, so draft round doesn't separate them.</li>
             <li><strong>KTC + FC agree / KTC only</strong>: the CHEAP / PRICEY rule run again on FantasyCalc values. A flag that holds on both is ranked a little higher; the daily signal log will show whether consensus flags do better.</li>
@@ -455,15 +456,6 @@
             <li><strong>Act now / Solid move / Worth a look</strong>: urgency tiers, not a score. Act now = the best-tested sell signals (PRICEY with KTC + FC agreeing, SELL NOW, SELL WINDOW when rebuilding) and, for contenders, WR BUY / Y2 JUMPED players already scoring 12+ this season. Solid move = the other WR BUY / Y2 JUMPED buys, PRICEY on KTC only, SELL WINDOW when not rebuilding. Worth a look = CHEAP and MIXED. Each row keeps its own odds and backtest numbers. The retired Sell-High / Buy-Low radars were never backtested.</li>
           </ul>
         </details>
-      </div>
-
-      <!-- Rookie buy targets -->
-      <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5">
-        <div>
-          <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">🌱 Rookie Buy Targets (Other Rosters)</h2>
-          <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Rookies and second-year players on other teams with a BUY tag (role ahead of points), a Year 2 JUMPED tag, or CHEAP pricing (KTC ranks them well below their Weeks 1–4 hit odds; worth a look, the weaker side of the backtest). From the rookie tabs, refreshed every Tuesday. Offer loads the best-fitting package.</p>
-        </div>
-        <div id="rookieTargetsList" class="space-y-2"></div>
       </div>
 
       <!-- Risers & Fallers -->
@@ -1876,7 +1868,8 @@
       'joshua palmer': 'josh palmer', 'gabe davis': 'gabriel davis', 'mitchell trubisky': 'mitch trubisky',
       'nathaniel dell': 'tank dell', 'ken walker': 'kenneth walker', 'kenneth walker': 'kenneth walker',
       'joshua dobbs': 'josh dobbs', 'dj chark': 'dj chark', 'tutu atwell': 'tutu atwell', 'jeffery wilson': 'jeff wilson',
-      'cedrick wilson': 'cedrick wilson', 'scotty miller': 'scott miller', 'olabisi johnson': 'bisi johnson'
+      'cedrick wilson': 'cedrick wilson', 'scotty miller': 'scott miller', 'olabisi johnson': 'bisi johnson',
+      'kenny gainwell': 'kenneth gainwell', 'matt hibner': 'matthew hibner'
     };
     function aliasKey(n) { const k = normName(n); return NAME_ALIASES[k] || k; }
     function ktcFormatValue(item) {
@@ -4210,6 +4203,15 @@
     fetch(`./signals.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
       if (d && d.players) { SIGNALS = d; try { all(); } catch (e) { /* app not ready yet */ } }
     }).catch(() => {});
+    // CHEAP / PRICEY are only backtested at Week 5 (Weeks 1–4 usage vs the market then) and found no edge by Week 9,
+    // so they run Weeks 5–8 only: off from the Tuesday after Week 8 (Week 1 = the Thursday after Labor Day). Calendar,
+    // not games played, so a rookie who stopped playing expires with everyone else. Same rule in scripts/log_signals.py.
+    function mvExpired(cls) {
+      const d = new Date(cls, 8, 1);
+      while (d.getDay() !== 1) d.setDate(d.getDate() + 1);   // Labor Day
+      d.setDate(d.getDate() + 3 + 54);                       // Week 1 Thursday + 54 days = Tuesday after Week 8
+      return Date.now() >= d.getTime();
+    }
     function signalPlayers() {
       if (!SIGNALS || !P.length) return [];
       const byName = new Map();
@@ -4240,6 +4242,7 @@
           });
         }
         pool.forEach(x => { x.mv.both = !!x.mv.flag && x.mv.fflag === x.mv.flag; });
+        if (mvExpired(SIGNALS.season)) pool.forEach(x => { x.mv.staleFlag = x.mv.flag; x.mv.flag = ''; x.mv.fflag = ''; x.mv.both = false; x.mv.expired = true; });
       });
       return out;
     }
@@ -4284,7 +4287,7 @@
         const nowTilt = myArch === 'contender' ? Math.min(0.3, (x.p.rdv || 0) / 10000) : 0;
         const strong = x.s.sig.includes('buy') || x.s.sig.includes('jump');
         const btier = !strong || pricey ? 3 : myArch === 'contender' && SCORING(x) ? 1 : 2;
-        if (chips.length && (all || !mine)) buys.push({ p: x.p, o, chips, tier: btier, odds: oddsTxt(x), score: sc.reduce((a, b) => a + b, 0) + nowTilt + (own != null ? own / 100 : (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 0.79 : 0.3)) });
+        if (chips.length && (all || !mine)) buys.push({ p: x.p, o, chips, tier: btier, cls: `'${String(x.s.yr).slice(2)}${x.s.rd ? ` R${x.s.rd}` : ' UDFA'}`, odds: oddsTxt(x), score: sc.reduce((a, b) => a + b, 0) + nowTilt + (own != null ? own / 100 : (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 0.79 : 0.3)) });
         const mixedSell = x.s.sig.includes('buy');
         if (pricey && (all || mine)) sells.push({ p: x.p, o, tier: mixedSell ? 3 : x.m4.both ? 1 : 2, chips: [['PRICEY', `5 of 5 faded in the backtest · odds #${x.m4.hr} vs KTC #${x.m4.kr} of ${x.m4.n} · ${agree(x.m4)}`], ...(mixedSell ? [['MIXED', 'also a WR BUY: role ahead of his points']] : [])], odds: oddsTxt(x), score: x.m4.both ? 5.5 : 5 });
       });
@@ -4307,7 +4310,7 @@
       const TIER = { 1: ['Act now', 'bg-emerald-600 text-white', 'bg-rose-600 text-white'], 2: ['Solid move', 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300', 'bg-rose-500/15 text-rose-800 dark:text-rose-300'], 3: ['Worth a look', 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200', 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'] };
       const row = (r, kind) => `<div class="p-2.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] flex items-center justify-between gap-2">
           <div class="min-w-0 space-y-0.5">
-            <div class="flex flex-wrap items-center gap-1.5">${posTag(r.p.pos)}<button type="button" data-player="${r.p.id}" class="text-xs font-bold hover:underline cursor-pointer text-left">${esc(r.p.name)}</button><span class="text-[11px] font-bold ${MUTED}">${fmt(V[r.p.id])}</span>${r.chips.map(([c, t]) => `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${c === 'MIXED' ? 'bg-amber-400/20 text-amber-800 dark:text-amber-300' : kind === 'buy' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'}" title="${esc(t)}">${c} · ${esc(t)}</span>`).join('')}</div>
+            <div class="flex flex-wrap items-center gap-1.5">${posTag(r.p.pos)}<button type="button" data-player="${r.p.id}" class="text-xs font-bold hover:underline cursor-pointer text-left">${esc(r.p.name)}</button><span class="text-[11px] font-bold ${MUTED}">${fmt(V[r.p.id])}</span>${r.cls ? `<span class="text-[10px] ${MUTED}" title="Draft class and round">${r.cls}</span>` : ''}${r.chips.map(([c, t]) => `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${c === 'MIXED' ? 'bg-amber-400/20 text-amber-800 dark:text-amber-300' : kind === 'buy' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'}" title="${esc(t)}">${c} · ${esc(t)}</span>`).join('')}</div>
             <div class="text-[11px]">${r.odds || `<span class="${MUTED}">no model odds (he already has a 12+ season, or too few games)</span>`}</div>
             ${owners.length ? `<div class="text-[10px] ${MUTED}">${r.o ? (r.o === ME ? 'Your roster' : `On ${esc(T[r.o]?.n || r.o)}`) : 'Free agent'}</div>` : ''}
           </div>
@@ -4319,37 +4322,11 @@
       const who = winPick === 'auto' ? `Your team reads as ${{ rebuild: '<strong>rebuilding</strong>', contender: 'a <strong>contender</strong>', retool: '<strong>in between</strong> (Retool)' }[myArch] || '<strong>balanced</strong>'} (League tab rule)` : `Set to <strong>${myArch === 'rebuild' ? 'Rebuilder' : 'Contender'}</strong>`;
       const how = { rebuild: 'aging veterans move to the top of Sell and SELL WINDOW counts as Act now.', contender: 'rookies already scoring 12+ this season move up Buy (Act now), and SELL WINDOW veterans drop to Solid move (they still help this year).' }[myArch] || 'no reordering.';
       const pill = (v, t) => `<button type="button" data-bswin="${v}" class="px-2.5 py-1 font-semibold cursor-pointer ${winPick === v ? 'bg-blue-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}">${t}</button>`;
-      const bar = owners.length ? `<div class="lg:col-span-2 flex flex-wrap items-center gap-2 text-[11px] ${MUTED}"><span class="inline-flex rounded-lg border border-[#d6dbe3] dark:border-[#2e3540] overflow-hidden text-[11px]">${pill('auto', 'Auto')}${pill('rebuild', 'Rebuilder')}${pill('contender', 'Contender')}</span><span>${who}: ${how} Nothing is hidden.</span></div>` : '';
+      const expiredNote = mvExpired(SIGNALS.season) ? `<div class="lg:col-span-2 text-[11px] ${MUTED}">CHEAP / PRICEY only run Weeks 5–8, the window the backtest supports; they're off for the rest of the ${SIGNALS.season} season.</div>` : '';
+      const bar = (owners.length ? `<div class="lg:col-span-2 flex flex-wrap items-center gap-2 text-[11px] ${MUTED}"><span class="inline-flex rounded-lg border border-[#d6dbe3] dark:border-[#2e3540] overflow-hidden text-[11px]">${pill('auto', 'Auto')}${pill('rebuild', 'Rebuilder')}${pill('contender', 'Contender')}</span><span>${who}: ${how} Nothing is hidden.</span></div>` : '') + expiredNote;
       el.innerHTML = bar + col('Buy', buys, 'buy', all ? 'No buy signals right now.' : 'No buy signals on other rosters right now.') + col('Sell', sells, 'sell', all ? 'No sell signals right now.' : 'No sell signals on your roster right now.');
     }
 
-    function renderRookieTargets() {
-      const el = document.getElementById('rookieTargetsList');
-      if (!el) return;
-      const xs = signalPlayers().filter(x => OWN[x.p.id] !== ME && (x.s.sig.includes('buy') || x.s.sig.includes('jump') || (x.mv && x.mv.flag === 'cheap')));
-      if (!SIGNALS) { el.innerHTML = `<div class="text-xs ${MUTED} py-2">Rookie signals load from the weekly refresh (signals.json).</div>`; return; }
-      if (!xs.length) { el.innerHTML = `<div class="text-xs ${MUTED} py-2">No BUY, JUMPED or CHEAP rookies on other rosters right now.</div>`; return; }
-      const score = x => (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 3 : 0) + (x.s.sig.includes('buy') ? 2 : 0) + (x.s.sig.includes('jump') ? 1.5 : 0) + (x.mv && x.mv.flag === 'cheap' ? (x.mv.both ? 0.6 : 0.3) : 0) + (x.mv ? x.mv.now / 100 : 0);
-      xs.sort((a, b) => score(b) - score(a));
-      const why = x => {
-        const r = [];
-        if (x.s.sig.includes('buy')) r.push('WR BUY: role ahead of his points (13 of 21 historical BUYs hit)');
-        if (x.s.sig.includes('jump')) r.push(`Y2 ${x.s.pos} JUMPED (${x.s.pos === 'RB' ? '79%' : x.s.pos === 'TE' ? '33%' : '31%'} hit historically)`);
-        if (x.mv && x.mv.flag === 'cheap') r.push(`${x.s.yr} CHEAP (worth a look; ${x.mv.both ? 'KTC + FC agree' : 'KTC only'}): #${x.mv.hr} of ${x.mv.n} in his class on Weeks 1–4 odds but KTC #${x.mv.kr} · ${x.mv.now}% odds now`);
-        else if (x.mv) r.push(`${x.mv.now}% odds`);
-        return r.join(' · ');
-      };
-      el.innerHTML = xs.slice(0, 10).map(x => {
-        const o = OWN[x.p.id];
-        return `<div class="p-2.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] flex items-center justify-between gap-2">
-          <div class="min-w-0">
-            <div class="flex items-center gap-1.5">${posTag(x.p.pos)}<button type="button" data-player="${x.p.id}" class="text-xs font-bold truncate hover:underline cursor-pointer">${esc(x.p.name)}</button><span class="text-[11px] font-bold ${MUTED}">${fmt(V[x.p.id])}</span><span class="text-[10px] ${MUTED}">'${String(x.s.yr).slice(2)}${x.s.rd ? ` R${x.s.rd}` : ' UDFA'}</span></div>
-            <div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium mt-0.5">${o ? `On ${esc(T[o]?.n || o)}` : 'Free agent'} · ${esc(why(x))}</div>
-          </div>
-          ${o ? `<button type="button" data-acquire="${x.p.id}" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white shrink-0 cursor-pointer">Offer →</button>` : `<span class="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 shrink-0">Add him</span>`}
-        </div>`;
-      }).join('');
-    }
 
     // ---- Team timeline: project each team's Win Now (this-season) lineup 1 and 2 years out ----
     // Ages FantasyCalc redraft values, not dynasty values (dynasty values already price age).
@@ -4822,7 +4799,7 @@
       try { renderPlayoffCard(); renderTimeline(); renderPickGrid(); renderHandcuffs(); } catch (e) { console.error(e); }
       sendLeagueToFrames();
       renderScout();
-      try { renderBuySell(); renderRookieTargets(); renderStashAlerts(); } catch (e) { console.error(e); }
+      try { renderBuySell(); renderStashAlerts(); } catch (e) { console.error(e); }
       renderMovers();
       renderTradeHistory();
       if (st.pm && !document.getElementById('playerModal')?.classList.contains('hidden')) renderPlayerModal();
