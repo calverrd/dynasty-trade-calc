@@ -53,6 +53,12 @@ jobs:
         continue-on-error: true
         run: python3 scripts/build_context.py .
 
+      # Report current rookies that KTC or FantasyCalc can't be matched to by name (log only, never fails)
+      - name: Check rookie name matches
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: python3 scripts/check_names.py .
+
       - name: Commit and push ktc.json + history
         if: ${{ !cancelled() }}
         run: |
