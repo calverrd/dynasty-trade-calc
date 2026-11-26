@@ -34,8 +34,8 @@ Last updated: Nov 25, 2026 (afternoon).
 
 | League | ID | Format | Notes |
 |---|---|---|---|
-| Planet of the DynastyIM Apes | 1334642025076621312 | 12 teams, superflex, TE +0.5/rec | Default league in `index.html` |
-| Dirty Double Dozen | 1312492943805779968 | 24 teams, 1 QB, TE +0.5/rec; starts QB, RB, 2 WR, TE, 2 FLEX; 6 bench + 3 taxi, no IR | Valued as **superflex**: 24 starting QBs is the same QB demand as a 12-team superflex league. Picks are mapped onto the 12-team curve by overall pick number. |
+| Planet of the DynastyIM Apes | 1334642025076621312 | 12 teams, superflex, TE +0.5/rec; 6-team playoffs (2 byes, re-seeded), one-week rounds, no trade deadline | Default league in `index.html`. **Rookie draft order: lowest Max PF first** (owner, Nov 25; `draftOrder: 'maxpf'`). |
+| Dirty Double Dozen | 1312492943805779968 | 24 teams, 1 QB, TE +0.5/rec; starts QB, RB, 2 WR, TE, 2 FLEX; 6 bench + 3 taxi, no IR | Valued as **superflex**: 24 starting QBs is the same QB demand as a 12-team superflex league. Picks are mapped onto the 12-team curve by overall pick number. 8-team playoffs (re-seeded), one-week rounds, consolation losers bracket (`playoff_type` 1), trade deadline Week 12. **Rookie draft order: weighted lottery based on finish** (owner, Nov 25): slots are projected by standings (`draftLottery: true`), and the playoff card's last column is "Last place", not the 1.01. |
 
 ## 3. Site map
 
@@ -64,7 +64,7 @@ Main features and where they live:
 | Picks | `parsePickName`, `buildPickTable`, `anchorValue`, `pickValueFrom`, `pickOddsHtml` |
 | Value history and trend graphs | `loadHistory`, `srcHistVal`, `histSeries`, `trendWindow`, `graphMode` / `listMode`, `openPlayerModal` |
 | Lineups and rank impact | `solveLineup`, `teamStrength`, `tradeRankImpact` |
-| Hub cards | playoff odds (`#playoffCard`, 2,000 simulations); team timeline (AGE_R curves); pick-ownership grid; handcuffs and stash alerts (DEPTH/BFSH, `SID_OWNER`); rookie targets (`signalPlayers`); sell windows (`sellBadge`) |
+| Hub cards | playoff odds (`#playoffCard`, 2,000 seeded simulations of the rest of the regular season and the playoff bracket: Playoffs / Bye / Title / 1.01); team timeline (AGE_R curves); pick-ownership grid; handcuffs and stash alerts (DEPTH/BFSH, `SID_OWNER`); rookie targets (`signalPlayers`); sell windows (`sellBadge`) |
 | Trading tools | Fit score (`computeFit`); Copy DM Pitch (`buildPitch`); acquire flow (`data-acquire` → `startAcquire`); Trade ideas section (`#tradeIdeasSection`) with three modes: shop one player (`renderTradeIdeas`), Trade Finder for one target (`acquireIdeas`), and **ideas with one team** (`#ideaPartnerSel` or the League tab's Ideas button → `partnerIdeas`) |
 | Saved settings (localStorage) | adj, adjModel, fair, src, w, theme |
 
@@ -122,6 +122,11 @@ Rookie refresh safety (`scripts/refresh/check_outputs.py`, runs before the commi
   - The next draft has per-slot values, from KTC/FC early/mid/late anchors interpolated by projected slot.
   - Later drafts use generic values.
   - Leagues over 12 teams map each overall pick onto the 12-team curve.
+- **Trade playoff odds** (Nov 25): the calculator shows Playoffs / Bye / Title before → after for both teams (`tradeOddsStrip`), and one-team idea cards get a badge when any of them moves 1+ point for either team (`fillIdeaOdds`, filled a card at a time).
+    - Engine: `playoffModel()` builds once per league data (cached by records, Win Now and PF): per-team scoring means, the remaining Sleeper schedule, and pre-drawn standard normals from a seeded PRNG (mulberry32, seed = league + weeks played). `runPlayoffSim(m, mu)` replays those same 2,000 seasons (about 2 ms), so baseline and "after" differ only through the two teams' means. A bench-only or picks-only trade gives exactly 0 for all teams.
+    - Points per Win Now: only above-replacement scoring moves with lineup value. The slope is fit per league (team PPG on Win Now) and clamped to 30–50% of mean / average Win Now; it's used in both the baseline lineup term and the trade change. Apes, Nov 25: 47% (r = 0.90), about 2.2 points a week per 1,000 Win Now (the first version used 100%, 4.8 points, which was too steep).
+    - A trade moves a team's mean by that slope × the change in its best this-season lineup (FantasyCalc redraft values, picks 0). Past points per game were scored by the old roster, so mu' = w·(PPG + Δ) + (1 − w)·(lineup term + Δ) = mu + Δ.
+    - Bracket: standard seeding with byes for the top seeds (6 teams → 2 byes, 12 → 4); `playoff_seed_type` 1 re-seeds each round (confirmed on Apes' 2025 bracket: seed 1 played seed 6 in round 2); round length is `playoff_round_type` (`playoff_type` is the losers-bracket style): 0 = one week (both leagues; DDD's 2025 bracket ran 3 one-week rounds), 1 = two-week final and 2 = two-week rounds are assumptions; each week of a two-week round gets its own draw; higher seed wins ties. Hidden once the regular season is over (live bracket odds are a separate item).
 - **FantasyCalc input:** `fcFromCache` turns `data/fc/fc-{1qb|sf}-ppr{0|05|1}-none.json` back into FC's row shape for the sync code. The sync pill's tooltip shows the cache time.
 - **Trend graphs:** follow the selected source once FC history has 2+ days; until then they show KTC. Blend history reuses today's FC→KTC map (an approximation).
 
@@ -164,7 +169,7 @@ Rookie refresh safety (`scripts/refresh/check_outputs.py`, runs before the commi
         - Pre-flight (Nov 25): the dynasty payload's `redraftValue` covers the same 194 players as `isDynasty=false` and matches it exactly in SF / 1 PPR, but ignores the TE premium (25 TEs, up to +29%) and drifts 1–3% in 1QB formats. So each file also takes the `isDynasty=false` call.
         - League size: every league maps to 12 teams. FC's 8/10/14-team values differ from 12 by a median ~0.6–1% (max ~3% among the top 150); 16 is identical to 12; TE premium changes only TEs.
         - `index.html` uses the `none` files (it applies KTC's TE lift itself). `keeper.html` uses the league's TE-premium file, falling back to `none`.
-    - Use restriction 1b: FC data or derivatives may not be used to replicate or substitute for FC's trade calculator or other key features. **Owner decision** (e.g. ask FantasyCalc for written permission, or use FC only as a secondary signal).
+    - Use restriction 1b: FC data or derivatives may not be used to replicate or substitute for FC's trade calculator or other key features. **Owner decision (Nov 25): keep using FantasyCalc values for the time being.** Revisit if FantasyCalc objects or the terms change; the options were written permission, FC as a secondary signal only, or KTC-only trade grades.
 
 - **Fixed Nov 25 — Blend outside KTC and FC.** There were two causes:
     1. `evalValues` gave the value adjustment to whichever side led on the raw curve. When that lead flipped, the stud side's premium dropped from about +3,000 to 0, so a near-even stud-for-package verdict could swing about 30 points. Now the side with the best player always gets the adjustment, sized continuously. KTC reference trades are unchanged.
