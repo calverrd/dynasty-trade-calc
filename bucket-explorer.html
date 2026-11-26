@@ -3830,12 +3830,12 @@
       let h = '';
       if (cohorts.length === 1 && ranked.length >= 2) {
         h += list(ranked, cohorts[0] === 'rookie'
-          ? 'Ranked by the chance of a 12+ PPG season in Years 1–3: the usage model for WRs and RBs (Games 1–8 when he has the games, else Weeks 1–4); TEs use half model, half draft-round history.'
+          ? 'Ranked by the chance of a 12+ PPG season: in Years 1–3 for WRs and RBs (the usage model, Games 1–8 when he has the games, else Weeks 1–4); in any season for TEs (half model, half draft-round history).'
           : 'Ranked by the chance of 12+ PPG again next season (age table, same as the hub\'s SELL badges).');
       } else if (ranked.length) {
         const rk = ranked.filter(x => x.o.cohort === 'rookie'), vt = ranked.filter(x => x.o.cohort === 'vet');
         if (rk.length && vt.length) h += `<p class="text-[11px] text-amber-700 dark:text-amber-300 pb-1">Rookies and veterans answer different questions (breakout in Years 1–3 vs 12+ again next season), so they aren't ranked against each other.</p>`;
-        if (rk.length) h += list(rk, 'Rookies: chance of a 12+ PPG season in Years 1–3');
+        if (rk.length) h += list(rk, 'Rookies: chance of a 12+ PPG season (WR / RB: in Years 1–3)');
         if (vt.length) h += list(vt, 'Veterans: chance of 12+ PPG again next season');
       }
       if (ranked.some(x => x.o.cohort === 'rookie' && ['WR', 'RB'].includes(x.d.p.pos))) h += `<p class="text-[10px] text-slate-500 dark:text-slate-400 pt-1">Second number: chance of an elite season (WR 14+, RB 15+), same model rescaled, so the order doesn't change. A separate elite model ranked the same players the same way and was less accurate. TEs and veterans: 12+ only.</p>`;
@@ -3924,7 +3924,7 @@
           return parts.length ? parts.join(' · ') + ` <span class="text-slate-400">(${ELITE_LBL[d.p.pos]} PPG)</span>` : '<span class="text-slate-400">—</span>';
         };
         const best = d => d.tb ? `<strong>${d.tb.med.toFixed(1)}</strong> PPG <span class="text-slate-400">(middle half ${d.tb.lo.toFixed(1)}–${d.tb.hi.toFixed(1)}; ${d.tb.how === 'ladder' ? `same model as the odds, ${d.tb.view} usage and draft slot` : `15 closest past rookies on ${d.tb.view} usage and draft slot`})</span>` : '—';
-        h += cmpStrip('Early usage & model odds', cmpRow('Usage', each(use)) + cmpRow('12+ hit odds (usage + draft slot)', each(odds)) + cmpRow('Elite odds (WR 14+ / RB 15+)', each(elite)) + cmpRow('Flags', each(tags)) + cmpRow('Projected best season, Years 1–3', each(best)));
+        h += cmpStrip('Early usage & model odds', cmpRow('Usage', each(use)) + cmpRow('12+ odds (usage + draft slot; WR/RB: Years 1–3, TE: any season)', each(odds)) + cmpRow('Elite odds (WR 14+ / RB 15+, Years 1–3)', each(elite)) + cmpRow('Flags', each(tags)) + cmpRow('Projected best season, Years 1–3', each(best)));
         const y2 = d => (d?.sg?.u2 != null) ? `Rookie ${d.sg.u != null ? Number(d.sg.u).toFixed(1) : '—'} → Year 2 <strong>${Number(d.sg.u2).toFixed(1)}</strong>${(d.sg.sig || []).includes('jump') ? ' <span class="text-[10px] font-extrabold px-1.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">JUMPED</span>' : ''}` : '—';
         if (ds.some(d => d?.sg?.u2 != null)) h += cmpRow('Year 2 usage (Games 1–4)', each(y2));
       }
