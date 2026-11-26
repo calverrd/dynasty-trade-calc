@@ -87,9 +87,7 @@
           <a href="#league" data-tab="league" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">League</a>
           <a href="#scout" data-tab="scout" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Scout &amp; Waivers</a>
           <a href="#buckets" data-tab="buckets" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Profile Buckets</a>
-          <a href="#rookies" data-tab="rookies" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookie WRs</a>
-          <a href="#rbs" data-tab="rbs" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookie RBs</a>
-          <a href="#tes" data-tab="tes" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookie TEs</a>
+          <a href="#rookies" data-tab="rookies" data-group="rookies" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookies</a>
           <a href="#pros" data-tab="pros" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Prospects</a>
           <a href="#about" data-tab="about" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">How it works</a>
         </nav>
@@ -121,6 +119,16 @@
 
   <!-- ==================== MAIN CONTENT ==================== -->
   <main class="max-w-7xl mx-auto px-3 sm:px-5 py-4 space-y-5">
+
+    <!-- Rookies tab: one top tab, WR / RB / TE switcher over the three tracker pages (each still its own file and
+         iframe; #rookies, #rbs and #tes keep working as links) -->
+    <div id="rookiePosBar" class="hidden sticky top-0 z-20 -mx-1 px-1 py-1.5 bg-[#f6f7f9]/95 dark:bg-[#0f1216]/95 backdrop-blur">
+      <div role="group" aria-label="Rookie position" class="grid grid-cols-3 sm:inline-grid sm:grid-cols-3 gap-1 p-1 rounded-xl bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039]">
+        <button type="button" data-rookpos="rookies" class="rook-pos min-h-[44px] sm:min-h-0 px-5 py-2 rounded-lg text-sm font-extrabold cursor-pointer">WR</button>
+        <button type="button" data-rookpos="rbs" class="rook-pos min-h-[44px] sm:min-h-0 px-5 py-2 rounded-lg text-sm font-extrabold cursor-pointer">RB</button>
+        <button type="button" data-rookpos="tes" class="rook-pos min-h-[44px] sm:min-h-0 px-5 py-2 rounded-lg text-sm font-extrabold cursor-pointer">TE</button>
+      </div>
+    </div>
 
     <!-- ==================== TAB 1: TRADE CHART ==================== -->
     <section id="view-chart" class="hidden space-y-3">
@@ -1065,9 +1073,9 @@
         .replace(/[^a-z0-9]+/g, ' ')
         .trim();
     }
-    function posTag(pos) {
+    function posTag(pos, label) {
       const p = String(pos || 'WR').toUpperCase();
-      return `<span class="pos-${p} px-1.5 py-0.5 rounded text-[10px] font-extrabold tracking-wide shrink-0">${esc(p)}</span>`;
+      return `<span class="pos-${p} px-1.5 py-0.5 rounded text-[10px] font-extrabold tracking-wide shrink-0">${esc(label || p)}</span>`;
     }
     function ownTxt(id) {
       const o = OWN[id];
@@ -2775,13 +2783,16 @@
 
       const cnt = document.getElementById('chartCount');
       if (cnt) cnt.textContent = `${list.length} assets`;
+      // Positional rank (WR1, QB2, ...) by current value among every player at that position, whatever the filters
+      const posRank = {}, seen = {};
+      P.filter(p => !p.pick).sort((a, b) => (V[b.id] || 0) - (V[a.id] || 0)).forEach(p => { seen[p.pos] = (seen[p.pos] || 0) + 1; posRank[p.id] = seen[p.pos]; });
 
       tbody.innerHTML = list.slice(0, 150).map((p, idx) => `
         <tr class="hover:bg-[#f6f7f9] dark:hover:bg-[#1e242d]">
           <td class="py-2 pr-2 font-semibold text-[#5d6672] dark:text-[#98a2ae]">${idx + 1}</td>
           <td class="py-2 pr-2">
             <div class="flex items-center gap-2">
-              ${posTag(p.pos)}
+              ${posTag(p.pos, posRank[p.id] ? `${p.pos}${posRank[p.id]}` : '')}
               <div>
                 <button type="button" data-player="${p.id}" class="font-semibold hover:underline cursor-pointer text-left">${esc(p.name)}</button>${trendBadge(p)}
                 <div class="text-[11px] text-[#5d6672] dark:text-[#98a2ae]">${p.pick ? 'Draft Pick' : `${esc(p.team || 'FA')}${p.age ? ` · Age ${Number(p.age).toFixed(1)}` : ''}${p.ktcOnly ? ' · KTC only' : ''}`}</div>
@@ -4756,6 +4767,14 @@
       save();
     }
 
+    const ROOKIE_TABS = ['rookies', 'rbs', 'tes'];
+    function lastRookieTab() { try { const t = localStorage.getItem('dtv_rookie_pos'); return ROOKIE_TABS.includes(t) ? t : 'rookies'; } catch (e) { return 'rookies'; } }
+    function pinRookieBar() {   // sit just under the sticky header, whatever its height on this screen
+      const bar = document.getElementById('rookiePosBar'), hd = document.querySelector('header');
+      if (bar && hd) bar.style.top = hd.offsetHeight + 'px';
+    }
+    window.addEventListener('resize', pinRookieBar);
+    try { new ResizeObserver(pinRookieBar).observe(document.querySelector('header')); } catch (e) {}   // header height changes after sync
     function switchTab(tab) {
       if (!['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'pros', 'about'].includes(tab)) tab = 'calc';
       st.tab = tab;
@@ -4764,8 +4783,18 @@
         if (sec) sec.classList.toggle('hidden', t !== tab);
       });
       document.querySelectorAll('[data-tab]').forEach(a => {
-        a.classList.toggle('active', a.dataset.tab === tab);
+        a.classList.toggle('active', a.dataset.tab === tab || (a.dataset.group === 'rookies' && ROOKIE_TABS.includes(tab)));
       });
+      const isRookie = ROOKIE_TABS.includes(tab);
+      document.getElementById('rookiePosBar')?.classList.toggle('hidden', !isRookie);
+      document.querySelectorAll('.rook-pos').forEach(b => {
+        const on = b.dataset.rookpos === tab;
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.classList.toggle('bg-[#2563eb]', on); b.classList.toggle('text-white', on);
+        b.classList.toggle('text-[#5d6672]', !on); b.classList.toggle('dark:text-[#98a2ae]', !on);
+      });
+      if (isRookie) { try { localStorage.setItem('dtv_rookie_pos', tab); } catch (e) {} }
+      if (isRookie) pinRookieBar();
       if (tab === 'buckets') loadBucketsFrame();
       if (tab === 'rookies') loadRookiesFrame();
       if (tab === 'rbs') loadRbsFrame();
@@ -4825,9 +4854,10 @@
       document.querySelectorAll('[data-tab]').forEach(a => {
         a.addEventListener('click', e => {
           e.preventDefault();
-          switchTab(a.dataset.tab);
+          switchTab(a.dataset.group === 'rookies' ? lastRookieTab() : a.dataset.tab);   // Rookies reopens the last position
         });
       });
+      document.querySelectorAll('.rook-pos').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.rookpos)));
 
       document.getElementById('btnJumpIdeas')?.addEventListener('click', () => {
         switchTab('calc');

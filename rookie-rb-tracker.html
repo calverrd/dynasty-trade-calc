@@ -447,8 +447,61 @@
     // Typical best season for rookies like him: the 15 settled rookies closest to him on usage (in this view) and
     // draft slot, the same two inputs as the odds. Median best-season PPG, middle half in the tooltip.
     const BEST_CACHE = {};
+    // Projected best season (Games 1–4 / 1–8 views): the same ladder model as Compare players in bucket-explorer.html
+    // (logistic fits of P(best Years 1–3 PPG >= t) on usage + log pick, median at 50%, middle half = median + training
+    // residual quartiles; backtested Nov 2026). Keep the two copies identical. Other views keep the 15-closest median.
+    const LADDER_TS = Array.from({ length: 57 }, (_, i) => 2 + i * 0.5);
+    function ladderLogit(X, y) {   // Newton/IRLS, L2 1e-3 on every weight (same as the backtest)
+      const k = X[0].length + 1; let w = new Array(k).fill(0);
+      for (let it = 0; it < 50; it++) {
+        const H = Array.from({ length: k }, (_, i) => Array.from({ length: k }, (_, j) => i === j ? 1e-3 : 0)), g = w.map(v => 1e-3 * v);
+        X.forEach((x, n) => {
+          const r = [1, ...x]; const z = r.reduce((a, v, i) => a + v * w[i], 0); const p = 1 / (1 + Math.exp(-z)); const W = p * (1 - p) + 1e-9;
+          for (let i = 0; i < k; i++) { g[i] += r[i] * (p - y[n]); for (let j = 0; j < k; j++) H[i][j] += r[i] * r[j] * W; }
+        });
+        // solve H d = g (small system, Gaussian elimination)
+        const A = H.map((row, i) => [...row, g[i]]);
+        for (let c = 0; c < k; c++) { let m = c; for (let r2 = c + 1; r2 < k; r2++) if (Math.abs(A[r2][c]) > Math.abs(A[m][c])) m = r2; [A[c], A[m]] = [A[m], A[c]];
+          for (let r2 = 0; r2 < k; r2++) if (r2 !== c) { const f = A[r2][c] / A[c][c]; for (let j = c; j <= k; j++) A[r2][j] -= f * A[c][j]; } }
+        w = w.map((v, i) => v - A[i][k] / A[i][i]);
+      }
+      return w;
+    }
+    function ladderAt(model, z, q) {
+      let prev = Infinity; const P = model.ws.map(m => { const v = m.c != null ? m.c : 1 / (1 + Math.exp(-(m.w[0] + m.w[1] * z[0] + m.w[2] * z[1]))); prev = Math.min(prev, v); return prev; });
+      let j = -1; P.forEach((v, i) => { if (v >= q) j = i; });
+      if (j < 0) return LADDER_TS[0];
+      return (j + 1 < P.length && P[j] !== P[j + 1]) ? LADDER_TS[j] + (P[j] - q) / (P[j] - P[j + 1]) * 0.5 : LADDER_TS[j];
+    }
+    function pctl(a, q) { const s = a.slice().sort((x, y) => x - y), i = (s.length - 1) * q, lo = Math.floor(i); return s[lo] + (s[Math.min(lo + 1, s.length - 1)] - s[lo]) * (i - lo); }
+    const LADDER_CACHE = {};
+    function ladderBest(p) {
+      const mk = st.mode === 8 ? 'm8' : 'm4';
+      if (!LADDER_CACHE[mk]) {
+        const top = Math.max(...DATA.map(x => x.yr)) - 3;
+        const pool = DATA.filter(x => x.yr <= top && x.tier !== 'tbd' && x[mk] && x[mk].u != null && (x[mk].g || 0) >= 2 && x.b3 != null);
+        if (pool.length < 30) LADDER_CACHE[mk] = { none: true };
+        else {
+          const raw = pool.map(x => [x[mk].u, Math.log(x.pk || 300)]);
+          const mu = [0, 1].map(i => raw.reduce((a, r) => a + r[i], 0) / raw.length);
+          const sd = [0, 1].map(i => Math.sqrt(raw.reduce((a, r) => a + (r[i] - mu[i]) ** 2, 0) / raw.length) + 1e-9);
+          const Z = raw.map(r => [(r[0] - mu[0]) / sd[0], (r[1] - mu[1]) / sd[1]]), b = pool.map(x => x.b3 || 0);
+          const ws = LADDER_TS.map(t => { const y = b.map(v => v >= t ? 1 : 0), s1 = y.reduce((a, v) => a + v, 0);
+            return (s1 > 0 && s1 < y.length) ? { w: ladderLogit(Z, y) } : { c: s1 / y.length }; });
+          const model = { ws, mu, sd };
+          const res = Z.map((z, i) => b[i] - ladderAt(model, z, 0.5));
+          LADDER_CACHE[mk] = { model, r25: pctl(res, 0.25), r75: pctl(res, 0.75), top };
+        }
+      }
+      const c = LADDER_CACHE[mk];
+      if (c.none || (p.g || 0) < 2) return null;
+      const z = [(p.u - c.model.mu[0]) / c.model.sd[0], (Math.log(p.pk || 300) - c.model.mu[1]) / c.model.sd[1]];
+      const med = Math.max(0, ladderAt(c.model, z, 0.5));
+      return { med, lo: Math.max(0, med + c.r25), hi: med + c.r75, fixed: true, top: c.top, ladder: true };
+    }
     function typBest(p) {
       if (p.u == null || p.tot == null) return null;
+      if (!st.y2 && (st.mode === 4 || st.mode === 8)) return ladderBest(p);
       const key = st.mode;
       if (!BEST_CACHE[key]) {
         const fixed = DATA.some(x => x.b3 != null), top = Math.max(...DATA.map(x => x.yr)) - (fixed ? 3 : 2);
@@ -464,6 +517,7 @@
     }
     function bestLine(p) {
       const t = typBest(p); if (!t) return '';
+      if (t.ladder) return `<div class="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap" title="Projected best season in his first 3 years, from the same inputs as the hit odds (usage in this view and draft slot; 2015–${t.top} classes, 2+ games). Middle half: ${t.lo.toFixed(1)}–${t.hi.toFixed(1)} PPG. Rookies who never played an 8-game season count as 0, so this is a typical outcome, not his PPG if healthy. Backtested: about half of past players landed inside the middle-half range. Same number as Compare players on the Profile Buckets tab.">proj. best ${t.med.toFixed(1)} PPG (Yrs 1–3)</div>`;
       return `<div class="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap" title="Median best season ${t.fixed ? 'in his first 3 years ' : ''}of the 15 past rookies closest to him on usage in this view and draft slot (2015–${t.top} classes). Middle half: ${t.lo.toFixed(1)}–${t.hi.toFixed(1)} PPG. Rookies who never played an 8-game season count as 0, so this is a typical outcome, not his PPG if healthy. Backtested: about half of past players landed inside the middle-half range.">typ. best ${t.med.toFixed(1)} PPG${t.fixed ? ' (Yrs 1–3)' : ''}</div>`;
     }
     function mvmLine(p) {

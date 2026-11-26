@@ -48,7 +48,7 @@ Every page has `<meta name="robots" content="noindex, nofollow">` in its `<head>
 - League
 - Scout & Waivers
 - Profile Buckets
-- Rookie WRs, Rookie RBs, Rookie TEs
+- Rookies (one tab; a WR / RB / TE switcher, `#rookiePosBar`, over the three tracker iframes. Internal tab ids stay `rookies` / `rbs` / `tes`, so those hashes still open the right position; the Rookies tab reopens the last one, `dtv_rookie_pos`.)
 - Prospects
 - How it works
 
