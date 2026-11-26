@@ -19,9 +19,19 @@ Usage: python3 scripts/log_signals.py [repo root]
 """
 import datetime, json, os, re, sys, unicodedata
 
+
+def mv_expired(cls, today=None):
+    """Same rule as the hub's mvExpired(): CHEAP / PRICEY run Weeks 5-8 only, off from the Tuesday after Week 8
+    (Week 1 = the Thursday after Labor Day)."""
+    d = datetime.date(cls, 9, 1)
+    while d.weekday() != 0:
+        d += datetime.timedelta(days=1)
+    return (today or datetime.datetime.now(datetime.timezone.utc).date()) >= d + datetime.timedelta(days=3 + 54)
+
 ROOT = sys.argv[1] if len(sys.argv) > 1 else "."
 RULES = "v2 (2026-11-26): + FantasyCalc check on CHEAP/PRICEY"
-# Log layout: 1 = flagged players only; 2 = + an unflagged comparison group (cohort "rookie" / "veteran", flags [])
+# Log layout: 1 = flagged players only; 2 = + an unflagged comparison group (cohort "rookie" / "veteran", flags []),
+# and mv.flag / mv.stale: CHEAP / PRICEY after Week 8 are recorded in mv only (stale: true), not in flags, as the site hides them
 LOG_SCHEMA = 2
 
 
@@ -51,7 +61,10 @@ def main():
             "ktc_sf": (p.get("superflexValues") or {}).get("value"), "ktc_1qb": (p.get("oneQBValues") or {}).get("value"),
         }
     ci = {x: i for i, x in enumerate(fc["fields"])}
-    F = {f"{r[ci['pos']]}|{key(r[ci['name']])}": r for r in fc["players"]}
+    # FantasyCalc spelling -> KTC spelling, same pairs as NAME_ALIASES in index.html (only the ones that differ)
+    FC_TO_KTC = {"chigokonkwo": "chigoziemokonkwo", "kennygainwell": "kennethgainwell", "matthibner": "matthewhibner",
+                 "hollywoodbrown": "marquisebrown", "kenwalker": "kennethwalker", "nathanieldell": "tankdell"}
+    F = {f"{r[ci['pos']]}|{FC_TO_KTC.get(key(r[ci['name']]), key(r[ci['name']]))}": r for r in fc["players"]}
 
     rows = {}   # pos|key -> logged row
 
@@ -125,10 +138,13 @@ def main():
             flag = ("CHEAP" if gap >= th else "PRICEY" if gap <= -th else None) if big else None
             # every pool member is logged (flagged or not), so a later test can compare flagged players with
             # unflagged peers priced on the same day
+            # after Week 8 the site hides CHEAP / PRICEY; the would-be flag is still logged (not in `flags`) as stale
+            stale = mv_expired(season)
             r = row(pos, s["n"])
-            if flag:
+            if flag and not stale:
                 r["flags"].append(flag)
-            r["mv"] = {"odds_rank": i + 1, "ktc_rank": kr, "pool": n, "fc_flag": fc_flags.get(s["n"], "")}
+            r["mv"] = {"odds_rank": i + 1, "ktc_rank": kr, "pool": n, "fc_flag": fc_flags.get(s["n"], ""),
+                       "flag": flag or "", "stale": stale}
 
     # comparison group: every rookie on the rookie tabs this season and last (the WR BUY / JUMP / MISSED classes)
     for s in players:
