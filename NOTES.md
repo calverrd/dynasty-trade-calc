@@ -168,6 +168,7 @@ Rookie refresh safety (`scripts/refresh/check_outputs.py`, runs before the commi
 ## 8. Open items
 
 - **League tab team detail** (Nov 25): a Value / Position toggle (`st.rosterSort`) sorts the opened team's players (QB, RB, WR, TE, then value, with position labels) and picks (by year, round, slot, with year labels).
+    - The opened detail is pinned (`position: sticky`, width = the table's visible width, refit on resize) so on phones the value column is on screen even though the League table itself scrolls sideways.
 
 - **FantasyCalc API terms** (https://fantasycalc.com/terms-of-usage, https://fantasycalc.com/api-docs, effective Oct 10, 2026; free under 1,000 monthly users with attribution):
     - A visible "FantasyCalc" link to https://fantasycalc.com near the data on every page using it, with at least one in the static HTML. Done: `index.html` header next to the Blend/KTC/FC toggle (Nov 25); `keeper.html` footer already had one.
@@ -184,7 +185,15 @@ Rookie refresh safety (`scripts/refresh/check_outputs.py`, runs before the commi
     - The verdict is steep near even (about 0.12 points per value point against a 3,000 + 2,900 package) but has no jumps. That steepness is KTC's own model, the same one that matches the reference trades.
     - Calibration now shows how many trades are uneven (only those move with the setting) and the best fit for KTC and FC separately.
     - Every trade grade now goes through `evalIds`: calculator, offer check, league trades, calibration, Trade ideas. Asset-level Blend values (`valueFor`) are still used for the chart, totals and "add X" suggestions.
-- **Built Nov 25 — player comparison** (`bucket-explorer.html`, "Compare two players" section; `wireCompare` / `renderCompare`). Value-free: no KTC, no FC, no CHEAP/PRICEY.
+- **Built Nov 25 — player comparison** (`bucket-explorer.html`, "Compare players" section; `wireCompare` / `renderCompare`). Value-free by default: no KTC, no FC, no CHEAP/PRICEY.
+    - **2–4 players + ranked summary** (Nov 25, `rankSummary` / `rankOdds`). Rule from a walk-forward backtest (to predict class Y, only classes ≤ Y−3; test classes 2018–2023; Brier / log-loss):
+        - WR: usage model 0.0701 (Games 1–8 view 0.0675); bucket alone 0.0931; draft round 0.1063; equal 3-way blend 0.0740; weights chosen year by year from earlier years 0.0765. RB: model 0.1278 (Games 1–8 0.1171); nested blend 0.1286. Draft round's best weight is 0% for WR and RB (the model already has draft slot). Buckets can't be tested fairly: bucket lists name most hits but count many busts only as a total, so named members skew to hits (47 of 82 WRs).
+        - TE (64 players, 8 hits): model 0.150, draft round 0.128, 50/50 model + draft round 0.121.
+        - Typical best season in the comparison uses the same view as the ranking (Games 1–8 when he has 2+ of those games), so it matches the rookie tab's Games 1–8 view (Bernard 12.9 on both).
+        - So: WR/RB rookies ranked by the usage model alone (Games 1–8 when he has 2+ of those games, else Weeks 1–4); TE rookies by 50/50 model + draft-round 12+ rate, tagged "TE small sample"; a player whose 12+ season is already on the books shows "already hit". Each row shows a sample tag (e.g. "8g", "4g · thin" under 6 games, "rookie yr" for sophomores). Buckets and draft history stay as context rows.
+        - Veterans ranked by next-season 12+ odds (`sellOdds`). Rookies and veterans are never ranked together; a mixed group gets two labeled lists. Players without odds are listed as not ranked, with the reason.
+    - **Market line** (opt-in, off by default): loads `ktc.json` and `data/fc/fc-{sf|1qb}-ppr1-none.json` only when switched on; SF / 1QB switch; shows KTC / FC and a market rank (average of the two ranks in the group) and flags "cheap for his odds" / "priced above his odds" when market and odds ranks differ by 2+ (1+ for two players).
+    - Name variants between the bucket sheet and the rookie tabs (Kevin vs KC Concepcion) are matched by class + last name + first initial when unique.
     - Any positions. Two search boxes (datalist of every bucket player), Swap, and a Safe / Upside toggle that sets which odds line comes first.
     - Safe = 12+ PPG (QB 16+) from bucket `nearTotal` (TE: hit). Upside = WR 14+ / RB 15+ / TE 17+ / QB 20+ from bucket `hit` (TE: `elite`).
     - Odds and comps always come from the player's own bucket. The type (e.g. Konami vs Pocket) is the point of a bucket, so the owner decided against pooling other types at the same tier (Nov 25).

@@ -271,22 +271,25 @@
     </section>
 
     <!-- Player Comparison (value-free) -->
-    <section id="cmpSection" aria-label="Compare two players" class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 space-y-3">
+    <section id="cmpSection" aria-label="Compare players" class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 space-y-3">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Compare two players</h2>
-          <p class="text-xs text-slate-600 dark:text-slate-400">Odds only — no trade values. Profile bucket for everyone, plus early usage and model odds for recent rookies, draft-slot history, and career seasons. Any positions.</p>
+          <h2 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Compare players</h2>
+          <p class="text-xs text-slate-600 dark:text-slate-400">Two to four players, ranked on odds only (trade values only if you switch on the market line). Profile bucket for everyone, plus early usage and model odds for recent rookies, draft-slot history, and career seasons. Any positions.</p>
         </div>
         <div class="inline-flex rounded-lg border border-slate-300 dark:border-slate-700 overflow-hidden text-xs font-bold">
           <button type="button" data-cmpmode="safe" class="cmp-mode px-3 py-1.5">Safe</button>
           <button type="button" data-cmpmode="upside" class="cmp-mode px-3 py-1.5">Upside</button>
         </div>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-2 items-center">
-        <input id="cmpA" list="cmpList" type="search" autocomplete="off" placeholder="Player A — type a name" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
-        <button id="cmpSwap" type="button" title="Swap players" class="justify-self-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">⇄</button>
-        <input id="cmpB" list="cmpList" type="search" autocomplete="off" placeholder="Player B — type a name" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <input id="cmpA" list="cmpList" type="search" autocomplete="off" placeholder="Player 1 — type a name" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
+        <input id="cmpB" list="cmpList" type="search" autocomplete="off" placeholder="Player 2" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
+        <input id="cmpC" list="cmpList" type="search" autocomplete="off" placeholder="Player 3 (optional)" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
+        <input id="cmpD" list="cmpList" type="search" autocomplete="off" placeholder="Player 4 (optional)" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
       </div>
+      <label class="inline-flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none"><input id="cmpMkt" type="checkbox" class="accent-sky-600"> Show market values (KTC + FantasyCalc) next to the ranking
+        <select id="cmpMktFmt" class="hidden bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-md px-1.5 py-0.5 text-xs"><option value="sf">SF · 1 PPR</option><option value="1qb">1QB · 1 PPR</option></select></label>
       <datalist id="cmpList"></datalist>
       <div id="cmpOut" class="text-sm"></div>
     </section>
@@ -2617,7 +2620,7 @@
     // Safe  = 12+ PPG (QB 16+) — bucket nearTotal (TE: hit, which is 12+)
     // Upside = WR 14+ / RB 15+ / TE 17+ / QB 20+ — bucket hit (TE: elite)
     // =========================================================================
-    const CMP = { a: null, b: null, mode: 'safe', extra: null, loading: null };
+    const CMP = { ids: [null, null, null, null], mode: 'safe', extra: null, loading: null, market: false, mktFmt: 'sf', mkt: null };
     const cmpLabel = p => `${p.name} (${p.pos} ${p.year})`;
     const CMP_BY_LABEL = new Map();
     const safeOf = b => b.noNear ? b.hitPct : b.nearTotalPct;
@@ -2681,7 +2684,14 @@
       const d = ex?.track[p.pos];
       if (!d) return null;
       const k = cmpNorm(p.name);
-      return d.find(x => cmpNorm(x.n) === k && Math.abs(x.yr - p.year) <= 1) || null;
+      const exact = d.find(x => cmpNorm(x.n) === k && Math.abs(x.yr - p.year) <= 1);
+      if (exact) return exact;
+      // Name variants between the bucket sheet and the rookie tabs (e.g. "Kevin Concepcion" = "KC Concepcion"):
+      // same class, same last name, same first initial, and only one such player
+      const parts = n => String(n).replace(/\b(jr|sr|ii|iii|iv|v)\b\.?/gi, '').trim().split(/\s+/);
+      const last = n => cmpNorm(parts(n).slice(-1)[0] || ''), first = n => cmpNorm(parts(n)[0] || '').charAt(0);
+      const alt = d.filter(x => x.yr === p.year && last(x.n) === last(p.name) && first(x.n) === first(p.name));
+      return alt.length === 1 ? alt[0] : null;
     }
     const roundGroup = rd => rd == null ? 'UDFA' : rd <= 3 ? `Round ${rd}` : 'Day 3';
     function draftBaseline(p, tr, ex) {
@@ -2698,31 +2708,35 @@
 
     const VIEW_KEY = { WR: ['u', 'g'], RB: ['u', 'g'], TE: ['u8', 'g8'] };
     const TB_CACHE = {};
+    // Same view as the ranking: Games 1–8 when he has 2+ of those games (the backtest's better view), else Weeks 1–4
     function typBestCmp(pos, tr, ex) {
       if (!tr || !ex || !VIEW_KEY[pos]) return null;
-      const [uk, gk] = VIEW_KEY[pos];
+      const [uk, gk] = (pos !== 'TE' && tr.u8 != null && tr.g8 >= 2) ? ['u8', 'g8'] : VIEW_KEY[pos];
+      const ck = `${pos}|${uk}`;
       if (tr[uk] == null || !tr[gk]) return null;
-      if (!TB_CACHE[pos]) {
+      if (!TB_CACHE[ck]) {
         const d = ex.track[pos];
         const top = Math.max(...d.map(x => x.yr)) - 3;
         const pool = d.filter(x => x.yr <= top && x.tier !== 'tbd' && x[uk] != null && x[gk] && x.b3 != null)
           .map(x => ({ u: x[uk], lp: Math.log(x.pk || 300), b: x.b3 || 0 }));
         const sd = a => { const m = a.reduce((q, v) => q + v, 0) / a.length; return Math.sqrt(a.reduce((q, v) => q + (v - m) ** 2, 0) / a.length) || 1; };
-        TB_CACHE[pos] = { pool, su: sd(pool.map(x => x.u)), sl: sd(pool.map(x => x.lp)) };
+        TB_CACHE[ck] = { pool, su: sd(pool.map(x => x.u)), sl: sd(pool.map(x => x.lp)), uk };
       }
-      const { pool, su, sl } = TB_CACHE[pos];
+      const { pool, su, sl } = TB_CACHE[ck];
       if (pool.length < 15) return null;
       const lp = Math.log(tr.pk || 300);
       const nb = pool.map(x => ({ dd: Math.hypot((x.u - tr[uk]) / su, (x.lp - lp) / sl), b: x.b })).sort((a, b) => a.dd - b.dd).slice(0, 15).map(x => x.b).sort((a, b) => a - b);
       const q = f => nb[Math.min(nb.length - 1, Math.floor(f * (nb.length - 1) + 0.5))];
-      return { med: q(0.5), lo: q(0.25), hi: q(0.75) };
+      return { med: q(0.5), lo: q(0.25), hi: q(0.75), view: uk === 'u8' ? 'Games 1–8' : (pos === 'WR' ? 'Weeks 1–4' : 'Games 1–4') };
     }
     function cmpPlayerData(p, ex) {
       const b = BUCKET_BY_ID.get(p.bucketId);
       const fb = b.n < 5 ? tierWide(p.pos, tierOf(b.name)) : null;
       const tr = trackRow(p, ex);
-      const sg = ex?.sigBy.get(`${p.pos}|${cmpNorm(p.name)}`) || null;
-      const pg = ex?.ppgBy.get(`${p.pos}|${cmpNorm(p.name)}`) || null;
+      const nm2 = tr && tr.n !== p.name ? tr.n : null;   // the rookie tab's spelling, if different
+      const look = map => map?.get(`${p.pos}|${cmpNorm(p.name)}`) || (nm2 && map?.get(`${p.pos}|${cmpNorm(nm2)}`)) || null;
+      const sg = look(ex?.sigBy);
+      const pg = look(ex?.ppgBy);
       // Comps and odds always come from his own bucket: the player type (e.g. Konami vs Pocket) is the point of
       // the bucket, so pooling other types at the same tier would mix different ways of scoring
       const others = b.players.filter(x => x.id !== p.id && !x.isRookie);
@@ -2737,21 +2751,127 @@
         safe: safeOf(b), up: upOf(b), rep: b.repPct };
     }
 
-    // cmpBar(label, valueA, valueB, thresholdA, thresholdB, samePos): the +N lead pill only on same-position pairs,
-    // since different positions have different scarcity bars
-    function cmpBar(label, va, vb, ta, tb, samePos) {
-      const cell = (v, other, th) => {
+    // ---- Layout helpers: a label column plus one column per player (1–4) ----
+    const cmpGrid = n => `style="grid-template-columns: minmax(4.5rem, 7.5rem) repeat(${n}, minmax(0, 1fr))"`;
+    // One bar per player; the "+N" lead pill goes only on the leader, and only when everyone shares a position
+    // (different positions have different PPG bars) and no bucket is a small sample
+    function cmpBar(label, vals, ths, samePos) {
+      const n = vals.length;
+      const real = vals.filter(v => v != null).sort((a, b) => b - a);
+      const lead = samePos && real.length >= 2 && real[0] - real[1] >= 3 ? real[0] - real[1] : 0;
+      const cell = (v, th) => {
         if (v == null) return `<div class="text-xs text-slate-400">—</div>`;
-        const lead = samePos && other != null && v - other >= 3;
-        return `<div class="space-y-0.5"><div class="flex items-baseline gap-1.5"><span class="font-extrabold tabular-nums">${v.toFixed(0)}%</span>${th ? `<span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">${th}</span>` : ''}${lead ? `<span class="text-[10px] font-bold px-1.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">+${(v - other).toFixed(0)}</span>` : ''}</div>
+        const pill = lead && v === real[0] ? `<span class="text-[10px] font-bold px-1.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">+${lead.toFixed(0)}</span>` : '';
+        return `<div class="space-y-0.5 min-w-0"><div class="flex flex-wrap items-baseline gap-x-1.5"><span class="font-extrabold tabular-nums">${v.toFixed(0)}%</span>${th ? `<span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">${th}</span>` : ''}${pill}</div>
           <div class="h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full bg-emerald-500" style="width:${Math.max(0, Math.min(100, v))}%"></div></div></div>`;
       };
-      return `<div class="grid grid-cols-[4.75rem_1fr_1fr] sm:grid-cols-[7.5rem_1fr_1fr] gap-x-2 sm:gap-x-3 gap-3 items-center py-1.5 border-t border-slate-100 dark:border-slate-800">
-        <div class="text-[11px] font-bold text-slate-600 dark:text-slate-400 leading-tight">${label}</div>${cell(va, vb, ta)}${cell(vb, va, tb)}</div>`;
+      return `<div class="grid gap-x-2 sm:gap-x-3 gap-3 items-center py-1.5 border-t border-slate-100 dark:border-slate-800" ${cmpGrid(n)}>
+        <div class="text-[11px] font-bold text-slate-600 dark:text-slate-400 leading-tight">${label}</div>${vals.map((v, i) => cell(v, ths[i])).join('')}</div>`;
     }
-    const cmpRow = (label, a, b) => `<div class="grid grid-cols-[4.75rem_1fr_1fr] sm:grid-cols-[7.5rem_1fr_1fr] gap-x-2 sm:gap-x-3 gap-3 items-start py-1.5 border-t border-slate-100 dark:border-slate-800">
-      <div class="text-[11px] font-bold text-slate-600 dark:text-slate-400 leading-tight">${label}</div><div class="text-xs">${a}</div><div class="text-xs">${b}</div></div>`;
+    const cmpRow = (label, cells) => `<div class="grid gap-x-2 sm:gap-x-3 gap-3 items-start py-1.5 border-t border-slate-100 dark:border-slate-800" ${cmpGrid(cells.length)}>
+      <div class="text-[11px] font-bold text-slate-600 dark:text-slate-400 leading-tight">${label}</div>${cells.map(c => `<div class="text-xs min-w-0 break-words">${c}</div>`).join('')}</div>`;
     const cmpStrip = (title, body) => `<div class="pt-2"><div class="text-[11px] font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-400">${title}</div>${body}</div>`;
+
+    // ---- Ranked summary. The rule comes from the walk-forward backtest (classes 2018–2023, Nov 25, NOTES.md):
+    // WR/RB rookies: the usage model alone (Games 1–8 view when he has 2+ of those games, else Weeks 1–4); draft
+    // round added nothing once the model had it, and bucket lists can't be tested fairly (busts aren't all named).
+    // TE rookies: 50/50 usage model + draft-round history (small sample: 64 players, 8 hits). Veterans: next-season
+    // 12+ odds from the age table. Rookies and veterans are different questions, so they're never ranked together.
+    function rankOdds(d, ex) {
+      const pos = d.p.pos;
+      const early = !!(d && (d.early || d.sg));
+      if (early && ['WR', 'RB', 'TE'].includes(pos)) {
+        const hp = d.tr?.hp || d.sg?.hp || {};
+        const g8 = d.tr?.g8, g4 = d.tr?.g;
+        // Already hit 12+ in a completed season (his class isn't settled yet, but this part is known)
+        if (d.tr && d.tr.tier && d.tr.tier !== 'tbd' && d.tr.tier !== 'red') return { cohort: 'rookie', p: 100, tag: 'already hit 12+', view: 'completed season' };
+        let model = null, view = '', games = null;
+        if (hp['8'] != null && (g8 == null || g8 >= 2)) { model = hp['8']; view = 'Games 1–8'; games = g8; }
+        else if (hp['4'] != null && (g4 == null || g4 >= 2)) { model = hp['4']; view = pos === 'WR' ? 'Weeks 1–4' : 'Games 1–4'; games = g4; }
+        if (model == null) return { cohort: 'rookie', why: 'no model odds yet (needs 2+ games)' };
+        const thin = games != null && games < 6;
+        const tag = `${games != null ? games + 'g' : view}${thin ? ' · thin' : ''}${d.soph ? ' · rookie yr' : ''}`;
+        if (pos === 'TE') {
+          if (d.base?.safe == null) return { cohort: 'rookie', p: model, tag: tag + ' · TE, no draft history', view, te: true };
+          return { cohort: 'rookie', p: 0.5 * model + 0.5 * d.base.safe, tag: tag + ' · TE small sample', view, te: true, model, draft: d.base.safe };
+        }
+        return { cohort: 'rookie', p: model, tag, view };
+      }
+      if (!early) {
+        const x = sellOdds(d.p, d.pg, ex);
+        if (x.odds != null) return { cohort: 'vet', p: x.odds, tag: `age ${Math.floor(x.age)}, ${x.n} similar` };
+        return { cohort: 'vet', why: x.why };
+      }
+      return { cohort: 'rookie', why: `no rookie model for ${pos}s` };
+    }
+
+    // ---- Market line (opt-in, off by default; loads ktc.json and one FantasyCalc cache file only when switched on) ----
+    async function cmpLoadMarket(fmt) {
+      CMP.mktCache = CMP.mktCache || {};
+      if (CMP.mktCache[fmt]) return CMP.mktCache[fmt];
+      const getJson = u => fetch(u, { cache: 'no-cache' }).then(r => r.ok ? r.json() : null).catch(() => null);
+      const [ktc, fc] = await Promise.all([getJson('./ktc.json'), getJson(`./data/fc/fc-${fmt}-ppr1-none.json`)]);
+      const k = new Map(), f = new Map();
+      (ktc?.players || []).forEach(p => { const v = (fmt === 'sf' ? p.superflexValues : p.oneQBValues)?.value; if (v) k.set(`${p.position}|${cmpNorm(p.playerName)}`, v); });
+      if (fc?.players) { const c = x => fc.fields.indexOf(x); fc.players.forEach(r => { if (r[c('val')] > 0) f.set(`${r[c('pos')]}|${cmpNorm(r[c('name')])}`, r[c('val')]); }); }
+      return (CMP.mktCache[fmt] = { k, f, updated: fc?.updated || null });
+    }
+    const mktOf = (d, m) => {
+      const names = [d.p.name, d.tr?.n].filter(Boolean).map(cmpNorm);   // bucket names can differ (Kevin vs KC Concepcion)
+      const find = map => { for (const n of names) { const v = map.get(`${d.p.pos}|${n}`); if (v) return v; } return null; };
+      return { k: find(m.k), f: find(m.f) };
+    };
+
+    function rankSummary(ds, ex) {
+      const r = ds.map(d => ({ d, o: rankOdds(d, ex) }));
+      const ranked = r.filter(x => x.o.p != null), unranked = r.filter(x => x.o.p == null);
+      const cohorts = [...new Set(ranked.map(x => x.o.cohort))];
+      const m = CMP.market && CMP.mkt ? CMP.mkt : null;
+      // Market rank: average of each player's KTC and FantasyCalc rank within this group
+      const mrank = {};
+      if (m) {
+        const vals = ranked.map(x => ({ x, v: mktOf(x.d, m) }));
+        const rk = key => { const s = vals.filter(y => y.v[key]).sort((a, b) => b.v[key] - a.v[key]); const o = {}; s.forEach((y, i) => { o[y.x.d.p.id] = i + 1; }); return o; };
+        const rk1 = rk('k'), rk2 = rk('f');
+        const avg = vals.map(y => ({ id: y.x.d.p.id, a: [rk1[y.x.d.p.id], rk2[y.x.d.p.id]].filter(Boolean) })).filter(y => y.a.length).map(y => ({ id: y.id, s: y.a.reduce((p, q) => p + q, 0) / y.a.length }));
+        avg.sort((a, b) => a.s - b.s).forEach((y, i) => { mrank[y.id] = i + 1; });
+        vals.forEach(y => { y.x.mv = y.v; });
+      }
+      const list = (items, head) => {
+        const sorted = items.slice().sort((a, b) => b.o.p - a.o.p);
+        const n = sorted.length;
+        return `<div class="pt-1"><div class="text-[11px] text-slate-500 dark:text-slate-400 pb-1">${head}</div>${sorted.map((x, i) => {
+          const mr = mrank[x.d.p.id];
+          let flag = '';
+          if (m && mr && n >= 2) {
+            const diff = mr - (i + 1);   // + = priced lower than his odds rank
+            if (diff >= (n >= 3 ? 2 : 1)) flag = `<span class="text-[10px] font-bold px-1.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">cheap for his odds</span>`;
+            else if (-diff >= (n >= 3 ? 2 : 1)) flag = `<span class="text-[10px] font-bold px-1.5 rounded bg-rose-500/15 text-rose-700 dark:text-rose-300">priced above his odds</span>`;
+          }
+          const mkt = m ? ` <span class="text-[11px] text-slate-500 dark:text-slate-400">· market #${mr || '—'} (KTC ${x.mv?.k ? x.mv.k.toLocaleString() : '—'} / FC ${x.mv?.f ? x.mv.f.toLocaleString() : '—'})</span> ${flag}` : '';
+          return `<div class="flex flex-wrap items-baseline gap-x-2 py-1 border-t border-slate-100 dark:border-slate-800">
+            <span class="font-extrabold tabular-nums w-5">#${i + 1}</span>
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${POS_META[x.d.p.pos].badgeCls}">${x.d.p.pos}</span>
+            <span class="font-bold">${esc(x.d.p.name)}</span>
+            <span class="font-extrabold tabular-nums">${Math.round(x.o.p)}%</span>
+            <span class="text-[10px] font-bold px-1.5 rounded ${/thin|small/.test(x.o.tag) ? 'bg-amber-400/20 text-amber-800 dark:text-amber-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}" title="${esc(x.o.view || '')}">${esc(x.o.tag)}</span>${mkt}</div>`;
+        }).join('')}</div>`;
+      };
+      let h = '';
+      if (cohorts.length === 1 && ranked.length >= 2) {
+        h += list(ranked, cohorts[0] === 'rookie'
+          ? 'Ranked by the chance of a 12+ PPG season in Years 1–3: the usage model for WRs and RBs (Games 1–8 when he has the games, else Weeks 1–4); TEs use half model, half draft-round history.'
+          : 'Ranked by the chance of 12+ PPG again next season (age table, same as the hub\'s SELL badges).');
+      } else if (ranked.length) {
+        const rk = ranked.filter(x => x.o.cohort === 'rookie'), vt = ranked.filter(x => x.o.cohort === 'vet');
+        if (rk.length && vt.length) h += `<p class="text-[11px] text-amber-700 dark:text-amber-300 pb-1">Rookies and veterans answer different questions (breakout in Years 1–3 vs 12+ again next season), so they aren't ranked against each other.</p>`;
+        if (rk.length) h += list(rk, 'Rookies: chance of a 12+ PPG season in Years 1–3');
+        if (vt.length) h += list(vt, 'Veterans: chance of 12+ PPG again next season');
+      }
+      if (unranked.length) h += `<p class="text-[11px] text-slate-500 dark:text-slate-400 pt-1">Not ranked: ${unranked.map(x => `${esc(x.d.p.name)} (${esc(x.o.why)})`).join('; ')}.</p>`;
+      if (m) h += `<p class="text-[10px] text-slate-500 dark:text-slate-400 pt-1">Market: ${CMP.mktFmt === 'sf' ? 'SF' : '1QB'} · 1 PPR values (KTC and the daily <a href="https://fantasycalc.com" target="_blank" rel="noopener" class="underline">FantasyCalc</a> cache${m.updated ? `, ${new Date(m.updated).toLocaleDateString()}` : ''}). "Cheap" / "priced above" compare the market rank with the odds rank in this group.</p>`;
+      return h ? cmpStrip('Ranking', h) : '';
+    }
 
     async function renderCompare() {
       const out = document.getElementById('cmpOut');
@@ -2760,45 +2880,41 @@
         const on = btn.dataset.cmpmode === CMP.mode;
         btn.className = `cmp-mode px-3 py-1.5 cursor-pointer ${on ? 'bg-sky-600 text-white' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`;
       });
-      const A = CMP.a ? PLAYER_BY_ID.get(CMP.a) : null, B = CMP.b ? PLAYER_BY_ID.get(CMP.b) : null;
-      if (!A && !B) { out.innerHTML = `<p class="text-xs text-slate-500 dark:text-slate-400">Pick two players. Their profile buckets are compared right away; usage, draft-slot history and model odds load the first time.</p>`; return; }
+      const fmtSel = document.getElementById('cmpMktFmt');
+      if (fmtSel) fmtSel.classList.toggle('hidden', !CMP.market);
+      const players = CMP.ids.map(id => (id ? PLAYER_BY_ID.get(id) : null)).filter(Boolean);
+      if (!players.length) { out.innerHTML = `<p class="text-xs text-slate-500 dark:text-slate-400">Pick two to four players. Their profile buckets are compared right away; usage, draft-slot history and model odds load the first time.</p>`; return; }
       if (!CMP.extra) {
         out.innerHTML = `<div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 py-3"><span class="inline-block w-3.5 h-3.5 rounded-full border-2 border-sky-500 border-t-transparent animate-spin"></span>Loading usage, draft history and age curves (first time only)…</div>`;
         await cmpLoadExtras();
       }
+      if (CMP.market && !CMP.mkt) { CMP.mkt = await cmpLoadMarket(CMP.mktFmt); }
       const ex = CMP.extra;
-      const da = A ? cmpPlayerData(A, ex) : null, db = B ? cmpPlayerData(B, ex) : null;
-      const col = (d, f) => d ? f(d) : '<span class="text-slate-400">—</span>';
+      const ds = players.map(p => cmpPlayerData(p, ex));
+      const N = ds.length;
+      const each = f => ds.map(f);
       const up = CMP.mode === 'upside';
       const head = d => `<div class="flex flex-wrap items-center gap-1.5"><span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${POS_META[d.p.pos].badgeCls}">${d.p.pos}</span><span class="font-extrabold text-slate-900 dark:text-white">${esc(d.p.name)}</span></div>
         <div class="text-[11px] text-slate-500 dark:text-slate-400">${d.p.year} class${d.tr && d.tr.rd != null ? ` · Rd ${d.tr.rd} · #${d.tr.pk}${d.wrRank ? ` · WR${d.wrRank}` : ''}` : d.tr ? ' · undrafted' : ''}${d.tr?.tm ? ` · ${esc(d.tr.tm)}` : ''}</div>
-        <button type="button" data-open-bucket="${esc(d.b.id)}" class="mt-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 hover:underline cursor-pointer">${esc(d.b.name)} · n=${d.b.n}</button>
+        <button type="button" data-open-bucket="${esc(d.b.id)}" class="mt-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 hover:underline cursor-pointer text-left">${esc(d.b.name)} · n=${d.b.n}</button>
         ${d.fb ? `<div class="text-[10px] font-semibold text-amber-700 dark:text-amber-300 mt-0.5">Small sample (n=${d.b.n}) — treat as a lean, not a rule</div>` : ''}`;
-      const sLbl = d => `${safeLbl(d.p.pos)}`, uLbl = d => `${upLbl(d.p.pos)}`;
-      let h = `<div class="grid grid-cols-[4.75rem_1fr_1fr] sm:grid-cols-[7.5rem_1fr_1fr] gap-x-2 sm:gap-x-3 gap-3 items-start pb-2"><div></div><div>${col(da, head)}</div><div>${col(db, head)}</div></div>`;
-      // Core bucket odds (Safe or Upside first, by toggle)
-      const samePos = !!(da && db && da.p.pos === db.p.pos && !da.fb && !db.fb);   // no lead pills across positions or on small samples
-      const lineSafe = cmpBar('Safe', da?.safe, db?.safe, da && sLbl(da), db && sLbl(db), samePos);
-      const lineUp = cmpBar('Upside', da?.up, db?.up, da && uLbl(da), db && uLbl(db), samePos);
-      h += cmpStrip('Profile bucket odds', (up ? lineUp + lineSafe : lineSafe + lineUp) + cmpBar('Repeat (2+ hit seasons, of hitters)', da?.rep, db?.rep, null, null, samePos)
-        + (da && db && !samePos ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 pt-1">${da.p.pos !== db.p.pos ? 'Different positions have different PPG bars' : 'One bucket is a small sample'}, so no "leads by" marks.</p>` : ''));
-      const compTxt = (d, list) => list.map(x => `${esc(x.name)} <span class="text-slate-400">${x.year}</span>`).join(', ') || '—';
-      // Small buckets: show the whole tier's rates as a faint reference only (different player types mixed in)
-      if (da?.fb || db?.fb) {
-        const ref = d => d.fb ? `<span class="text-slate-500 dark:text-slate-400">All ${esc(tierOf(d.b.name))} ${d.p.pos}s, any type (n=${d.fb.n}): ${d.fb.safe.toFixed(0)}% safe · ${d.fb.up.toFixed(0)}% upside — different play styles mixed, reference only</span>` : '—';
-        h += cmpRow('Tier average (reference)', col(da, ref), col(db, ref));
-      }
-      h += cmpRow('Bucket hits', col(da, d => compTxt(d, d.hits)), col(db, d => compTxt(d, d.hits)));
-      h += cmpRow('Bucket busts', col(da, d => compTxt(d, d.busts)), col(db, d => compTxt(d, d.busts)));
-      // Draft-capital baseline
-      if (da?.base || db?.base) {
+      let h = (N >= 2 ? rankSummary(ds, ex) : '');
+      h += `<div class="grid gap-x-2 sm:gap-x-3 gap-3 items-start pb-2 pt-2" ${cmpGrid(N)}><div></div>${ds.map(d => `<div class="min-w-0">${head(d)}</div>`).join('')}</div>`;
+      const samePos = N >= 2 && ds.every(d => d.p.pos === ds[0].p.pos && !d.fb);
+      const lineSafe = cmpBar('Safe', each(d => d.safe), each(d => safeLbl(d.p.pos)), samePos);
+      const lineUp = cmpBar('Upside', each(d => d.up), each(d => upLbl(d.p.pos)), samePos);
+      h += cmpStrip('Profile bucket odds', (up ? lineUp + lineSafe : lineSafe + lineUp) + cmpBar('Repeat (2+ hit seasons, of hitters)', each(d => d.rep), each(() => null), samePos)
+        + (N >= 2 && !samePos ? `<p class="text-[10px] text-slate-500 dark:text-slate-400 pt-1">${ds.some(d => d.p.pos !== ds[0].p.pos) ? 'Different positions have different PPG bars' : 'A bucket is a small sample'}, so no "leads by" marks.</p>` : ''));
+      const compTxt = list => list.map(x => `${esc(x.name)} <span class="text-slate-400">${x.year}</span>`).join(', ') || '—';
+      if (ds.some(d => d.fb)) h += cmpRow('Tier average (reference)', each(d => d.fb ? `<span class="text-slate-500 dark:text-slate-400">All ${esc(tierOf(d.b.name))} ${d.p.pos}s, any type (n=${d.fb.n}): ${d.fb.safe.toFixed(0)}% safe · ${d.fb.up.toFixed(0)}% upside — different play styles mixed, reference only</span>` : '—'));
+      h += cmpRow('Bucket hits', each(d => compTxt(d.hits)));
+      h += cmpRow('Bucket busts', each(d => compTxt(d.busts)));
+      if (ds.some(d => d.base)) {
         const ELT = { WR: '14+', RB: '15+', TE: '17+' };
-        const bl = d => d.base ? `${d.base.g}: <strong>${d.base.safe.toFixed(0)}%</strong> hit 12+ · ${d.base.up.toFixed(0)}% ${ELT[d.p.pos]} <span class="text-slate-400">(n=${d.base.n})</span>` : '—';
-        h += cmpStrip('Draft-slot history', cmpRow(`Same round, ${samePos ? da.p.pos : 'same position'}, settled classes`, col(da, bl), col(db, bl)));
+        h += cmpStrip('Draft-slot history', cmpRow(`Same round, ${samePos ? ds[0].p.pos : 'same position'}, settled classes`, each(d => d.base ? `${d.base.g}: <strong>${d.base.safe.toFixed(0)}%</strong> hit 12+ · ${d.base.up.toFixed(0)}% ${ELT[d.p.pos]} <span class="text-slate-400">(n=${d.base.n})</span>` : '—')));
       }
-      // Rookie usage & model odds (current rookies / second-year players)
       const isEarly = d => d && (d.early || d.sg);
-      if (isEarly(da) || isEarly(db)) {
+      if (ds.some(isEarly)) {
         const VIEW = { WR: 'Weeks 1–4', RB: 'Games 1–4', TE: 'Games 1–8' };
         const use = d => {
           if (!isEarly(d)) return '—';
@@ -2807,14 +2923,14 @@
           const g = te ? d.tr?.g8 : d.tr?.g;
           const u8 = d.tr?.u8 ?? d.sg?.u8;
           const bf = d.tr?.bf8 ?? d.sg?.bf8;
-          return `${VIEW[d.p.pos] || 'Early'} usage <strong>${u != null ? Number(u).toFixed(1) : '—'}</strong>${g != null ? ` <span class="text-slate-400">(${g} g)</span>` : ''}${!te && u8 != null ? ` · Games 1–8 ${Number(u8).toFixed(1)}` : ''}${bf != null ? ` · BF% ${(bf * 100).toFixed(0)}` : ''}`;
+          return `${VIEW[d.p.pos] || 'Early'} usage <strong>${u != null ? Number(u).toFixed(1) : '—'}</strong>${g != null ? ` <span class="text-slate-400">(${g} g)</span>` : ''}${!te && u8 != null ? ` · Games 1–8 ${Number(u8).toFixed(1)}${d.tr?.g8 != null ? ` <span class="text-slate-400">(${d.tr.g8} g)</span>` : ''}` : ''}${bf != null ? ` · BF% ${(bf * 100).toFixed(0)}` : ''}`;
         };
         const odds = d => {
           if (!isEarly(d)) return '—';
           const hp = d.tr?.hp || d.sg?.hp || {};
           const gOf = { '4': d.tr?.g, '8': d.tr?.g8, 'L': d.tr?.gL };
           const parts = [['4', 'G1–4'], ['8', 'G1–8'], ['L', 'Last 4']]
-            .filter(([k]) => hp[k] != null && (gOf[k] == null || gOf[k] >= 2))   // needs 2+ games in that view
+            .filter(([k]) => hp[k] != null && (gOf[k] == null || gOf[k] >= 2))
             .map(([k, l]) => `${l} <strong>${hp[k]}%</strong>`);
           if (!parts.length) return Object.keys(hp).length ? '<span class="text-slate-400">no model odds (needs 2+ games)</span>' : '<span class="text-slate-400">no model odds on file</span>';
           return (d.soph ? '<span class="text-[10px] font-bold text-slate-500">Rookie-yr odds:</span> ' : '') + parts.join(' · ');
@@ -2825,13 +2941,11 @@
           const lbl = { buy: 'WR BUY', missed: 'MISSED TIME', jump: 'JUMPED' };
           return t.length ? t.map(x => `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">${lbl[x]}</span>`).join(' ') : '—';
         };
-        const best = d => d.tb ? `<strong>${d.tb.med.toFixed(1)}</strong> PPG <span class="text-slate-400">(middle half ${d.tb.lo.toFixed(1)}–${d.tb.hi.toFixed(1)}; 15 closest past rookies on usage and draft slot)</span>` : '—';
-        h += cmpStrip('Early usage & model odds', cmpRow('Usage', col(da, use), col(db, use)) + cmpRow('12+ hit odds (usage + draft slot)', col(da, odds), col(db, odds)) + cmpRow('Flags', col(da, tags), col(db, tags)) + cmpRow('Typical best season, Years 1–3', col(da, best), col(db, best)));
-        // Year 2 shift
+        const best = d => d.tb ? `<strong>${d.tb.med.toFixed(1)}</strong> PPG <span class="text-slate-400">(middle half ${d.tb.lo.toFixed(1)}–${d.tb.hi.toFixed(1)}; 15 closest past rookies on ${d.tb.view} usage and draft slot)</span>` : '—';
+        h += cmpStrip('Early usage & model odds', cmpRow('Usage', each(use)) + cmpRow('12+ hit odds (usage + draft slot)', each(odds)) + cmpRow('Flags', each(tags)) + cmpRow('Typical best season, Years 1–3', each(best)));
         const y2 = d => (d?.sg?.u2 != null) ? `Rookie ${d.sg.u != null ? Number(d.sg.u).toFixed(1) : '—'} → Year 2 <strong>${Number(d.sg.u2).toFixed(1)}</strong>${(d.sg.sig || []).includes('jump') ? ' <span class="text-[10px] font-extrabold px-1.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">JUMPED</span>' : ''}` : '—';
-        if (da?.sg?.u2 != null || db?.sg?.u2 != null) h += cmpRow('Year 2 usage (Games 1–4)', col(da, y2), col(db, y2));
+        if (ds.some(d => d?.sg?.u2 != null)) h += cmpRow('Year 2 usage (Games 1–4)', each(y2));
       }
-      // Career résumé (any player with completed seasons)
       const res = d => {
         if (d.p.isRookie) return '<span class="text-slate-400">no completed seasons</span>';
         const pm = POS_META[d.p.pos];
@@ -2848,8 +2962,8 @@
         const fl = x.flag ? ` <span class="text-[10px] font-bold px-1.5 rounded ${x.flag === 'now' ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300' : 'bg-amber-400/20 text-amber-800 dark:text-amber-300'}">${x.flag === 'now' ? 'SELL NOW' : 'SELL WINDOW'}</span>` : '';
         return `<strong>${x.odds}%</strong> repeat 12+${fl} <span class="text-slate-400">(age ${Math.floor(x.age)}: ${x.k} of ${x.n} ${d.p.pos}s aged ${x.band}, ${x.above ? 'above' : 'below'} ${x.med} PPG)</span>`;
       };
-      h += cmpStrip('Career', cmpRow('Seasons by PPG tier', col(da, res), col(db, res)) + ((da?.pg || db?.pg) ? cmpRow('This season', col(da, now), col(db, now)) + cmpRow('Next season', col(da, keep), col(db, keep)) : ''));
-      h += `<p class="pt-2 text-[10px] text-slate-500 dark:text-slate-400">Bucket odds are historical rates for players drafted with that profile; tap a bucket for its full list. Model odds and usage come from the rookie tabs. Next-season odds use the same age table as the hub's SELL badges (nflverse 2015–2024). Nothing here uses trade values.</p>`;
+      h += cmpStrip('Career', cmpRow('Seasons by PPG tier', each(res)) + (ds.some(d => d.pg) ? cmpRow('This season', each(now)) + cmpRow('Next season', each(keep)) : ''));
+      h += `<p class="pt-2 text-[10px] text-slate-500 dark:text-slate-400">Bucket odds are historical rates for players drafted with that profile; tap a bucket for its full list. Model odds and usage come from the rookie tabs. Next-season odds use the same age table as the hub's SELL badges (nflverse 2015–2024). The ranking uses only odds; trade values appear only if you switch on the market line.</p>`;
       out.innerHTML = h;
     }
 
@@ -2859,21 +2973,18 @@
       const sorted = ALL_PLAYERS.slice().sort((x, y) => (y.year - x.year) || x.name.localeCompare(y.name));
       sorted.forEach(p => CMP_BY_LABEL.set(cmpLabel(p), p.id));
       list.innerHTML = sorted.map(p => `<option value="${esc(cmpLabel(p))}"></option>`).join('');
-      const pick = (inp, key) => {
+      const pick = (inp, i) => {
         const v = inp.value.trim();
         let id = CMP_BY_LABEL.get(v);
         if (!id && v) {   // allow a bare name when it's unique
           const m = sorted.filter(p => p.norm === normStr(v));
           if (m.length === 1) { id = m[0].id; inp.value = cmpLabel(m[0]); }
         }
-        if (id || !v) { CMP[key] = id || null; renderCompare(); }
+        if (id || !v) { CMP.ids[i] = id || null; renderCompare(); }
       };
-      const a = document.getElementById('cmpA'), b = document.getElementById('cmpB');
-      a.addEventListener('change', () => pick(a, 'a'));
-      b.addEventListener('change', () => pick(b, 'b'));
-      document.getElementById('cmpSwap').addEventListener('click', () => {
-        [CMP.a, CMP.b] = [CMP.b, CMP.a]; [a.value, b.value] = [b.value, a.value]; renderCompare();
-      });
+      ['cmpA', 'cmpB', 'cmpC', 'cmpD'].forEach((elId, i) => { const el = document.getElementById(elId); if (el) el.addEventListener('change', () => pick(el, i)); });
+      document.getElementById('cmpMkt')?.addEventListener('change', e => { CMP.market = e.target.checked; renderCompare(); });
+      document.getElementById('cmpMktFmt')?.addEventListener('change', e => { CMP.mktFmt = e.target.value; CMP.mkt = null; renderCompare(); });
       document.querySelectorAll('.cmp-mode').forEach(btn => btn.addEventListener('click', () => { CMP.mode = btn.dataset.cmpmode; renderCompare(); }));
       renderCompare();
     }

@@ -3872,8 +3872,9 @@
             </div>`;
           }).join('');
 
+          // The League table scrolls sideways on phones; the detail is pinned to the visible width (set after render)
           detail = `<tr class="bg-[#f6f7f9]/80 dark:bg-[#0f1216]/70">
-            <td colspan="16" class="p-3 space-y-3">
+            <td colspan="16" class="p-0"><div data-teamdetail="1" class="sticky left-0 p-3 space-y-3">
               <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">${posCards}</div>
               ${sortBar}
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
@@ -3896,7 +3897,7 @@
                   </div>
                 </div>
               </div>
-            </td>
+            </div></td>
           </tr>`;
         }
         return `<tr data-openrow="${esc(r.o)}" class="hover:bg-[#f6f7f9] dark:hover:bg-[#1e242d] cursor-pointer">
@@ -3927,6 +3928,14 @@
           </td>
         </tr>${detail}`;
       }).join('');
+      // Pin an opened team's detail to the visible width of the (sideways-scrolling) table, so on phones the value
+      // column is on screen without swiping
+      const det = tbody.querySelector('[data-teamdetail]');
+      if (det) { const box = tbody.closest('.overflow-x-auto') || tbody.parentElement; det.style.width = `${Math.max(280, box.clientWidth)}px`; }
+      if (!window.__teamDetailResize) {   // keep it fitted after a rotation / resize
+        window.__teamDetailResize = true;
+        window.addEventListener('resize', () => { const d = document.querySelector('#leagueBody [data-teamdetail]'); if (d) d.style.width = `${Math.max(280, (d.closest('.overflow-x-auto') || d.parentElement).clientWidth)}px`; });
+      }
     }
 
     // ============================================================================
