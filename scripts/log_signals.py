@@ -19,7 +19,7 @@ Usage: python3 scripts/log_signals.py [repo root]
 import datetime, json, os, re, sys, unicodedata
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else "."
-RULES = "v1 (2026-11-26)"
+RULES = "v2 (2026-11-26): + FantasyCalc check on CHEAP/PRICEY"
 
 
 def key(name):   # same matching key as check_names.py / the hub's value hand-off: letters only, suffixes dropped
@@ -77,6 +77,30 @@ def main():
             r["flags"] += tags
 
     # CHEAP / PRICEY: the hub's signalPlayers() rule on KTC superflex
+    # FantasyCalc on the KTC scale (same rank, KTC's value at that rank), so the 500-point / 15% gap reads the same
+    kv_all = sorted((v["ktc_sf"] or 0 for v in K.values()), reverse=True)
+    fv_all = sorted((r[ci["val"]] or 0 for r in fc["players"]), reverse=True)
+    def fc_on_ktc(v):
+        i = sum(1 for x in fv_all if x > v)
+        return kv_all[min(len(kv_all) - 1, int(i * len(kv_all) / max(1, len(fv_all))))]
+    fc_flags = {}
+    for pos in ("WR", "RB", "TE"):
+        fpool = []
+        for s in players:
+            if s["pos"] != pos or s.get("yr") != season or (s.get("hp") or {}).get("4") is None:
+                continue
+            f = F.get(f"{pos}|{key(s['n'])}")
+            if (K.get(f"{pos}|{key(s['n'])}") or {}).get("ktc_sf") and f and f[ci["val"]]:
+                fpool.append((s, fc_on_ktc(f[ci["val"]])))
+        if len(fpool) < 6:
+            continue
+        th = max(3, round(len(fpool) * 0.2))
+        by_f = sorted(fpool, key=lambda x: -x[1])
+        for i, (s, fv) in enumerate(sorted(fpool, key=lambda x: (-x[0]["hp"]["4"], -x[1]))):
+            fr = next(j for j, x in enumerate(by_f) if x[0] is s) + 1
+            gap = fr - (i + 1)
+            big = abs(fv - by_f[i][1]) >= max(500, 0.15 * fv)
+            fc_flags[s["n"]] = ("CHEAP" if gap >= th else "PRICEY" if gap <= -th else "") if big else ""
     for pos in ("WR", "RB", "TE"):
         pool = []
         for s in players:
@@ -99,7 +123,7 @@ def main():
             if flag:
                 r = row(pos, s["n"])
                 r["flags"].append(flag)
-                r["mv"] = {"odds_rank": i + 1, "ktc_rank": kr, "pool": n}
+                r["mv"] = {"odds_rank": i + 1, "ktc_rank": kr, "pool": n, "fc_flag": fc_flags.get(s["n"], "")}
 
     # odds and draft info for every logged rookie
     by_key = {f"{s['pos']}|{key(s['n'])}": s for s in players}
