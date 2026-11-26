@@ -59,6 +59,13 @@ jobs:
         continue-on-error: true
         run: python3 scripts/check_names.py .
 
+      # Point-in-time record of every flagged player (WR BUY, Y2 JUMPED, MISSED TIME, CHEAP, PRICEY, SELL NOW/WINDOW)
+      # with today's KTC, FantasyCalc and model odds, for later forward-testing. Log only; never fails the run.
+      - name: Log today's signals (data/signal-log/)
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: python3 scripts/log_signals.py .
+
       - name: Commit and push ktc.json + history
         if: ${{ !cancelled() }}
         run: |
@@ -67,6 +74,9 @@ jobs:
           git add ktc.json ktc-history.json depth.json draft_latest.json
           if [ -f data/player-context.json ] && node -e "JSON.parse(require('fs').readFileSync('data/player-context.json','utf8'))"; then git add data/player-context.json; fi
           if [ -f fc-history.json ] && node -e "JSON.parse(require('fs').readFileSync('fc-history.json','utf8'))"; then git add fc-history.json; fi
+          for f in data/signal-log/*.json; do
+            if [ -f "$f" ] && node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$f"; then git add "$f"; fi
+          done
           for f in data/fc/*.json; do
             if [ -f "$f" ] && node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$f"; then git add "$f"; fi
           done
