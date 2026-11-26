@@ -204,6 +204,54 @@
   <!-- ==================== MAIN WORKSPACE ==================== -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-5">
 
+    <!-- Bucket matrix: every bucket's rates from the owner's Hit Rates sheet, one table per position -->
+    <section id="matrixSection" aria-label="Bucket matrix" class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Bucket matrix</h2>
+          <p class="text-xs text-slate-600 dark:text-slate-400">Every bucket side by side: hit rate, the rate at each PPG mark, and how often hitters did it again. Two kinds of repeaters, kept apart: <strong>12+ repeaters</strong> (of players with a 12+ season, the share with 2+) and <strong>hit-mark repeaters</strong> (QB 20+, RB 15+, WR 14+), which is the Repeater % on the bucket cards. TE cards use the 12+ column, the TE hit mark. Both leave out the newest class's one-season hitters, who can't have repeated yet. Tap a bucket to open it.</p>
+        </div>
+        <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer select-none"><input id="mxCompact" type="checkbox" class="accent-sky-600"> Compact (hit rate + repeaters)</label>
+      </div>
+      <div id="mxPos"></div>
+      <div id="mxOut" class="overflow-x-auto -mx-1 px-1"></div>
+    </section>
+
+    <!-- Player Comparison (value-free) -->
+    <section id="cmpSection" aria-label="Compare players" class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Compare players</h2>
+          <p class="text-xs text-slate-600 dark:text-slate-400">Two to four players, ranked on odds only (trade values only if you switch on the market line). Profile bucket for everyone, plus early usage and model odds for recent rookies, draft-slot history, and career seasons. Any positions.</p>
+        </div>
+        <div class="inline-flex rounded-lg border border-slate-300 dark:border-slate-700 overflow-hidden text-xs font-bold">
+          <button type="button" data-cmpmode="safe" class="cmp-mode px-3 py-1.5">Safe</button>
+          <button type="button" data-cmpmode="upside" class="cmp-mode px-3 py-1.5">Upside</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <input id="cmpA" list="cmpList" type="search" autocomplete="off" placeholder="Player 1 — type a name" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
+        <input id="cmpB" list="cmpList" type="search" autocomplete="off" placeholder="Player 2" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
+        <input id="cmpC" list="cmpList" type="search" autocomplete="off" placeholder="Player 3 (optional)" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
+        <input id="cmpD" list="cmpList" type="search" autocomplete="off" placeholder="Player 4 (optional)" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
+      </div>
+      <label class="inline-flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none"><input id="cmpMkt" type="checkbox" class="accent-sky-600"> Show market values (Blend of KTC + FantasyCalc; your league's values inside the site) next to the ranking
+        <select id="cmpMktFmt" class="hidden bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-md px-1.5 py-0.5 text-xs"><option value="sf">SF · 1 PPR</option><option value="1qb">1QB · 1 PPR</option></select></label>
+      <datalist id="cmpList"></datalist>
+      <div id="cmpOut" class="text-sm"></div>
+    </section>
+
+    <!-- Card view: the original bucket cards (player chips, draft-class filter, player search, league owner badges).
+         Collapsed under the matrix until those features move onto the matrix; then it can be retired. -->
+    <details id="cardView" class="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      <summary class="cursor-pointer select-none list-none p-4 sm:p-5 flex flex-wrap items-center justify-between gap-2">
+        <span>
+          <span class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Card view</span>
+          <span class="block text-xs text-slate-600 dark:text-slate-400">The bucket cards: named players at a glance, the draft-class filter, player search and your league's owners.</span>
+        </span>
+        <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"><span class="group-open:hidden">Show cards ▾</span><span class="hidden group-open:inline">Hide cards ▴</span></span>
+      </summary>
+      <div class="px-3 sm:px-4 pb-4 space-y-5">
     <!-- Filter Controls Bar -->
     <section aria-label="Position and Outcome Filters"
       class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3.5">
@@ -281,43 +329,6 @@
       </div>
     </section>
 
-    <!-- Player Comparison (value-free) -->
-    <section id="cmpSection" aria-label="Compare players" class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Compare players</h2>
-          <p class="text-xs text-slate-600 dark:text-slate-400">Two to four players, ranked on odds only (trade values only if you switch on the market line). Profile bucket for everyone, plus early usage and model odds for recent rookies, draft-slot history, and career seasons. Any positions.</p>
-        </div>
-        <div class="inline-flex rounded-lg border border-slate-300 dark:border-slate-700 overflow-hidden text-xs font-bold">
-          <button type="button" data-cmpmode="safe" class="cmp-mode px-3 py-1.5">Safe</button>
-          <button type="button" data-cmpmode="upside" class="cmp-mode px-3 py-1.5">Upside</button>
-        </div>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <input id="cmpA" list="cmpList" type="search" autocomplete="off" placeholder="Player 1 — type a name" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
-        <input id="cmpB" list="cmpList" type="search" autocomplete="off" placeholder="Player 2" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
-        <input id="cmpC" list="cmpList" type="search" autocomplete="off" placeholder="Player 3 (optional)" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
-        <input id="cmpD" list="cmpList" type="search" autocomplete="off" placeholder="Player 4 (optional)" class="bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm">
-      </div>
-      <label class="inline-flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none"><input id="cmpMkt" type="checkbox" class="accent-sky-600"> Show market values (Blend of KTC + FantasyCalc; your league's values inside the site) next to the ranking
-        <select id="cmpMktFmt" class="hidden bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-md px-1.5 py-0.5 text-xs"><option value="sf">SF · 1 PPR</option><option value="1qb">1QB · 1 PPR</option></select></label>
-      <datalist id="cmpList"></datalist>
-      <div id="cmpOut" class="text-sm"></div>
-    </section>
-
-    <!-- Bucket matrix: every bucket's rates from the owner's Hit Rates sheet, one table per position -->
-    <section id="matrixSection" aria-label="Bucket matrix" class="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 sm:p-5 space-y-3">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h2 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Bucket matrix</h2>
-          <p class="text-xs text-slate-600 dark:text-slate-400">Every bucket side by side: hit rate, the rate at each PPG mark, and how often hitters did it again. Two kinds of repeaters, kept apart: <strong>12+ repeaters</strong> (of players with a 12+ season, the share with 2+) and <strong>hit-mark repeaters</strong> (QB 20+, RB 15+, WR 14+), which is the Repeater % on the bucket cards. TE cards use the 12+ column, the TE hit mark. Both leave out the newest class's one-season hitters, who can't have repeated yet. Tap a bucket to open it.</p>
-        </div>
-        <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer select-none"><input id="mxCompact" type="checkbox" class="accent-sky-600"> Compact (hit rate + repeaters)</label>
-      </div>
-      <div id="mxPos"></div>
-      <div id="mxOut" class="overflow-x-auto -mx-1 px-1"></div>
-    </section>
-
     <!-- Positional Quick Insights Banner -->
     <div id="posInsightBanner" class="rounded-2xl bg-gradient-to-r from-slate-100 via-sky-50/70 to-indigo-50/60 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/40 border border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-xs">
     </div>
@@ -326,6 +337,9 @@
     <section aria-label="Profile Buckets Grid">
       <div id="bucketsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5"></div>
     </section>
+
+      </div>
+    </details>
 
   </main>
 
@@ -4068,6 +4082,11 @@
       out.innerHTML = h;
       const cnt = document.getElementById('mxCount'); if (cnt) cnt.textContent = `Showing ${rows.length} of ${sec.rows.length} buckets`;
     }
+    (function rememberCardView() {
+      const d = document.getElementById('cardView'); if (!d) return;
+      try { if (localStorage.getItem('pbe_cardview') === '1') d.open = true; } catch (e) {}
+      d.addEventListener('toggle', () => { try { localStorage.setItem('pbe_cardview', d.open ? '1' : '0'); } catch (e) {} });
+    })();
     function wireMatrix() {
       const tabs = document.getElementById('mxPos'), out = document.getElementById('mxOut');
       if (!tabs) return;
