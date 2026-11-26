@@ -2045,6 +2045,23 @@
           let fallback = 0;
           if (!kv && !fv) fallback = overallPickValue12T((rd - 1) * nTeams + (slot || (nTeams + 1) / 2), year === y0 ? 2027 : year === y0 + 1 ? 2028 : 2029);
           const tier = slot ? tierOf(slot) : 'Mid';
+          if (rd > 4) {
+            // Rounds 5+ (LFFL): neither KTC nor FantasyCalc prices them, and stretching the round-4 curve left a 5th at
+            // ~1,700 in Blend (FantasyCalc's tail maps onto KTC's flat low end). Price them as deep darts instead:
+            // 4% of that year's 1.01 at the top of round 5 down to 2% at the end, halved each later round, on each
+            // source's own scale. Marked as estimates, like other picks neither source lists.
+            const frac = slot ? (slot - 0.5) / nTeams : 0.5;
+            const share = (0.04 - 0.02 * frac) * Math.pow(0.5, rd - 5);
+            const k101 = pickValueFrom(ktcPickTable, year, 1, 1, nTeams), f101 = pickValueFrom(fcPickTable, year, 1, 1, nTeams);
+            newP.push({
+              id: pid, pick: true, pos: 'PICK', team: '', age: null, year, rd, slot: slot || 0, tier: slot ? tier : '',
+              name: slot ? `${year} ${rd}.${String(slot).padStart(2, '0')}` : `${year} ${ORD_NAME[rd] || rd + 'th'}`,
+              k: Math.round(k101 * share), fRaw: Math.round(f101 * share), f: Math.round(FC_SCALE.toKtc(f101) * share),
+              est: true, ktcKey: `${year} ${tier} ${ORD_NAME[rd] || ''}|RDP`
+            });
+            pickLookup[`${year}_${rd}_${slot || 0}`] = pid;
+            return;
+          }
           newP.push({
             id: pid, pick: true, pos: 'PICK', team: '', age: null, year, rd, slot: slot || 0,
             tier: slot ? tier : '',
