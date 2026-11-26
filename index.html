@@ -1002,7 +1002,7 @@
       // round 1 is priced and graded like a 12-team 1.12. Say so on the card so it doesn't read as a 12-team default.
       const n = activeLeague.numTeams || 12;
       const r12 = Math.ceil(o / 12), s12 = o - (r12 - 1) * 12;
-      const ctx = n !== 12 ? `${n}-team: ~#${o} overall ≈ 12-team ${r12}.${String(s12).padStart(2, '0')}` : '';
+      const ctx = n !== 12 ? `${n}-team: ~#${o} overall ≈ 12-team ${r12}.${String(s12).padStart(2, '0')}${p.lgMult && p.lgMult !== 1 ? ` · ${n}-team pick discount ×${p.lgMult.toFixed(2)}` : ''}` : '';
       return `<span class="inline-flex flex-wrap items-center gap-x-1.5 align-middle" title="Rookie pick ~#${o} overall${est}${ctx ? ` (${ctx}; values and odds use the overall pick)` : ''}. Historically: ${e}% elite, ${s}% starter, ${bu}% bust (2015-2023 QB/WR/RB/TE classes)">
         <span class="inline-flex w-14 h-2 rounded-sm overflow-hidden"><span class="bg-emerald-600" style="width:${e}%"></span><span class="bg-amber-400" style="width:${s}%"></span><span class="bg-rose-500" style="width:${bu}%"></span></span>
         <span class="text-[10px]"><span class="font-bold text-emerald-700 dark:text-emerald-400">${e}% elite</span> · <span class="font-bold text-amber-600 dark:text-amber-400">${s}% starter</span> · <span class="font-bold text-rose-600 dark:text-rose-400">${bu}% bust</span></span>${ctx ? `<span class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">· ${ctx}</span>` : ''}</span>`;
@@ -2080,8 +2080,14 @@
         const ktcPickTable = buildPickTable(ktcIdx ? ktcIdx.picks : []);
         const fcPickTable = buildPickTable(fcPickEntries);
         const tierOf = slot => slot <= Math.ceil(nTeams / 3) ? 'Early' : slot <= Math.ceil(2 * nTeams / 3) ? 'Mid' : 'Late';
+        // 24+ team single-copy leagues (DDD): picks priced below the 12-team-mapped curve. Fitted direction from DDD's
+        // pick-for-player trades (Nov 2026: 5 trades, picks would have needed ×0.33–0.74 to balance), kept deliberately
+        // mild for the small sample: round ×0.90 / ×0.80 / ×0.70 (3rd+), year ×1.00 / ×0.95 / ×0.90 (next draft / +1 / +2).
+        // Refit when the league has 15+ pick-for-player trades (NOTES.md). 12-team leagues are untouched.
+        const lgPickMult = (year, rd) => nTeams >= 24 ? (rd === 1 ? 0.90 : rd === 2 ? 0.80 : 0.70) * ([1, 0.95, 0.90][Math.max(0, Math.min(2, year - y0))]) : 1;
         const addPick = (year, rd, slot) => {
           const pid = newP.length;
+          const lm = lgPickMult(year, rd);
           const kv = pickValueFrom(ktcPickTable, year, rd, slot || null, nTeams);
           const fv = pickValueFrom(fcPickTable, year, rd, slot || null, nTeams);
           let fallback = 0;
@@ -2098,8 +2104,8 @@
             newP.push({
               id: pid, pick: true, pos: 'PICK', team: '', age: null, year, rd, slot: slot || 0, tier: slot ? tier : '',
               name: slot ? `${year} ${rd}.${String(slot).padStart(2, '0')}` : `${year} ${ORD_NAME[rd] || rd + 'th'}`,
-              k: Math.round(k101 * share), fRaw: Math.round(f101 * share), f: Math.round(FC_SCALE.toKtc(f101) * share),
-              est: true, ktcKey: `${year} ${tier} ${ORD_NAME[rd] || ''}|RDP`
+              k: Math.round(k101 * share * lm), fRaw: Math.round(f101 * share * lm), f: Math.round(FC_SCALE.toKtc(f101) * share * lm),
+              est: true, lgMult: lm, ktcKey: `${year} ${tier} ${ORD_NAME[rd] || ''}|RDP`
             });
             pickLookup[`${year}_${rd}_${slot || 0}`] = pid;
             return;
@@ -2108,10 +2114,10 @@
             id: pid, pick: true, pos: 'PICK', team: '', age: null, year, rd, slot: slot || 0,
             tier: slot ? tier : '',
             name: slot ? `${year} ${rd}.${String(slot).padStart(2, '0')}` : `${year} ${ORD_NAME[rd] || rd + 'th'}`,
-            k: kv || (fv ? 0 : fallback),
-            fRaw: fv || (kv ? 0 : fallback),
-            f: fv ? Math.round(FC_SCALE.toKtc(fv)) : (kv ? 0 : fallback),
-            est: !kv && !fv,
+            k: Math.round((kv || (fv ? 0 : fallback)) * lm),
+            fRaw: Math.round((fv || (kv ? 0 : fallback)) * lm),
+            f: Math.round((fv ? FC_SCALE.toKtc(fv) : (kv ? 0 : fallback)) * lm),
+            est: !kv && !fv, lgMult: lm,
             ktcKey: `${year} ${tier} ${ORD_NAME[rd] || ''}|RDP`
           });
           pickLookup[`${year}_${rd}_${slot || 0}`] = pid;
@@ -2331,7 +2337,11 @@
       return v != null ? Math.round(v * (p.pos === 'TE' ? (p.fcTeMult || 1) : 1)) : null;
     }
     // A past value under a given source, built the same way valueFor() builds today's value
-    function srcHistVal(p, date, mode) {
+    function srcHistVal(p, date, mode) {   // past values carry today's league pick discount, so trends compare like with like
+      const v = srcHistVal0(p, date, mode);
+      return v != null && p.pick && p.lgMult && p.lgMult !== 1 ? Math.round(v * p.lgMult) : v;
+    }
+    function srcHistVal0(p, date, mode) {
       if (mode === 'ktc') return p.ktcKey ? histVal(p.ktcKey, p.pos, date) : null;
       if (!FC_HISTORY || !FC_HISTORY.days[date]) return null;
       const k = p.ktcKey && HISTORY ? histVal(p.ktcKey, p.pos, date) : null;
