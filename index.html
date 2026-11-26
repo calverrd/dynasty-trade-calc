@@ -481,7 +481,7 @@
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5">
         <div>
           <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">🌱 Rookie Buy Targets (Other Rosters)</h2>
-          <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Rookies and second-year players on other teams with a BUY tag (role ahead of points), a Year 2 JUMPED tag, or CHEAP pricing (KTC ranks them well below their hit odds). From the rookie tabs, refreshed every Tuesday. Offer loads the best-fitting package.</p>
+          <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Rookies and second-year players on other teams with a BUY tag (role ahead of points), a Year 2 JUMPED tag, or CHEAP pricing (KTC ranks them well below their Weeks 1–4 hit odds, the window the backtest supports). From the rookie tabs, refreshed every Tuesday. Offer loads the best-fitting package.</p>
         </div>
         <div id="rookieTargetsList" class="space-y-2"></div>
       </div>
@@ -4310,8 +4310,8 @@
       const out = SIGNALS.players.map(s => ({ s, p: byName.get(`${normName(s.n)}|${s.pos}`) })).filter(x => x.p);
       // Model vs market, same rule as the rookie tabs: odds rank vs KTC rank among unsettled rookies at the position
       ['WR', 'RB', 'TE'].forEach(pos => {
-        const key = '8';
-        // current rookie class only, same rule as the rookie tabs (rank gap + a real value gap)
+        const key = '4';
+        // current rookie class only, Weeks 1–4 odds (the window the CHEAP/PRICEY backtest validated), same rule as the rookie tabs (rank gap + a real value gap)
         const pool = out.filter(x => x.s.pos === pos && x.s.yr === SIGNALS.season && x.s.hp && x.s.hp[key] != null && x.p.k > 0);
         const n = pool.length;
         if (n < 6) return;
@@ -4320,7 +4320,7 @@
         pool.slice().sort((a, b) => b.s.hp[key] - a.s.hp[key] || b.p.k - a.p.k).forEach((x, i) => {
           const kr = byK.indexOf(x) + 1, gap = kr - (i + 1);
           const kAt = byK[i].p.k, big = Math.abs(x.p.k - kAt) >= Math.max(500, 0.15 * x.p.k);
-          x.mv = { hp: x.s.hp[key], hr: i + 1, kr, n, flag: big ? (gap >= th ? 'cheap' : gap <= -th ? 'pricey' : '') : '' };
+          x.mv = { hp: x.s.hp[key], now: x.s.hp['8'] ?? x.s.hp[key], hr: i + 1, kr, n, flag: big ? (gap >= th ? 'cheap' : gap <= -th ? 'pricey' : '') : '' };
         });
       });
       return out;
@@ -4332,16 +4332,8 @@
       if (!el) return;
       const all = document.getElementById('bsAll')?.checked || !owners.length || !T[ME];
       const xs = signalPlayers();
-      // CHEAP / PRICEY exactly as the rookie tabs: current class, Weeks 1–4 odds vs KTC rank (the view the backtest validated)
-      ['WR', 'RB', 'TE'].forEach(pos => {
-        const pool = xs.filter(x => x.s.pos === pos && x.s.yr === SIGNALS?.season && x.s.hp && x.s.hp['4'] != null && x.p.k > 0);
-        const n = pool.length; if (n < 6) return;
-        const th = Math.max(3, Math.round(n * 0.2)), byK = pool.slice().sort((a, b) => b.p.k - a.p.k);
-        pool.slice().sort((a, b) => b.s.hp['4'] - a.s.hp['4'] || b.p.k - a.p.k).forEach((x, i) => {
-          const kr = byK.indexOf(x) + 1, gap = kr - (i + 1), kAt = byK[i].p.k, big = Math.abs(x.p.k - kAt) >= Math.max(500, 0.15 * x.p.k);
-          x.m4 = { hr: i + 1, kr, n, flag: big ? (gap >= th ? 'cheap' : gap <= -th ? 'pricey' : '') : '' };
-        });
-      });
+      // CHEAP / PRICEY from signalPlayers (Weeks 1–4 odds vs KTC rank, the rookie tabs' rule)
+      xs.forEach(x => { x.m4 = x.mv; });
       const ELB = { WR: '14+', RB: '15+' };
       // class average odds (same position, class and view) so each player's odds read against a baseline
       const avgOf = (pos, yr, k) => { const v = xs.filter(y => y.s.pos === pos && y.s.yr === yr && y.s.hp && y.s.hp[k] != null).map(y => y.s.hp[k]); return v.length ? Math.round(v.reduce((a, b) => a + b, 0) / v.length) : null; };
@@ -4396,14 +4388,14 @@
       const xs = signalPlayers().filter(x => OWN[x.p.id] !== ME && (x.s.sig.includes('buy') || x.s.sig.includes('jump') || (x.mv && x.mv.flag === 'cheap')));
       if (!SIGNALS) { el.innerHTML = `<div class="text-xs ${MUTED} py-2">Rookie signals load from the weekly refresh (signals.json).</div>`; return; }
       if (!xs.length) { el.innerHTML = `<div class="text-xs ${MUTED} py-2">No BUY, JUMPED or CHEAP rookies on other rosters right now.</div>`; return; }
-      const score = x => (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 3 : 0) + (x.s.sig.includes('buy') ? 2 : 0) + (x.s.sig.includes('jump') ? 1.5 : 0) + (x.mv && x.mv.flag === 'cheap' ? 1 : 0) + (x.mv ? x.mv.hp / 100 : 0);
+      const score = x => (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 3 : 0) + (x.s.sig.includes('buy') ? 2 : 0) + (x.s.sig.includes('jump') ? 1.5 : 0) + (x.mv && x.mv.flag === 'cheap' ? 1 : 0) + (x.mv ? x.mv.now / 100 : 0);
       xs.sort((a, b) => score(b) - score(a));
       const why = x => {
         const r = [];
         if (x.s.sig.includes('buy')) r.push('WR BUY: role ahead of his points (13 of 21 historical BUYs hit)');
         if (x.s.sig.includes('jump')) r.push(`Y2 ${x.s.pos} JUMPED (${x.s.pos === 'RB' ? '79%' : x.s.pos === 'TE' ? '33%' : '31%'} hit historically)`);
-        if (x.mv && x.mv.flag === 'cheap') r.push(`${x.s.yr} CHEAP: ${x.mv.hp}% odds (#${x.mv.hr} of ${x.mv.n} in his class) but KTC #${x.mv.kr}`);
-        else if (x.mv) r.push(`${x.mv.hp}% odds`);
+        if (x.mv && x.mv.flag === 'cheap') r.push(`${x.s.yr} CHEAP: #${x.mv.hr} of ${x.mv.n} in his class on Weeks 1–4 odds but KTC #${x.mv.kr} · ${x.mv.now}% odds now`);
+        else if (x.mv) r.push(`${x.mv.now}% odds`);
         return r.join(' · ');
       };
       el.innerHTML = xs.slice(0, 10).map(x => {
