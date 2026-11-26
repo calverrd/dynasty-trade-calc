@@ -2060,6 +2060,18 @@
           return pfa - pfb;
         });
 
+        // Leagues with division playoff quotas (Dirty Double Dozen): teams outside the current playoff field pick
+        // first (1.01–1.16), then the field (1.17–1.24), each group worst-first. Otherwise a 19–9 Bottom Division team
+        // that misses the playoffs would project behind a 17–11 Top Division team that makes them.
+        const dq = LEAGUE_RULES[activeLeague.id]?.quota;
+        if (dq && (rosters || []).some(r => Number(r.settings?.division))) {
+          const pfOf = r => (r.settings?.fpts || 0) + (r.settings?.fpts_decimal || 0) / 100;
+          const best = (rosters || []).slice().sort((a, b) => ((b.settings?.wins || 0) - (a.settings?.wins || 0)) || (pfOf(b) - pfOf(a)));   // the field is by record
+          const field = new Set(playoffSeeds(best.map((_, i) => i), 0, dq, best.map(r => Number(r.settings?.division) || 0)).map(i => best[i].roster_id));
+          const out = sortedForDraft.filter(r => !field.has(r.roster_id)), inn = sortedForDraft.filter(r => field.has(r.roster_id));
+          sortedForDraft.splice(0, sortedForDraft.length, ...out, ...inn);
+        }
+
         const slotByRosterId = {};
         sortedForDraft.forEach((r, i) => { slotByRosterId[r.roster_id] = i + 1; });
 
