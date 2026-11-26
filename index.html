@@ -20,6 +20,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
+    /* desktop reads like 110% browser zoom; embedded tabs (iframes) scale with it, phones unchanged */
+    @media (min-width: 1024px) { html { zoom: 1.1; } }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -89,6 +91,7 @@
           <a href="#buckets" data-tab="buckets" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Profile Buckets</a>
           <a href="#rookies" data-tab="rookies" data-group="rookies" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Rookies</a>
           <a href="#pros" data-tab="pros" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Prospects</a>
+          <a href="#draft" data-tab="draft" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">Draft Board</a>
           <a href="#about" data-tab="about" class="tab-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap">How it works</a>
         </nav>
 
@@ -544,6 +547,12 @@
     <section id="view-pros" class="hidden">
       <iframe id="pros-frame" data-src="./prospects.html" title="2027 Prospects"
         class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1400px;"></iframe>
+    </section>
+
+    <!-- ==================== TAB: DRAFT BOARD (draft-board.html, lazy iframe) ==================== -->
+    <section id="view-draft" class="hidden">
+      <iframe id="draft-frame" data-src="./draft-board.html" title="Draft Board"
+        class="w-full border-0 rounded-xl" style="min-height: calc(100vh - 140px); height: 1100px;"></iframe>
     </section>
 
     <!-- ==================== TAB: ROOKIE TE USAGE (rookie-te-tracker.html, lazy iframe) ==================== -->
@@ -1254,6 +1263,27 @@
       try { fr.contentDocument.documentElement.classList.toggle('dark', dark); } catch (e) {}
     }
 
+    // ---- Draft Board iframe ----
+    function loadDraftFrame() {
+      const fr = document.getElementById('draft-frame');
+      if (!fr || fr.getAttribute('src')) return;
+      fr.addEventListener('load', syncDraftFrameTheme);
+      fr.src = freshSrc(fr.dataset.src);
+    }
+    function syncDraftFrameTheme() {
+      const fr = document.getElementById('draft-frame');
+      if (!fr || !fr.getAttribute('src')) return;
+      const dark = document.documentElement.classList.contains('dark');
+      try { fr.contentWindow.postMessage({ type: 'dtc-theme', theme: dark ? 'dark' : 'light' }, '*'); } catch (e) {}
+      try { fr.contentDocument.documentElement.classList.toggle('dark', dark); } catch (e) {}
+    }
+    // league, me and the projected next-draft order (standings + lottery) for the board
+    function sendDraftCtx() {
+      const fr = document.getElementById('draft-frame');
+      if (!fr || !fr.getAttribute('src') || !fr.contentWindow) return;
+      try { fr.contentWindow.postMessage({ type: 'dtc-draft-ctx', leagueId: activeLeague.id, me: ME, slotByRid: SLOT_BY_RID, nextSeason: DRAFT_YEARS[0] }, location.origin); } catch (e) {}
+    }
+
     // ---- Rookie TEs iframe ----
     function loadTesFrame() {
       const fr = document.getElementById('tes-frame');
@@ -1325,6 +1355,7 @@
       if (e.data.frame === 'rookies') resizeRookiesFrame(e.data.height);
       else if (e.data.frame === 'rbs') resizeRbsFrame(e.data.height);
       else if (e.data.frame === 'tes') resizeTesFrame(e.data.height);
+      else if (e.data.frame === 'draft') { const fr = document.getElementById('draft-frame'); const n = Math.ceil(Number(e.data.height) || 0); if (fr && n > 200 && Math.abs(parseFloat(fr.style.height) - n) > 1) fr.style.height = `${n}px`; }
       else if (e.data.frame === 'pros') { const fr = document.getElementById('pros-frame'); const n = Math.ceil(Number(e.data.height) || 0); if (fr && n > 200) fr.style.height = `${n}px`; }
       else resizeBucketsFrame(e.data.height);
     });
@@ -1341,6 +1372,7 @@
       syncRbsFrameTheme();
       syncTesFrameTheme();
       syncProsFrameTheme();
+      syncDraftFrameTheme();
     }
 
     function save() {
@@ -1800,6 +1832,7 @@
     // Share league ownership with the embedded Rookie WR + Profile Buckets pages
     function sendLeagueToFrames() {
       sendValuesToFrames();
+      sendDraftCtx();
       try {
         if (!owners.length) return;
         const { rows } = getLeaguePartnerProfiles();
@@ -1903,7 +1936,8 @@
       'nathaniel dell': 'tank dell', 'ken walker': 'kenneth walker', 'kenneth walker': 'kenneth walker',
       'joshua dobbs': 'josh dobbs', 'dj chark': 'dj chark', 'tutu atwell': 'tutu atwell', 'jeffery wilson': 'jeff wilson',
       'cedrick wilson': 'cedrick wilson', 'scotty miller': 'scott miller', 'olabisi johnson': 'bisi johnson',
-      'kenny gainwell': 'kenneth gainwell', 'matt hibner': 'matthew hibner'
+      'kenny gainwell': 'kenneth gainwell', 'matt hibner': 'matthew hibner',
+      'kc concepcion': 'kevin concepcion', 'jam miller': 'jamarion miller'   // bucket lists use the full first names
     };
     function aliasKey(n) { const k = normName(n); return NAME_ALIASES[k] || k; }
     function ktcFormatValue(item) {
@@ -4321,9 +4355,10 @@
         const nowTilt = myArch === 'contender' ? Math.min(0.3, (x.p.rdv || 0) / 10000) : 0;
         const strong = x.s.sig.includes('buy') || x.s.sig.includes('jump');
         const btier = !strong || pricey ? 3 : myArch === 'contender' && SCORING(x) ? 1 : 2;
-        if (chips.length && (all || !mine)) buys.push({ p: x.p, o, chips, tier: btier, cls: `'${String(x.s.yr).slice(2)}${x.s.rd ? ` R${x.s.rd}` : ' UDFA'}`, odds: oddsTxt(x), score: sc.reduce((a, b) => a + b, 0) + nowTilt + (own != null ? own / 100 : (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 0.79 : 0.3)) });
+        const ppgNow = (r => r && r.s === SIGNALS.season ? r.ppg : null)(PPG[normName(x.p.name)]);
+        if (chips.length && (all || !mine)) buys.push({ p: x.p, o, chips, tier: btier, oddsKey: own ?? null, ppgKey: ppgNow, cls: `'${String(x.s.yr).slice(2)}${x.s.rd ? ` R${x.s.rd}` : ' UDFA'}`, odds: oddsTxt(x), score: sc.reduce((a, b) => a + b, 0) + nowTilt + (own != null ? own / 100 : (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 0.79 : 0.3)) });
         const mixedSell = x.s.sig.includes('buy');
-        if (pricey && (all || mine)) sells.push({ p: x.p, o, tier: mixedSell ? 3 : x.m4.both ? 1 : 2, chips: [['PRICEY', `5 of 5 faded in the backtest · odds #${x.m4.hr} vs KTC #${x.m4.kr} of ${x.m4.n} · ${agree(x.m4)}`], ...(mixedSell ? [['MIXED', 'also a WR BUY: role ahead of his points']] : [])], odds: oddsTxt(x), score: x.m4.both ? 5.5 : 5 });
+        if (pricey && (all || mine)) sells.push({ p: x.p, o, askKey: Math.max(x.p.f || 0, x.p.k || 0), oddsKey: own ?? null, tier: mixedSell ? 3 : x.m4.both ? 1 : 2, chips: [['PRICEY', `5 of 5 faded in the backtest · odds #${x.m4.hr} vs KTC #${x.m4.kr} of ${x.m4.n} · ${agree(x.m4)}`], ...(mixedSell ? [['MIXED', 'also a WR BUY: role ahead of his points']] : [])], odds: oddsTxt(x), score: x.m4.both ? 5.5 : 5 });
       });
       P.forEach(p => {
         if (p.pick) return;
@@ -4337,10 +4372,20 @@
           : `<div class="text-[11px]"><span class="font-bold">Ask: ${fmt(p.k)}</span> <span class="${MUTED}">KTC vs FantasyCalc ${fmt(p.f)}; trades value him lower, so KTC is the higher anchor</span></div>`) : '';
         // rebuilders sell aging veterans first; contenders can ride a SELL WINDOW player through this season
         const wTilt = myArch === 'rebuild' ? 1 : myArch === 'contender' && si.flag === 'window' ? -1 : 0;
-        sells.push({ p, o, tier: si.flag === 'now' || myArch === 'rebuild' ? 1 : 2, chips: [[si.flag === 'now' ? 'SELL NOW' : 'SELL WINDOW', `age ${si.age.toFixed(1)}`]],
+        sells.push({ p, o, askKey: Math.max(p.f || 0, p.k || 0), oddsKey: si.odds, tier: si.flag === 'now' || myArch === 'rebuild' ? 1 : 2, chips: [[si.flag === 'now' ? 'SELL NOW' : 'SELL WINDOW', `age ${si.age.toFixed(1)}`]],
           odds: `<span class="font-bold">12+ next season ${si.odds}%</span> <span class="${MUTED}">(${si.k} of ${si.n} like him; ${si.ppg} PPG in ${si.season})</span>${ask}`, score: (si.flag === 'now' ? 3 : 2) + wTilt + (100 - si.odds) / 100 });
       });
-      buys.sort((a, b) => a.tier - b.tier || b.score - a.score); sells.sort((a, b) => a.tier - b.tier || b.score - a.score);
+      // inside each tier, best to worst on numbers shown on the row; rows missing the number go last, then the old blended score
+      const desc = (a, b) => (a == null) - (b == null) || (a != null && b != null ? b - a : 0);
+      const asc = (a, b) => (a == null) - (b == null) || (a != null && b != null ? a - b : 0);
+      buys.sort((a, b) => a.tier - b.tier
+        || (myArch === 'contender' ? desc(a.ppgKey, b.ppgKey) : 0)    // contender: this season's PPG first
+        || desc(a.oddsKey, b.oddsKey)                                  // model 12+ odds
+        || b.score - a.score);
+      sells.sort((a, b) => a.tier - b.tier
+        || b.askKey - a.askKey                                         // biggest return first: max(FC, KTC)
+        || asc(a.oddsKey, b.oddsKey)                                   // then lowest repeat odds
+        || b.score - a.score);
       const TIER = { 1: ['Act now', 'bg-emerald-600 text-white', 'bg-rose-600 text-white'], 2: ['Solid move', 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300', 'bg-rose-500/15 text-rose-800 dark:text-rose-300'], 3: ['Worth a look', 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200', 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'] };
       const row = (r, kind) => `<div class="p-2.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] flex items-center justify-between gap-2">
           <div class="min-w-0 space-y-0.5">
@@ -4849,9 +4894,9 @@
     window.addEventListener('resize', pinRookieBar);
     try { new ResizeObserver(pinRookieBar).observe(document.querySelector('header')); } catch (e) {}   // header height changes after sync
     function switchTab(tab) {
-      if (!['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'pros', 'about'].includes(tab)) tab = 'calc';
+      if (!['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'pros', 'draft', 'about'].includes(tab)) tab = 'calc';
       st.tab = tab;
-      ['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'pros', 'about'].forEach(t => {
+      ['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'pros', 'draft', 'about'].forEach(t => {
         const sec = document.getElementById(`view-${t}`);
         if (sec) sec.classList.toggle('hidden', t !== tab);
       });
@@ -4873,6 +4918,7 @@
       if (tab === 'rbs') loadRbsFrame();
       if (tab === 'tes') loadTesFrame();
       if (tab === 'pros') loadProsFrame();
+      if (tab === 'draft') loadDraftFrame();
       if (tab === 'league') loadTradeHistory();
       try { history.replaceState(null, '', `#${tab}`); } catch (e) {}
     }
@@ -5317,7 +5363,7 @@
       wireEvents();
       loadFallbackDataset();
       const initialHash = (location.hash || '').replace('#', '');
-      switchTab(['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'pros', 'about'].includes(initialHash) ? initialHash : 'calc');
+      switchTab(['chart', 'calc', 'league', 'scout', 'buckets', 'rookies', 'rbs', 'tes', 'pros', 'draft', 'about'].includes(initialHash) ? initialHash : 'calc');
       syncLiveSleeperAndFC(true);
     });
   })();

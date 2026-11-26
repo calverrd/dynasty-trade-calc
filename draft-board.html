@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Draft Board</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Montserrat', 'system-ui', '-apple-system', 'sans-serif'] } } } };
+  </script>
+  <style>
+    body { font-family: 'Montserrat', system-ui, -apple-system, sans-serif; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+    .num { font-variant-numeric: tabular-nums; }
+    .scroll-thin::-webkit-scrollbar { height: 8px; }
+    .scroll-thin::-webkit-scrollbar-thumb { background: rgba(100,116,139,.45); border-radius: 8px; }
+    .rd-col { position: sticky; left: 0; z-index: 2; }
+    @keyframes clock { 0%, 100% { box-shadow: 0 0 0 2px #38bdf8; } 50% { box-shadow: 0 0 0 4px rgba(56,189,248,.35); } }
+    .on-clock { animation: clock 1.6s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 antialiased">
+  <main class="max-w-[100rem] mx-auto px-3 sm:px-5 py-5 space-y-3">
+    <header class="flex flex-wrap items-start gap-3">
+      <div class="min-w-0">
+        <h1 class="text-lg sm:text-xl font-extrabold tracking-tight">Draft Board</h1>
+        <p id="sub" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Loading…</p>
+      </div>
+      <div class="ml-auto flex flex-wrap items-center gap-2 text-xs sm:text-sm">
+        <span id="status" class="px-2 py-1 rounded-md font-semibold bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200">…</span>
+        <select id="draftSel" aria-label="Draft" class="px-2 py-1 rounded-md bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"></select>
+        <button id="syncBtn" class="px-2.5 py-1 rounded-md bg-sky-600 hover:bg-sky-700 text-white font-semibold">Sync now</button>
+        <button id="pauseBtn" aria-pressed="false" class="hidden px-2.5 py-1 rounded-md border border-slate-300 dark:border-slate-700 font-semibold">Pause auto-sync</button>
+      </div>
+    </header>
+
+    <div id="replay" class="hidden flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs sm:text-sm">
+      <span class="font-semibold">Replay</span>
+      <button id="rpPrev" class="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800" aria-label="Back one pick">◀</button>
+      <input id="rpSlider" type="range" min="0" value="0" class="flex-1 min-w-[8rem] accent-sky-600" aria-label="Replay up to pick" />
+      <button id="rpNext" class="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800" aria-label="Forward one pick">▶</button>
+      <span id="rpLbl" class="num text-slate-600 dark:text-slate-300 whitespace-nowrap"></span>
+      <button id="rpAll" class="px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800">Show all</button>
+    </div>
+
+    <div id="chips" class="flex flex-wrap gap-1.5"></div>
+    <div id="summary" class="hidden flex flex-wrap items-center gap-2 rounded-xl border border-violet-300 dark:border-violet-500/40 bg-violet-50 dark:bg-violet-500/10 px-3 py-2 text-sm"></div>
+
+    <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2">
+      <div id="board" class="overflow-x-auto scroll-thin"></div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
+      <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm bg-pink-500"></span>QB</span>
+      <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm bg-emerald-500"></span>RB</span>
+      <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm bg-sky-500"></span>WR</span>
+      <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-sm bg-amber-500"></span>TE</span>
+      <span class="flex items-center gap-1"><span class="px-1 rounded bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100 font-semibold">→ team</span>traded pick, now owned by that team</span>
+      <span class="flex items-center gap-1"><span class="px-1 rounded bg-violet-600 text-white font-semibold">→ you</span>a pick you own</span>
+      <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded on-clock"></span>on the clock</span>
+      <span>Click a team or a pick to highlight that team's picks; click again to clear.</span>
+    </div>
+    <p id="note" class="text-[11px] text-slate-500 dark:text-slate-400"></p>
+  </main>
+
+  <script>
+  (() => {
+    const API = 'https://api.sleeper.app/v1';
+    const POLL_MS = 8000, PRE_POLL_MS = 60000;
+    const $ = s => document.querySelector(s);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const short = (s, n) => { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+    const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+                    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+    const POS = {
+      QB: { cell: 'bg-pink-500/15 border-pink-500/50 border-l-pink-500', txt: 'text-pink-700 dark:text-pink-300' },
+      RB: { cell: 'bg-emerald-500/15 border-emerald-500/50 border-l-emerald-500', txt: 'text-emerald-700 dark:text-emerald-300' },
+      WR: { cell: 'bg-sky-500/15 border-sky-500/50 border-l-sky-500', txt: 'text-sky-700 dark:text-sky-300' },
+      TE: { cell: 'bg-amber-500/15 border-amber-500/50 border-l-amber-500', txt: 'text-amber-700 dark:text-amber-300' },
+    };
+    const params = new URLSearchParams(location.search);
+    const EMBEDDED = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+
+    // ctx comes from the hub ('dtc-draft-ctx'); standalone uses ?league= and ?me=
+    let CTX = { leagueId: params.get('league') || '1334642025076621312', me: (params.get('me') || 'calverrd').toLowerCase(), slotByRid: null, nextSeason: null };
+    const S = { league: null, users: [], rosters: [], drafts: [], sel: null, draft: null, picks: [], traded: [], leagueTraded: [],
+                lastSync: 0, paused: false, replay: null, hl: undefined, err: '', loading: false, loadSeq: 0 };
+    let pollTimer = null, tickTimer = null;
+
+    const getJSON = async (path) => {
+      const r = await fetch(API + path, { cache: 'no-store' });
+      if (!r.ok) throw new Error(`${path} → ${r.status}`);
+      return r.json();
+    };
+
+    // ---------- league data ----------
+    async function loadLeague() {
+      const seq = ++S.loadSeq;
+      S.err = ''; S.loading = true; render();
+      try {
+        const id = CTX.leagueId;
+        const [league, users, rosters, drafts, lt] = await Promise.all([
+          getJSON(`/league/${id}`), getJSON(`/league/${id}/users`), getJSON(`/league/${id}/rosters`),
+          getJSON(`/league/${id}/drafts`).catch(() => []), getJSON(`/league/${id}/traded_picks`).catch(() => []),
+        ]);
+        if (seq !== S.loadSeq) return;
+        Object.assign(S, { league, users: users || [], rosters: rosters || [], drafts: (drafts || []).slice().sort((a, b) => Number(b.season) - Number(a.season) || (b.start_time || 0) - (a.start_time || 0)), leagueTraded: lt || [] });
+        S.hl = undefined; S.replay = null;
+        S.sel = pickDefaultDraft();
+        buildDraftSelect();
+        await syncDraft(true);
+      } catch (e) {
+        if (seq !== S.loadSeq) return;
+        S.err = `Couldn't load the league from Sleeper (${e.message}). Try Sync now.`;
+      }
+      S.loading = false; render();
+    }
+    const nextSeason = () => CTX.nextSeason || (S.league ? Number(S.league.season) + 1 : new Date().getFullYear());
+    const isLive = d => d && ['drafting', 'paused', 'pre_draft'].includes(d.status);
+    function pickDefaultDraft() {
+      const live = S.drafts.find(d => d.status === 'drafting' || d.status === 'paused') || S.drafts.find(d => d.status === 'pre_draft');
+      if (live) return live.draft_id;
+      // nothing upcoming on Sleeper yet: show next year's projected board (needs the league's traded picks + projected order)
+      return S.drafts.some(d => Number(d.season) >= nextSeason()) ? S.drafts[0].draft_id : 'proj';
+    }
+    function buildDraftSelect() {
+      const hasNext = S.drafts.some(d => Number(d.season) >= nextSeason());
+      const opts = [];
+      if (!hasNext) opts.push(`<option value="proj">${nextSeason()} · projected</option>`);
+      S.drafts.forEach(d => {
+        const st = { complete: 'complete', drafting: 'live', paused: 'paused', pre_draft: 'upcoming' }[d.status] || d.status;
+        opts.push(`<option value="${esc(d.draft_id)}">${esc(d.season)} rookie draft · ${esc(st)}</option>`);
+      });
+      $('#draftSel').innerHTML = opts.join('');
+      $('#draftSel').value = S.sel;
+    }
+
+    async function syncDraft(first) {
+      if (S.sel === 'proj') { S.draft = null; S.picks = []; S.traded = []; S.lastSync = Date.now(); schedule(); render(); return; }
+      const id = S.sel, seq = S.loadSeq;
+      try {
+        // every sync pulls both: a made pick's own roster_id is the truth; open slots use traded_picks
+        const [draft, picks, traded] = await Promise.all([getJSON(`/draft/${id}`), getJSON(`/draft/${id}/picks`), getJSON(`/draft/${id}/traded_picks`).catch(() => [])]);
+        if (seq !== S.loadSeq || id !== S.sel) return;
+        S.draft = draft;
+        S.picks = (picks || []).filter(p => !p.is_keeper);
+        S.traded = traded || [];
+        S.lastSync = Date.now(); S.err = '';
+        if (first && draft.status === 'complete') S.replay = null;
+      } catch (e) {
+        S.err = `Sync failed (${e.message}). Auto-sync will retry.`;
+      }
+      schedule(); render();
+    }
+
+    function schedule() {
+      clearTimeout(pollTimer); pollTimer = null;
+      const d = S.draft;
+      if (!d || S.paused || document.hidden) return;
+      if (d.status === 'drafting') pollTimer = setTimeout(() => syncDraft(), POLL_MS);
+      else if (d.status === 'pre_draft' && d.start_time && d.start_time - Date.now() < 3600e3) pollTimer = setTimeout(() => syncDraft(), PRE_POLL_MS);
+      // 'paused' (by the commissioner) and 'complete': no auto-sync; Sync now still works
+    }
+
+    // ---------- the board model ----------
+    function model() {
+      const L = S.league; if (!L) return null;
+      const d = S.draft;
+      const ridByUser = {}; S.rosters.forEach(r => { if (r.owner_id) ridByUser[r.owner_id] = r.roster_id; });
+      const user = {}; S.users.forEach(u => { user[u.user_id] = u; });
+      const team = {};
+      S.rosters.forEach(r => {
+        const u = user[r.owner_id] || {};
+        team[r.roster_id] = { rid: r.roster_id, dn: u.display_name || `Team ${r.roster_id}`, tn: u.metadata?.team_name || u.display_name || `Team ${r.roster_id}` };
+      });
+      const N = Number(d?.settings?.teams) || Number(L.total_rosters) || S.rosters.length || 12;
+      const R = Number(d?.settings?.rounds) || Number(L.settings?.draft_rounds) || 4;
+      const ref = d || S.drafts[0] || {};
+      const type = ref.type || 'linear';
+      const rev = Number(ref.settings?.reversal_round) || 0;
+      const season = d ? Number(d.season) : nextSeason();
+
+      // slot → original roster: slot_to_roster_id → draft_order (user → slot) → hub's projected order → roster_id
+      let slotRid = {}, orderSrc = '';
+      if (d?.slot_to_roster_id && Object.keys(d.slot_to_roster_id).length) {
+        Object.entries(d.slot_to_roster_id).forEach(([s, rid]) => { if (rid != null) slotRid[s] = Number(rid); });
+        orderSrc = 'Sleeper draft order';
+      }
+      if (Object.keys(slotRid).length < N && d?.draft_order && Object.keys(d.draft_order).length) {
+        slotRid = {};
+        Object.entries(d.draft_order).forEach(([uid, s]) => { if (ridByUser[uid] != null) slotRid[s] = ridByUser[uid]; });
+        orderSrc = 'Sleeper draft order';
+      }
+      if (Object.keys(slotRid).length < N && CTX.slotByRid && Object.keys(CTX.slotByRid).length) {
+        slotRid = {};
+        Object.entries(CTX.slotByRid).forEach(([rid, s]) => { slotRid[s] = Number(rid); });
+        orderSrc = 'projected order (standings + lottery odds, from the hub)';
+      }
+      if (Object.keys(slotRid).length < N) {
+        // standalone fallback: worst record picks first
+        slotRid = {};
+        S.rosters.slice().sort((a, b) => (a.settings?.wins || 0) - (b.settings?.wins || 0) || ((a.settings?.fpts || 0) + (a.settings?.fpts_decimal || 0) / 100) - ((b.settings?.fpts || 0) + (b.settings?.fpts_decimal || 0) / 100))
+          .forEach((r, i) => { slotRid[i + 1] = r.roster_id; });
+        orderSrc = 'projected order (worst record first)';
+      }
+
+      // who owns each (round, original roster) right now
+      const tp = d ? (S.traded.length ? S.traded : S.leagueTraded.filter(t => Number(t.season) === season)) : S.leagueTraded.filter(t => Number(t.season) === season);
+      const ownerOf = {}; tp.forEach(t => { ownerOf[`${t.round}:${t.roster_id}`] = Number(t.owner_id); });
+
+      const byNo = {}; S.picks.forEach(p => { byNo[p.pick_no] = p; });
+      const madeCount = S.picks.length;
+      const cut = S.replay == null ? Infinity : S.replay;
+      const madeShown = S.picks.filter(p => p.pick_no <= cut).length;
+      const total = N * R;
+      let clock = null;
+      if (d && (d.status === 'drafting' || d.status === 'paused' || S.replay != null)) {
+        for (let k = 1; k <= total; k++) { const p = byNo[k]; if (!p || k > cut) { clock = k; break; } }
+      }
+      const rows = [];
+      for (let r = 1; r <= R; r++) {
+        let fwd = type === 'snake' ? r % 2 === 1 : true;
+        if (type === 'snake' && rev > 0 && r >= rev) fwd = !fwd;
+        const cells = [];
+        for (let s = 1; s <= N; s++) {
+          const inRound = fwd ? s : N + 1 - s;
+          const no = (r - 1) * N + inRound;
+          const orig = slotRid[s];
+          const made = byNo[no] && no <= cut ? byNo[no] : null;
+          const owner = made && made.roster_id != null ? Number(made.roster_id) : (ownerOf[`${r}:${orig}`] ?? orig);
+          cells[s] = { r, s, inRound, no, orig, owner, made, label: `${r}.${String(inRound).padStart(2, '0')}` };
+        }
+        rows.push({ r, fwd, cells });
+      }
+      return { N, R, type, rev, season, team, slotRid, orderSrc, rows, madeCount, madeShown, total, clock, d };
+    }
+
+    const meRid = M => { const t = Object.values(M.team).find(t => t.dn.toLowerCase() === CTX.me); return t ? t.rid : null; };
+
+    // ---------- render ----------
+    function render() {
+      const M = model();
+      $('#syncBtn').disabled = S.loading;
+      if (!M) { $('#sub').textContent = S.err || 'Loading…'; $('#status').textContent = S.err ? 'Error' : '…'; post(); return; }
+      const me = meRid(M);
+      if (S.hl === undefined) S.hl = store.get(`dtc_db_hl_${CTX.leagueId}`, me);
+      if (S.hl != null && !M.team[S.hl]) S.hl = null;
+      const hl = S.hl;
+      const name = rid => M.team[rid]?.dn || `Team ${rid}`;
+
+      // header + status
+      const d = M.d;
+      $('#sub').textContent = `${S.league.name} · ${M.season} rookie draft · ${M.N} teams · ${M.R} rounds · ${M.type === 'snake' ? (M.rev ? `snake, round ${M.rev} reversal` : 'snake') : 'linear'}`;
+      const ago = S.lastSync ? Math.max(0, Math.round((Date.now() - S.lastSync) / 1000)) : null;
+      const st = $('#status');
+      let label, cls;
+      if (!d) { label = 'Projected · no draft on Sleeper yet'; cls = 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'; }
+      else if (S.replay != null) { label = `Replay · pick ${S.replay} of ${M.madeCount}`; cls = 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200'; }
+      else if (d.status === 'drafting') { label = S.paused ? `Live · auto-sync off · ${ago}s ago` : `● Live · synced ${ago}s ago`; cls = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200'; }
+      else if (d.status === 'paused') { label = 'Paused by the commissioner'; cls = 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200'; }
+      else if (d.status === 'pre_draft') { label = d.start_time ? `Starts ${new Date(d.start_time).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}` : 'Not started'; cls = 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'; }
+      else { label = `Complete · ${M.madeCount} picks`; cls = 'bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200'; }
+      st.textContent = label; st.className = `px-2 py-1 rounded-md font-semibold ${cls}`;
+      const pb = $('#pauseBtn');
+      pb.classList.toggle('hidden', !(d && d.status === 'drafting' && S.replay == null));
+      pb.textContent = S.paused ? 'Resume auto-sync' : 'Pause auto-sync';
+      pb.setAttribute('aria-pressed', String(S.paused));
+
+      // replay bar (any draft with picks made)
+      const rp = $('#replay');
+      rp.classList.toggle('hidden', !(d && M.madeCount > 0));
+      if (d && M.madeCount > 0) {
+        const sl = $('#rpSlider'); sl.max = String(M.madeCount); sl.value = String(S.replay == null ? M.madeCount : S.replay);
+        const v = Number(sl.value), lastPick = S.picks.find(p => p.pick_no === v);
+        $('#rpLbl').textContent = `Up to pick ${v} of ${M.madeCount}${lastPick ? ` · ${pickName(lastPick)}` : ''}`;
+        $('#rpAll').classList.toggle('hidden', S.replay == null);
+      }
+
+      // team chips: draft order, with each team's pick count
+      const count = {};
+      M.rows.forEach(row => row.cells.forEach(c => { if (c) count[c.owner] = (count[c.owner] || 0) + 1; }));
+      const chips = [];
+      for (let s = 1; s <= M.N; s++) {
+        const rid = M.slotRid[s]; if (rid == null) continue;
+        const on = hl === rid, mine = rid === me;
+        chips.push(`<button data-hl="${rid}" aria-pressed="${on}" title="${esc(M.team[rid]?.tn || '')} · slot ${s} · ${count[rid] || 0} picks" class="px-2 py-1 rounded-lg text-xs font-semibold border transition ${on ? 'bg-violet-600 border-violet-600 text-white' : mine ? 'border-violet-400 text-violet-700 dark:text-violet-300 bg-white dark:bg-slate-900' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:border-violet-400'}">${s}. ${esc(short(name(rid), 16))} <span class="num opacity-70">${count[rid] || 0}</span></button>`);
+      }
+      // teams that own picks but no slot (shouldn't happen, but traded-in orphans stay clickable)
+      Object.keys(count).map(Number).filter(rid => !Object.values(M.slotRid).includes(rid)).forEach(rid => chips.push(`<button data-hl="${rid}" class="px-2 py-1 rounded-lg text-xs font-semibold border border-slate-300 dark:border-slate-700">${esc(name(rid))} ${count[rid]}</button>`));
+      $('#chips').innerHTML = chips.join('');
+
+      // summary strip for the highlighted team
+      const sum = $('#summary');
+      if (hl != null) {
+        const mine = [];
+        M.rows.forEach(row => row.cells.forEach(c => { if (c && c.owner === hl) mine.push(c); }));
+        mine.sort((a, b) => a.no - b.no);
+        const list = mine.map(c => {
+          const p = c.made ? ` <span class="${POS[c.made.metadata?.position]?.txt || ''}">${esc(pickName(c.made))}</span>` : '';
+          return `<span class="num font-semibold">${c.label}</span>${p}`;
+        }).join('<span class="text-slate-400">, </span>');
+        sum.innerHTML = `<span class="inline-block w-3 h-3 rounded ring-2 ring-violet-500"></span><b>${esc(name(hl))}</b><span class="text-slate-600 dark:text-slate-300">— ${mine.length} pick${mine.length === 1 ? '' : 's'}${mine.length ? ':' : ''}</span><span class="min-w-0">${list}</span><button data-hl="none" class="ml-auto px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs">Clear</button>`;
+        sum.classList.remove('hidden');
+      } else sum.classList.add('hidden');
+
+      // grid: columns = draft slots (like Sleeper), rows = rounds
+      const W = M.N > 14 ? 'w-[6.25rem]' : 'w-[7.25rem]';
+      const head = [];
+      for (let s = 1; s <= M.N; s++) {
+        const rid = M.slotRid[s];
+        head.push(`<th class="p-0.5 align-bottom"><button data-hl="${rid}" title="${esc(M.team[rid]?.tn || '')}" class="${W} truncate text-left px-1 py-0.5 rounded text-[10px] font-semibold ${hl === rid ? 'bg-violet-600 text-white' : rid === me ? 'text-violet-700 dark:text-violet-300' : 'text-slate-500 dark:text-slate-400 hover:bg-violet-500/15'}">${s}. ${esc(short(name(rid), M.N > 14 ? 12 : 14))}</button></th>`);
+      }
+      const body = M.rows.map(row => {
+        const cells = [];
+        for (let s = 1; s <= M.N; s++) {
+          const c = row.cells[s], p = c.made, pos = p?.metadata?.position;
+          const mine = hl != null && c.owner === hl;
+          const traded = c.owner !== c.orig;
+          const badge = traded ? `<span class="shrink-0 max-w-[4.2rem] truncate px-1 rounded text-[9px] font-bold ${c.owner === me ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-100'}" title="Now owned by ${esc(name(c.owner))} (originally ${esc(name(c.orig))})">→ ${esc(c.owner === me ? 'you' : short(name(c.owner), 9))}</span>` : '';
+          const onClock = M.clock === c.no;
+          let inner;
+          if (p) {
+            inner = `<div class="font-bold truncate">${esc(pickName(p))}</div><div class="text-[10px] truncate ${POS[pos]?.txt || 'text-slate-500'}">${esc(pos || '')}${p.metadata?.team ? ' · ' + esc(p.metadata.team) : ''}</div>`;
+          } else if (onClock) {
+            inner = `<div class="font-bold text-sky-700 dark:text-sky-300">On the clock</div><div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${esc(name(c.owner))}</div>`;
+          } else {
+            inner = `<div class="font-medium ${c.owner === me ? 'text-violet-700 dark:text-violet-300' : 'text-slate-500 dark:text-slate-400'}">Open</div><div class="text-[10px] text-slate-400 truncate">${esc(short(name(c.owner), 16))}</div>`;
+          }
+          const base = p ? `border border-l-4 ${POS[pos]?.cell || 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 border-l-slate-400'}`
+                         : 'border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60';
+          const hlCls = mine ? 'ring-2 ring-violet-500 shadow-md shadow-violet-500/30' : hl != null && !onClock ? 'opacity-30 hover:opacity-70' : 'hover:ring-1 hover:ring-violet-400';
+          const title = `${c.label} (#${c.no}) · ${name(c.owner)}${traded ? ` via ${name(c.orig)}` : ''}${p ? ` · ${pickName(p)} ${pos || ''}` : onClock ? ' · on the clock' : ' · open'}`;
+          cells.push(`<td class="p-0.5 align-top"><div data-hl="${c.owner}" title="${esc(title)}" class="${W} h-[3.4rem] cursor-pointer transition-opacity rounded px-1.5 py-1 text-[11px] leading-tight ${base} ${hlCls} ${onClock ? 'on-clock' : ''}">
+            <div class="flex items-center gap-1"><span class="text-[9px] text-slate-400 num">${c.label}</span><span class="ml-auto"></span>${badge}</div>${inner}</div></td>`);
+        }
+        return `<tr><td class="rd-col bg-white dark:bg-slate-900 pr-1.5 pl-1 text-[11px] font-semibold text-slate-500 align-middle whitespace-nowrap">Rd ${row.r}${M.type === 'snake' ? (row.fwd ? ' →' : ' ←') : ''}</td>${cells.join('')}</tr>`;
+      }).join('');
+      $('#board').innerHTML = `<table class="border-separate" style="border-spacing:0"><thead><tr><th class="rd-col bg-white dark:bg-slate-900"></th>${head.join('')}</tr></thead><tbody>${body}</tbody></table>`;
+
+      const notes = [`Order: ${M.orderSrc}.`];
+      if (!d) notes.push(`No ${M.season} draft exists on Sleeper yet, so this is the projected board: today's traded ${M.season} picks placed in the projected order. It switches to the real draft once Sleeper creates it.`);
+      if (d && d.status === 'drafting') notes.push(`Auto-sync every ${POLL_MS / 1000} s while the draft is live${S.paused ? ' (paused by you)' : ''}.`);
+      if (S.err) notes.push(`⚠ ${S.err}`);
+      $('#note').textContent = notes.join(' ');
+      post();
+    }
+    const pickName = p => [p.metadata?.first_name, p.metadata?.last_name].filter(Boolean).join(' ') || `Player ${p.player_id}`;
+
+    // ---------- events ----------
+    document.addEventListener('click', e => {
+      const b = e.target.closest('[data-hl]'); if (!b) return;
+      const v = b.dataset.hl;
+      S.hl = v === 'none' ? null : (S.hl === Number(v) ? null : Number(v));
+      store.set(`dtc_db_hl_${CTX.leagueId}`, S.hl);
+      render();
+    });
+    $('#syncBtn').addEventListener('click', () => { if (S.league) syncDraft(); else loadLeague(); });
+    $('#pauseBtn').addEventListener('click', () => { S.paused = !S.paused; schedule(); render(); });
+    $('#draftSel').addEventListener('change', e => { S.sel = e.target.value; S.replay = null; S.draft = null; S.picks = []; S.traded = []; render(); syncDraft(true); });
+    const setReplay = v => { const max = S.picks.length; v = Math.max(0, Math.min(max, v)); S.replay = v >= max && S.draft?.status === 'complete' ? null : v; if (S.replay != null) { clearTimeout(pollTimer); pollTimer = null; } else schedule(); render(); };
+    $('#rpSlider').addEventListener('input', e => setReplay(Number(e.target.value)));
+    $('#rpPrev').addEventListener('click', () => setReplay((S.replay ?? S.picks.length) - 1));
+    $('#rpNext').addEventListener('click', () => setReplay((S.replay ?? S.picks.length) + 1));
+    $('#rpAll').addEventListener('click', () => { S.replay = null; schedule(); render(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && S.draft?.status === 'drafting' && !S.paused) syncDraft(); else schedule(); });
+    tickTimer = setInterval(() => { if (S.draft?.status === 'drafting' && S.replay == null) render(); }, 1000);
+
+    // ---------- hub embedding ----------
+    function post() {
+      if (!EMBEDDED) return;
+      try { window.parent.postMessage({ type: 'dtc-height', frame: 'draft', height: document.body.offsetHeight }, location.origin); } catch (e) {}
+    }
+    if (EMBEDDED) {
+      window.addEventListener('message', e => {
+        if (e.origin !== location.origin || !e.data) return;
+        if (e.data.type === 'dtc-theme') document.documentElement.classList.toggle('dark', e.data.theme === 'dark');
+        if (e.data.type === 'dtc-draft-ctx') {
+          const c = e.data, changed = c.leagueId && c.leagueId !== CTX.leagueId;
+          CTX = { leagueId: c.leagueId || CTX.leagueId, me: String(c.me || CTX.me).toLowerCase(), slotByRid: c.slotByRid || null, nextSeason: Number(c.nextSeason) || null };
+          if (changed || !S.league) loadLeague(); else { buildDraftSelect(); render(); }
+        }
+      });
+      if ('ResizeObserver' in window) new ResizeObserver(post).observe(document.body);
+      // ask the hub for league context; load standalone defaults if none arrives
+      try { window.parent.postMessage({ type: 'dtc-ready', frame: 'draft' }, location.origin); } catch (e) {}
+      setTimeout(() => { if (!S.league && !S.loading) loadLeague(); }, 1500);
+    } else {
+      document.documentElement.classList.toggle('dark', params.get('theme') !== 'light');
+      loadLeague();
+    }
+  })();
+  </script>
+</body>
+</html>
