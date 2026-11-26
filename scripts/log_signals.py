@@ -1,4 +1,5 @@
-"""Daily signal log: every player the site flags today, with that day's market prices and model odds.
+"""Daily signal log: every player the site flags today, plus an unflagged comparison group, with that day's market
+prices and model odds.
 
 Point-in-time prices can't be rebuilt later (ktc.json / data/fc/ are overwritten every day), so this keeps a dated
 snapshot that a later backtest can join to what the players actually did over the next 6-12 months.
@@ -20,6 +21,8 @@ import datetime, json, os, re, sys, unicodedata
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else "."
 RULES = "v2 (2026-11-26): + FantasyCalc check on CHEAP/PRICEY"
+# Log layout: 1 = flagged players only; 2 = + an unflagged comparison group (cohort "rookie" / "veteran", flags [])
+LOG_SCHEMA = 2
 
 
 def key(name):   # same matching key as check_names.py / the hub's value hand-off: letters only, suffixes dropped
@@ -120,10 +123,16 @@ def main():
             gap = kr - (i + 1)
             big = abs(kv - by_k[i][1]) >= max(500, 0.15 * kv)
             flag = ("CHEAP" if gap >= th else "PRICEY" if gap <= -th else None) if big else None
+            # every pool member is logged (flagged or not), so a later test can compare flagged players with
+            # unflagged peers priced on the same day
+            r = row(pos, s["n"])
             if flag:
-                r = row(pos, s["n"])
                 r["flags"].append(flag)
-                r["mv"] = {"odds_rank": i + 1, "ktc_rank": kr, "pool": n, "fc_flag": fc_flags.get(s["n"], "")}
+            r["mv"] = {"odds_rank": i + 1, "ktc_rank": kr, "pool": n, "fc_flag": fc_flags.get(s["n"], "")}
+
+    # comparison group: every rookie on the rookie tabs this season and last (the WR BUY / JUMP / MISSED classes)
+    for s in players:
+        row(s["pos"], s["n"])
 
     # odds and draft info for every logged rookie
     by_key = {f"{s['pos']}|{key(s['n'])}": s for s in players}
@@ -150,16 +159,22 @@ def main():
             flag = "SELL NOW" if age >= 31 else "SELL WINDOW" if (age >= 29 and p["ppg"] < cfg["med"]) else None
         elif pos == "TE" and p["ppg"] < cfg["med"]:
             flag = "SELL NOW" if age >= 32 else "SELL WINDOW" if age >= 31 else None
+        # every 12+ PPG veteran the sell table covers is logged, flagged or not (the veteran comparison group)
+        r = row(pos, m["name"])
         if flag:
-            r = row(pos, m["name"])
             r["flags"].append(flag)
-            r["sell"] = {"repeat12_odds": round(100 * kk / nn), "k": kk, "n": nn, "ppg": p["ppg"], "season": p.get("s"), "gp": p.get("gp")}
+        r["sell"] = {"repeat12_odds": round(100 * kk / nn), "k": kk, "n": nn, "ppg": p["ppg"], "season": p.get("s"), "gp": p.get("gp")}
+
+    for k, r in rows.items():   # rookie = on the rookie tabs (this class or last); veteran = the sell table's group
+        r["cohort"] = "rookie" if k in by_key else "veteran"
 
     out = {
         "date": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d"),
         "rules": RULES,
+        "log_schema": LOG_SCHEMA,
         "sources": {"ktc_updated": ktc.get("updatedAt"), "fc_updated": fc.get("updated"), "signals_season": season},
         "count": len(rows),
+        "flagged": sum(1 for r in rows.values() if r["flags"]),
         "players": sorted(rows.values(), key=lambda r: (r["pos"], -(r.get("ktc_sf") or 0))),
     }
     os.makedirs(os.path.join(ROOT, "data/signal-log"), exist_ok=True)
@@ -173,7 +188,7 @@ def main():
     print(f"signal log {out['date']}: {len(rows)} players · " + " · ".join(f"{k} {v}" for k, v in sorted(tally.items())))
     nomkt = [r["name"] for r in rows.values() if r["ktc_sf"] is None and r["fc_sf"] is None]
     if nomkt:
-        print(f"  no market value found for: {', '.join(nomkt)}")
+        print(f"  no market value found for {len(nomkt)} (mostly deep rookies): {', '.join(nomkt[:12])}{' …' if len(nomkt) > 12 else ''}")
 
 
 if __name__ == "__main__":
