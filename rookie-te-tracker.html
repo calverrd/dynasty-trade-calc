@@ -401,7 +401,7 @@
       const missed = [], cls = Math.max(...DATA.map(p => p.yr));
       DATA.forEach(p => {
         const v = d.players[`${POS_KEY}|${normName(p.n)}`];
-        if (v) { p.ktc = v[0]; p.kFlag = v[1] || null; p.kRaw = v[1] || null; p.fRaw = v[2] || null; p.ktcWr = v[3]; p.kOnly = v[4] === 1 && MKT.src !== 'ktc'; }
+        if (v) { p.ktc = v[0]; p.kFlag = v[1] || null; p.kRaw = v[1] || null; p.fRaw = v[2] || null; p.fK = v[5] || null; p.ktcWr = v[3]; p.kOnly = v[4] === 1 && MKT.src !== 'ktc'; }
         else { p.ktc = null; p.kFlag = null; p.kRaw = p.fRaw = null; p.kOnly = false; if (p.yr === cls) missed.push(p.n); }
       });
       const byYr = {};
