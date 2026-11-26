@@ -445,8 +445,11 @@
           <ul class="list-disc pl-5 mt-1.5 space-y-1 leading-relaxed">
             <li><strong>WR BUY</strong> (role ahead of points: usage 15+, PPG under 10): 13 of 21 historical BUYs reached 12+ PPG, against about 7 of 21 rookies with the same early PPG.</li>
             <li><strong>Y2 JUMPED</strong> (second-year usage jump): 79% of RBs, 31% of WRs, 33% of TEs went on to a 12+ season.</li>
-            <li><strong>PRICEY</strong> (KTC ranks him far above his odds, Weeks 1–4): Week 5 PRICEY rookies trailed similar fairly priced rookies by 59% in value at 6 months and 70% at 12 months; 7 of 8 trailed. The strongest market signal we have.</li>
-            <li><strong>CHEAP</strong> (KTC ranks him far below his odds, Weeks 1–4): the weaker side of the same backtest. A lean, not a rule.</li>
+            <li><strong>PRICEY</strong> (KTC ranks him far above his odds, Weeks 1–4): the strongest market signal we have. Rerun Nov 26 on 2020–2025 rookies: all 5 PRICEY rookies under the live rule lost value against similar rookies (median −60% at 12 months); with a looser cutoff, 17 PRICEY rookies trailed by 56% at 12 months (95% range −72% to −31%).</li>
+            <li><strong>CHEAP</strong> (KTC ranks him far below his odds, Weeks 1–4): worth a look, not a buy call. On average CHEAP rookies gained (+53% at 12 months), but the range runs from −29% to +253%: big hits (Puka Nacua, Chase Claypool) and busts. Nearly every CHEAP flag is a 3rd-round-or-later pick, so draft round doesn't separate them.</li>
+            <li><strong>KTC + FC agree / KTC only</strong>: the CHEAP / PRICEY rule run again on FantasyCalc values. A flag that holds on both is ranked a little higher; the daily signal log will show whether consensus flags do better.</li>
+            <li><strong>Ask price on SELL rows</strong>: FantasyCalc values come from completed trades and price most flagged veterans above KTC (12 of 15 on Nov 26), so the higher of the two is shown as your asking price.</li>
+            <li><strong>Contender / rebuild tilt</strong>: your team's League-tab tag reorders the lists (rebuilders: aging veterans first in Sell; contenders: this-season scorers up in Buy, SELL WINDOW players down in Sell). Nothing is hidden.</li>
             <li><strong>SELL NOW / SELL WINDOW</strong> (age curve, 2015–2024): veterans with 12+ PPG at that position, age and PPG level; the % is how many posted 12+ again the next season.</li>
             <li><strong>MIXED</strong>: a player with both a buy and a sell signal (for example a WR BUY whose KTC price is already PRICEY) shows in both lists with this tag. PRICEY is the better-tested of the two.</li>
             <li>Left out on purpose: the Sell-High / Buy-Low radars below (repeat rate and KTC-vs-FC gaps), which haven't been backtested.</li>
@@ -481,7 +484,7 @@
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-2.5">
         <div>
           <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">🌱 Rookie Buy Targets (Other Rosters)</h2>
-          <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Rookies and second-year players on other teams with a BUY tag (role ahead of points), a Year 2 JUMPED tag, or CHEAP pricing (KTC ranks them well below their Weeks 1–4 hit odds, the window the backtest supports). From the rookie tabs, refreshed every Tuesday. Offer loads the best-fitting package.</p>
+          <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Rookies and second-year players on other teams with a BUY tag (role ahead of points), a Year 2 JUMPED tag, or CHEAP pricing (KTC ranks them well below their Weeks 1–4 hit odds; worth a look, the weaker side of the backtest). From the rookie tabs, refreshed every Tuesday. Offer loads the best-fitting package.</p>
         </div>
         <div id="rookieTargetsList" class="space-y-2"></div>
       </div>
@@ -4361,6 +4364,17 @@
           const kAt = byK[i].p.k, big = Math.abs(x.p.k - kAt) >= Math.max(500, 0.15 * x.p.k);
           x.mv = { hp: x.s.hp[key], now: x.s.hp['8'] ?? x.s.hp[key], hr: i + 1, kr, n, flag: big ? (gap >= th ? 'cheap' : gap <= -th ? 'pricey' : '') : '' };
         });
+        // Same rule on FantasyCalc (on the KTC scale): a flag that holds on both sources is a consensus flag
+        const fpool = pool.filter(x => x.p.f > 0), fn = fpool.length;
+        if (fn >= 6) {
+          const fth = Math.max(3, Math.round(fn * 0.2)), byF = fpool.slice().sort((a, b) => b.p.f - a.p.f);
+          fpool.slice().sort((a, b) => b.s.hp[key] - a.s.hp[key] || b.p.f - a.p.f).forEach((x, i) => {
+            const fr = byF.indexOf(x) + 1, gap = fr - (i + 1), big = Math.abs(x.p.f - byF[i].p.f) >= Math.max(500, 0.15 * x.p.f);
+            x.mv.fflag = big ? (gap >= fth ? 'cheap' : gap <= -fth ? 'pricey' : '') : '';
+            x.mv.fr = fr;
+          });
+        }
+        pool.forEach(x => { x.mv.both = !!x.mv.flag && x.mv.fflag === x.mv.flag; });
       });
       return out;
     }
@@ -4384,18 +4398,23 @@
         return `<span class="font-bold">12+ ${v}%</span>${e ? ` · <span class="font-bold">${ELB[x.s.pos]} ${e}</span>` : ''} <span class="${MUTED}">(${x.s.pos === 'TE' ? 'any season' : 'Yrs 1–3'}, ${k === '8' ? 'Games 1–8' : 'Weeks 1–4'}${avg != null ? `; ${x.s.yr} ${x.s.pos} average ${avg}%` : ''})</span>`;
       };
       const buys = [], sells = [];
+      // Contender / rebuild tilt from your own team's archetype (the League tab's rule): reorders, never hides
+      const myArch = owners.length && T[ME] ? teamArchetype(ME).archetype : 'neutral';
+      const agree = m => m.both ? 'KTC + FC agree' : 'KTC only';
       xs.forEach(x => {
         const o = OWN[x.p.id], mine = o === ME;
         const chips = [], sc = [];
         // ranked by the player's own odds first (a signal on a 10% player is still a 10% player), signal strength second
         if (x.s.sig.includes('buy')) { chips.push(['WR BUY', '13 of 21 hit']); sc.push(0.3); }
         if (x.s.sig.includes('jump')) { chips.push(['Y2 JUMPED', x.s.pos === 'RB' ? '79% hit' : x.s.pos === 'TE' ? '33% hit' : '31% hit']); sc.push(x.s.pos === 'RB' ? 0.8 : 0.3); }
-        if (x.m4 && x.m4.flag === 'cheap') { chips.push(['CHEAP', `odds #${x.m4.hr} vs KTC #${x.m4.kr} of ${x.m4.n}`]); sc.push(0.1); }
+        if (x.m4 && x.m4.flag === 'cheap') { chips.push(['CHEAP', `worth a look · odds #${x.m4.hr} vs KTC #${x.m4.kr} of ${x.m4.n} · ${agree(x.m4)}`]); sc.push(x.m4.both ? 0.15 : 0.05); }
         const own = x.s.hp?.['8'] ?? x.s.hp?.['4'];
         const pricey = x.m4 && x.m4.flag === 'pricey';
         if (chips.length && pricey) chips.push(['MIXED', 'also PRICEY: the market already pays for it']);
-        if (chips.length && (all || !mine)) buys.push({ p: x.p, o, chips, odds: oddsTxt(x), score: sc.reduce((a, b) => a + b, 0) + (own != null ? own / 100 : (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 0.79 : 0.3)) });
-        if (pricey && (all || mine)) sells.push({ p: x.p, o, chips: [['PRICEY', `odds #${x.m4.hr} vs KTC #${x.m4.kr} of ${x.m4.n}`], ...(x.s.sig.includes('buy') ? [['MIXED', 'also a WR BUY: role ahead of his points']] : [])], odds: oddsTxt(x), score: 5 });
+        // contenders: a rookie already scoring this season (FantasyCalc redraft value) moves up a little
+        const nowTilt = myArch === 'contender' ? Math.min(0.3, (x.p.rdv || 0) / 10000) : 0;
+        if (chips.length && (all || !mine)) buys.push({ p: x.p, o, chips, odds: oddsTxt(x), score: sc.reduce((a, b) => a + b, 0) + nowTilt + (own != null ? own / 100 : (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 0.79 : 0.3)) });
+        if (pricey && (all || mine)) sells.push({ p: x.p, o, chips: [['PRICEY', `strongest sell signal · odds #${x.m4.hr} vs KTC #${x.m4.kr} of ${x.m4.n} · ${agree(x.m4)}`], ...(x.s.sig.includes('buy') ? [['MIXED', 'also a WR BUY: role ahead of his points']] : [])], odds: oddsTxt(x), score: x.m4.both ? 5.5 : 5 });
       });
       P.forEach(p => {
         if (p.pick) return;
@@ -4403,8 +4422,14 @@
         if (!si || !si.flag) return;
         const o = OWN[p.id];
         if (!all && o !== ME) return;
+        // Asking price: FantasyCalc comes from completed trades and has priced flagged veterans above KTC (12 of 15 on Nov 26)
+        const ask = p.f > 0 && p.k > 0 ? (p.f >= p.k
+          ? `<div class="text-[11px]"><span class="font-bold">Ask: ${fmt(p.f)}</span> <span class="${MUTED}">FantasyCalc (real trades) vs KTC ${fmt(p.k)}; anchor on the FC price</span></div>`
+          : `<div class="text-[11px]"><span class="font-bold">Ask: ${fmt(p.k)}</span> <span class="${MUTED}">KTC vs FantasyCalc ${fmt(p.f)}; trades value him lower, so KTC is the higher anchor</span></div>`) : '';
+        // rebuilders sell aging veterans first; contenders can ride a SELL WINDOW player through this season
+        const wTilt = myArch === 'rebuild' ? 1 : myArch === 'contender' && si.flag === 'window' ? -1 : 0;
         sells.push({ p, o, chips: [[si.flag === 'now' ? 'SELL NOW' : 'SELL WINDOW', `age ${si.age.toFixed(1)}`]],
-          odds: `<span class="font-bold">12+ next season ${si.odds}%</span> <span class="${MUTED}">(${si.k} of ${si.n} like him; ${si.ppg} PPG in ${si.season})</span>`, score: (si.flag === 'now' ? 3 : 2) + (100 - si.odds) / 100 });
+          odds: `<span class="font-bold">12+ next season ${si.odds}%</span> <span class="${MUTED}">(${si.k} of ${si.n} like him; ${si.ppg} PPG in ${si.season})</span>${ask}`, score: (si.flag === 'now' ? 3 : 2) + wTilt + (100 - si.odds) / 100 });
       });
       buys.sort((a, b) => b.score - a.score); sells.sort((a, b) => b.score - a.score);
       const row = (r, kind) => `<div class="p-2.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] flex items-center justify-between gap-2">
@@ -4418,7 +4443,8 @@
         </div>`;
       const col = (title, list, kind, empty) => `<div class="space-y-2"><h3 class="text-xs font-extrabold uppercase tracking-wider ${kind === 'buy' ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}">${title} <span class="${MUTED} font-semibold normal-case tracking-normal">(${list.length})</span></h3>${list.length ? list.slice(0, 15).map(r => row(r, kind)).join('') : `<div class="text-xs ${MUTED} py-2">${empty}</div>`}</div>`;
       if (!SIGNALS) { el.innerHTML = `<div class="text-xs ${MUTED} py-2 lg:col-span-2">Loading rookie signals…</div>`; return; }
-      el.innerHTML = col('Buy', buys, 'buy', all ? 'No buy signals right now.' : 'No buy signals on other rosters right now.') + col('Sell', sells, 'sell', all ? 'No sell signals right now.' : 'No sell signals on your roster right now.');
+      const tiltNote = { rebuild: 'Your team reads as <strong>rebuilding</strong>: aging veterans are sorted to the top of Sell.', contender: 'Your team reads as a <strong>contender</strong>: rookies already scoring this season rank a bit higher in Buy, and SELL WINDOW veterans drop down Sell (they still help this year; sell after the season).' }[myArch];
+      el.innerHTML = (tiltNote ? `<div class="lg:col-span-2 text-[11px] ${MUTED}">${tiltNote} Same rule as the League tab's Contender / Rebuild tags; nothing is hidden.</div>` : '') + col('Buy', buys, 'buy', all ? 'No buy signals right now.' : 'No buy signals on other rosters right now.') + col('Sell', sells, 'sell', all ? 'No sell signals right now.' : 'No sell signals on your roster right now.');
     }
 
     function renderRookieTargets() {
@@ -4427,13 +4453,13 @@
       const xs = signalPlayers().filter(x => OWN[x.p.id] !== ME && (x.s.sig.includes('buy') || x.s.sig.includes('jump') || (x.mv && x.mv.flag === 'cheap')));
       if (!SIGNALS) { el.innerHTML = `<div class="text-xs ${MUTED} py-2">Rookie signals load from the weekly refresh (signals.json).</div>`; return; }
       if (!xs.length) { el.innerHTML = `<div class="text-xs ${MUTED} py-2">No BUY, JUMPED or CHEAP rookies on other rosters right now.</div>`; return; }
-      const score = x => (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 3 : 0) + (x.s.sig.includes('buy') ? 2 : 0) + (x.s.sig.includes('jump') ? 1.5 : 0) + (x.mv && x.mv.flag === 'cheap' ? 1 : 0) + (x.mv ? x.mv.now / 100 : 0);
+      const score = x => (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 3 : 0) + (x.s.sig.includes('buy') ? 2 : 0) + (x.s.sig.includes('jump') ? 1.5 : 0) + (x.mv && x.mv.flag === 'cheap' ? (x.mv.both ? 0.6 : 0.3) : 0) + (x.mv ? x.mv.now / 100 : 0);
       xs.sort((a, b) => score(b) - score(a));
       const why = x => {
         const r = [];
         if (x.s.sig.includes('buy')) r.push('WR BUY: role ahead of his points (13 of 21 historical BUYs hit)');
         if (x.s.sig.includes('jump')) r.push(`Y2 ${x.s.pos} JUMPED (${x.s.pos === 'RB' ? '79%' : x.s.pos === 'TE' ? '33%' : '31%'} hit historically)`);
-        if (x.mv && x.mv.flag === 'cheap') r.push(`${x.s.yr} CHEAP: #${x.mv.hr} of ${x.mv.n} in his class on Weeks 1–4 odds but KTC #${x.mv.kr} · ${x.mv.now}% odds now`);
+        if (x.mv && x.mv.flag === 'cheap') r.push(`${x.s.yr} CHEAP (worth a look; ${x.mv.both ? 'KTC + FC agree' : 'KTC only'}): #${x.mv.hr} of ${x.mv.n} in his class on Weeks 1–4 odds but KTC #${x.mv.kr} · ${x.mv.now}% odds now`);
         else if (x.mv) r.push(`${x.mv.now}% odds`);
         return r.join(' · ');
       };
