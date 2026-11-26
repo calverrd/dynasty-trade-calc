@@ -475,6 +475,7 @@ def add_odds(rows, pos):
     lp = lambda o: math.log(o.get("pk") or 262)
     for o in rows:
         o.pop("hp", None)
+        o.pop("he", None)
     for key, uk, gk in WINDOWS[pos]:
         tr = [o for o in rows if o["tier"] != "tbd" and o["yr"] <= LAST_DONE - 1 and (o.get(gk) or 0) >= 2 and o.get(uk) is not None]
         if len(tr) < 30:
@@ -482,12 +483,22 @@ def add_odds(rows, pos):
         X = np.array([[o[uk], lp(o)] for o in tr], dtype=float)
         mu, sd = X.mean(0), X.std(0) + 1e-9
         w = logit_fit((X - mu) / sd, np.array([1.0 if hit(o) else 0.0 for o in tr]))
+        # Elite odds (WR 14+, RB 15+ = tier "green") = the 12+ model rescaled: a 1-input logistic of elite on the
+        # 12+ model's score. Backtested Nov 2026 (walk-forward 2019-23): best Brier / log-loss in every WR/RB
+        # window; a separate elite model ranked the same (Spearman 0.94-1.00) with no AUC gain. TE: too few elite hits.
+        we = None
+        if pos in ("WR", "RB"):
+            Zs = (X - mu) / sd
+            we = logit_fit((w[0] + Zs @ w[1:])[:, None], np.array([1.0 if o["tier"] == "green" else 0.0 for o in tr]))
         for o in rows:
             if o["tier"] != "tbd" or (o.get(gk) or 0) < 2 or o.get(uk) is None:   # same 2-game floor as training
                 continue
             z = (np.array([o[uk], lp(o)]) - mu) / sd
             p = 1 / (1 + math.exp(-(w[0] + w[1] * z[0] + w[2] * z[1])))
             o.setdefault("hp", {})[key] = max(1, min(99, int(round(100 * p))))
+            if we is not None:   # elite odds: the 12+ model rescaled, never above the 12+ odds (tail crossings)
+                pe = 1 / (1 + math.exp(-(we[0] + we[1] * (w[0] + w[1] * z[0] + w[2] * z[1]))))
+                o.setdefault("he", {})[key] = max(0, min(o["hp"][key], int(round(100 * pe))))
     return rows
 
 
@@ -502,7 +513,7 @@ def signals(rows, pos):
         if not (o.get("hp") or any(sig.values())):
             continue
         out.append({"n": o["n"], "pos": pos, "yr": o["yr"], "rd": o.get("rd"), "pk": o.get("pk"), "tm": o.get("tm", ""),
-                    "hp": o.get("hp", {}), "u": o.get("u"), "u8": o.get("u8"), "u2": o.get("u2"), "bf8": o.get("bf8"),
+                    "hp": o.get("hp", {}), "he": o.get("he", {}), "u": o.get("u"), "u8": o.get("u8"), "u2": o.get("u2"), "bf8": o.get("bf8"),
                     "sig": [k for k, v in sig.items() if v]})
     return out
 
