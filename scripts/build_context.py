@@ -17,7 +17,7 @@ import json, os, re, sys, unicodedata
 ROOT = sys.argv[1] if len(sys.argv) > 1 else "."
 PAGES = {"WR": "rookie-wr-tracker.html", "RB": "rookie-rb-tracker.html", "TE": "rookie-te-tracker.html"}
 MIN_ROWS = 100
-FIELDS = ["n", "yr", "rd", "pk", "tm", "tier", "u", "u8", "g", "g8", "gL", "hp", "tags", "bf8", "b3"]
+FIELDS = ["n", "yr", "rd", "pk", "tm", "tier", "u", "u8", "g", "g8", "gL", "hp", "he", "tags", "bf8", "b3"]
 
 
 def norm(s):
@@ -44,7 +44,7 @@ def main():
         data = page_data(os.path.join(ROOT, fname))
         if len(data) < MIN_ROWS:
             raise SystemExit(f"{fname}: only {len(data)} rows")
-        rows[pos] = [[rnd(r.get(f)) if f not in ("hp", "tags") else (r.get(f) or ([] if f == "tags" else None)) for f in FIELDS] for r in data]
+        rows[pos] = [[rnd(r.get(f)) if f not in ("hp", "he", "tags") else (r.get(f) or ([] if f == "tags" else None)) for f in FIELDS] for r in data]
 
     ages, src = {}, {"fc": 0, "ktc": 0}
     try:  # 1) FantasyCalc (the hub's first choice)
