@@ -3698,7 +3698,14 @@
       const low = sec.lowMark, hit = sec.hitMark, rep2 = sec.rep2Mark, c = MX.compact;
       const pct = v => v == null ? '<span class="text-slate-400">—</span>' : `${(v * 100).toFixed(1)}%`;
       // One red → yellow → green scale for every rate cell: 0% red, 50% yellow, 100% green
-      const heat = v => v == null ? '' : `background: hsla(${Math.round(120 * Math.max(0, Math.min(1, v)))}, 75%, 50%, 0.32)`;
+      // Solid spreadsheet-style scale (red 0% → yellow 50% → green 100%) with dark text, so it reads the same in light and dark mode
+      const HEAT = [[230, 124, 115], [255, 214, 102], [87, 187, 138]];
+      const heat = v => {
+        if (v == null) return '';
+        const t = Math.max(0, Math.min(1, v)) * 2, i = Math.min(1, Math.floor(t)), f = t - i;
+        const c = HEAT[i].map((x, k) => Math.round(x + (HEAT[i + 1][k] - x) * f));
+        return `background: rgb(${c.join(',')}); color: #111827`;
+      };
       const G = '16,185,129', A = '245,158,11', S = '14,165,233';
       // column model: key -> getter
       const cols = [
