@@ -162,9 +162,10 @@
         <summary class="cursor-pointer font-bold text-slate-700 dark:text-slate-200">How to use this tab</summary>
         <ul class="list-disc pl-5 mt-2 space-y-1.5 text-slate-600 dark:text-slate-300 leading-relaxed">
           <li><strong>What a bucket is:</strong> a tier (Cornerstone, Elite, Upside, Depth, Clogger) plus a player type for his position (for example Hog vs Runt WRs, Workhorse vs Committee RBs). Every past player is placed in one, so each bucket shows how players like him turned out.</li>
-          <li><strong>Read the bars:</strong> green = Hit, amber = Starter, red = Bust, using the thresholds in the color key below. Repeater % is how often a player who hit once did it again, which tells you how sticky that profile's success is.</li>
-          <li><strong>Compare buckets:</strong> the bucket rankings chart sorts every bucket by hit rate. Tap a bucket's title for its detail view: stat tiles, hit seasons, results by era, current rookies, and a sortable player list.</li>
-          <li><strong>Find a player:</strong> use the search bar to jump to his bucket.</li>
+          <li><strong>Read the matrix:</strong> every bucket's hit rate, its rate at each PPG mark, and its repeaters, colored red (0%) to yellow to green (100%). Repeater % is how often a player who hit once did it again, which tells you how sticky that profile's success is.</li>
+          <li><strong>Open a bucket:</strong> tap its name for the detail view (stat tiles, hit seasons, results by era, current rookies, a sortable player list), or tap any number to see the players behind it.</li>
+          <li><strong>Draft class:</strong> pick a range on the matrix and every rate is recomputed for just those classes; a bucket opened from there lists only those classes too.</li>
+          <li><strong>Find a player:</strong> use the search bar at the top for his range of outcomes, or type his name in the matrix search to see his bucket's row.</li>
           <li><strong>With your league loaded,</strong> players in the detail view show who owns them and an <strong>Offer</strong> button that opens the trade calculator with a fair package.</li>
         </ul>
       </details>
@@ -209,7 +210,7 @@
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Bucket matrix</h2>
-          <p class="text-xs text-slate-600 dark:text-slate-400">Every bucket side by side: hit rate, the rate at each PPG mark, and how often hitters did it again. Two kinds of repeaters, kept apart: <strong>12+ repeaters</strong> (of players with a 12+ season, the share with 2+) and <strong>hit-mark repeaters</strong> (QB 20+, RB 15+, WR 14+), which is the Repeater % on the bucket cards. TE cards use the 12+ column, the TE hit mark. Both leave out the newest class's one-season hitters, who can't have repeated yet. Tap a bucket to open it.</p>
+          <p class="text-xs text-slate-600 dark:text-slate-400">Every bucket side by side: hit rate, the rate at each PPG mark, and how often hitters did it again. Two kinds of repeaters, kept apart: <strong>12+ repeaters</strong> (of players with a 12+ season, the share with 2+) and <strong>hit-mark repeaters</strong> (QB 20+, RB 15+, WR 14+), which is the Repeater % in each bucket's detail. TE buckets use the 12+ column, the TE hit mark. Both leave out the newest class's one-season hitters, who can't have repeated yet. Tap a bucket to open it, or any number for the players behind it. Search finds buckets or players (with your league's owner and an Offer button), and the draft-class filter recomputes every rate for just those classes.</p>
         </div>
         <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer select-none"><input id="mxCompact" type="checkbox" class="accent-sky-600"> Compact (hit rate + repeaters)</label>
       </div>
@@ -241,105 +242,6 @@
       <div id="cmpOut" class="text-sm"></div>
     </section>
 
-    <!-- Card view: the original bucket cards (player chips, draft-class filter, player search, league owner badges).
-         Collapsed under the matrix until those features move onto the matrix; then it can be retired. -->
-    <details id="cardView" class="group rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-      <summary class="cursor-pointer select-none list-none p-4 sm:p-5 flex flex-wrap items-center justify-between gap-2">
-        <span>
-          <span class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Card view</span>
-          <span class="block text-xs text-slate-600 dark:text-slate-400">The bucket cards: named players at a glance, the draft-class filter, player search and your league's owners.</span>
-        </span>
-        <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"><span class="group-open:hidden">Show cards ▾</span><span class="hidden group-open:inline">Hide cards ▴</span></span>
-      </summary>
-      <div class="px-3 sm:px-4 pb-4 space-y-5">
-    <!-- Filter Controls Bar -->
-    <section aria-label="Position and Outcome Filters"
-      class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3.5">
-
-      <!-- Row 1: Position Tabs -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div role="tablist" aria-label="Position Filter" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-          <button type="button" role="tab" data-pos="QB" aria-selected="true"
-            class="pos-tab px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition cursor-pointer">
-            QB <span class="opacity-75 font-semibold">(6 PT/TD)</span>
-          </button>
-          <button type="button" role="tab" data-pos="RB" aria-selected="false"
-            class="pos-tab px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition cursor-pointer">
-            RB
-          </button>
-          <button type="button" role="tab" data-pos="WR" aria-selected="false"
-            class="pos-tab px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition cursor-pointer">
-            WR <span class="opacity-75 font-semibold">(Size-Adjusted)</span>
-          </button>
-          <button type="button" role="tab" data-pos="TE" aria-selected="false"
-            class="pos-tab px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition cursor-pointer">
-            TE <span class="opacity-75 font-semibold">(1.5 TEP)</span>
-          </button>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2 self-start md:self-auto">
-        <!-- Draft Class (Rookie Year) Range Filter -->
-        <div class="inline-flex items-center gap-2 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3 py-1.5">
-          <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">Draft class</span>
-          <label for="yearMin" class="sr-only">Earliest draft class</label>
-          <select id="yearMin" class="year-sel bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-1.5 py-1 text-xs font-bold text-slate-900 dark:text-slate-100 cursor-pointer"></select>
-          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">to</span>
-          <label for="yearMax" class="sr-only">Latest draft class</label>
-          <select id="yearMax" class="year-sel bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-1.5 py-1 text-xs font-bold text-slate-900 dark:text-slate-100 cursor-pointer"></select>
-          <button id="yearReset" type="button" class="hidden text-[11px] font-bold text-sky-700 dark:text-sky-400 hover:underline cursor-pointer">All years</button>
-        </div>
-
-        <!-- Historical Pre-2019 Clogger Busts Toggle -->
-        <label class="inline-flex items-center gap-2.5 cursor-pointer select-none bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl px-3.5 py-2">
-          <input id="hideOldCloggerBusts" type="checkbox" checked
-            class="w-4 h-4 rounded border-slate-400 text-sky-600 focus:ring-sky-500 accent-sky-500 cursor-pointer" />
-          <span class="text-xs font-semibold text-slate-700 dark:text-slate-200">
-            Hide pre-2019 busts
-          </span>
-        </label>
-        </div>
-      </div>
-
-      <!-- Row 2: Outcome Filter Pills + Positional Threshold Info -->
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-3 border-t border-slate-200/80 dark:border-slate-800">
-        <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filter players by outcome">
-          <button type="button" data-outcome="all"
-            class="outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer">
-            All Outcomes
-          </button>
-          <button type="button" data-outcome="hit"
-            class="outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer">
-            Hits Only
-          </button>
-          <button type="button" data-outcome="near"
-            class="outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer">
-            Starters Only
-          </button>
-          <button type="button" data-outcome="bust"
-            class="outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer">
-            Busts Only
-          </button>
-          <button type="button" data-outcome="rookie"
-            class="outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer">
-            2026 Rookies Only
-          </button>
-        </div>
-
-        <div id="posSummaryMeta" class="text-xs font-semibold text-slate-600 dark:text-slate-400"></div>
-      </div>
-    </section>
-
-    <!-- Positional Quick Insights Banner -->
-    <div id="posInsightBanner" class="rounded-2xl bg-gradient-to-r from-slate-100 via-sky-50/70 to-indigo-50/60 dark:from-slate-900 dark:via-slate-900 dark:to-sky-950/40 border border-slate-200 dark:border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-xs">
-    </div>
-
-    <!-- Bucket Cards Grid -->
-    <section aria-label="Profile Buckets Grid">
-      <div id="bucketsGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5"></div>
-    </section>
-
-      </div>
-    </details>
 
   </main>
 
@@ -2463,11 +2365,6 @@
     // =========================================================================
     const state = {
       pos: 'QB',
-      outcome: 'all', // 'all' | 'hit' | 'near' | 'bust' | 'rookie'
-      hideOldCloggerBusts: true,
-      yearMin: 0,   // set from data in init (draft-class range filter)
-      yearMax: 9999,
-      expandedBustBuckets: new Set(),
       modalPlayerId: null,
       modalSubTab: 'all',
       searchHighlightIdx: -1,
@@ -2559,39 +2456,8 @@
     }
 
     // =========================================================================
-    // 7. RENDER CONTROLS & BUCKET CARDS GRID
+    // 7. PLAYER CHIPS (bucket detail)
     // =========================================================================
-    function syncControlStyles() {
-      document.querySelectorAll('.pos-tab').forEach(btn => {
-        const active = btn.dataset.pos === state.pos;
-        btn.setAttribute('aria-selected', active ? 'true' : 'false');
-        btn.className = `pos-tab px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition cursor-pointer ${
-          active
-            ? 'bg-sky-600 text-white shadow-md shadow-sky-600/25'
-            : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/70'
-        }`;
-      });
-
-      const outcomeStyles = {
-        all:    { on: 'bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-sm', off: 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700' },
-        hit:    { on: 'bg-emerald-600 text-white shadow-sm', off: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20' },
-        near:   { on: 'bg-amber-500 text-slate-950 shadow-sm', off: 'bg-amber-50 dark:bg-amber-500/10 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/20' },
-        bust:   { on: 'bg-rose-600 text-white shadow-sm', off: 'bg-rose-50 dark:bg-rose-500/10 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 hover:bg-rose-100 dark:hover:bg-rose-500/20' },
-        rookie: { on: 'bg-sky-600 text-white shadow-sm', off: 'bg-sky-50 dark:bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-500/30 hover:bg-sky-100 dark:hover:bg-sky-500/20' }
-      };
-
-      const noNearPos = Boolean(POS_META[state.pos].noNear);
-      if (noNearPos && state.outcome === 'near') state.outcome = 'all';
-      document.querySelectorAll('.outcome-pill').forEach(btn => {
-        const key = btn.dataset.outcome;
-        const active = key === state.outcome;
-        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-        btn.className = `outcome-pill px-3 py-1.5 rounded-full text-xs font-bold transition cursor-pointer ${
-          active ? outcomeStyles[key].on : outcomeStyles[key].off
-        }${key === 'near' && noNearPos ? ' hidden' : ''}`;
-      });
-    }
-
     function renderPlayerChip(p) {
       const sm = statusMeta(p.status);
       let countBadge = '';
@@ -2615,197 +2481,6 @@
         ${yrBadge}
         ${countBadge}
       </button>`;
-    }
-
-    function renderBucketsGrid() {
-      const grid = document.getElementById('bucketsGrid');
-      const metaEl = document.getElementById('posSummaryMeta');
-      const bannerEl = document.getElementById('posInsightBanner');
-      const posBuckets = BUCKETS.filter(b => b.pos === state.pos);
-      const pm = POS_META[state.pos];
-
-      const totalSample = posBuckets.reduce((sum, b) => sum + b.n, 0);
-      const totalRookies = posBuckets.reduce((sum, b) => sum + b.players.filter(p => p.isRookie).length, 0);
-      metaEl.textContent = `${posBuckets.length} Buckets · ${totalSample.toLocaleString()} Historical Samples · ${totalRookies} 2026 Rookies`;
-      const yReset = document.getElementById('yearReset');
-
-      bannerEl.innerHTML = `
-        <div class="flex items-start sm:items-center gap-2.5">
-          <span class="px-2.5 py-1 rounded-lg text-[11px] font-extrabold shrink-0 ${pm.badgeCls}">${esc(pm.label)}</span>
-          <p class="text-slate-700 dark:text-slate-300 font-medium leading-relaxed">${esc(pm.insight)}</p>
-        </div>
-        <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">
-          Hit: <span class="text-emerald-600 dark:text-emerald-400">${esc(pm.hitLbl)}</span> ·
-          ${pm.nearLbl ? `Starter: <span class="text-amber-400 dark:text-amber-400">${esc(pm.nearLbl)}</span> ·` : 'No near tier ·'}
-          Elite: <span class="text-sky-600 dark:text-sky-400">${esc(pm.eliteLbl)}</span>
-        </div>`;
-
-      const YEAR_LO = Math.min(...ALL_PLAYERS.map(p => p.year));
-      // (computed below; reset button visibility set after)
-      const YEAR_HI = Math.max(...ALL_PLAYERS.map(p => p.year));
-      const yearFiltered = state.yearMin > YEAR_LO || state.yearMax < YEAR_HI;
-      const inYears = p => p.year >= state.yearMin && p.year <= state.yearMax;
-      if (yReset) yReset.classList.toggle('hidden', !yearFiltered);
-      if (yearFiltered) {
-        const shownN = posBuckets.reduce((sum, bb) => sum + bb.players.filter(inYears).length, 0);
-        metaEl.textContent += ` · Showing ${shownN} players drafted ${state.yearMin}–${state.yearMax} (stats = full sample)`;
-      }
-
-      grid.innerHTML = posBuckets.map(bFull => {
-        // Draft-class filter narrows which players are shown; bucket stats stay the full historical sample
-        const b = yearFiltered
-          ? { ...bFull, players: bFull.players.filter(inYears), extraHistoricalBusts: 0 }
-          : bFull;
-        // Order players: Hits (desc by hit, elite, near) -> Near Hits (desc by near) -> 2026 Rookies -> Busts (desc by year)
-        const hits = b.players.filter(p => p.status === 'hit').sort((a, c) => (c.hit - a.hit) || (c.elite - a.elite) || (c.near - a.near));
-        const nears = b.players.filter(p => p.status === 'near').sort((a, c) => (c.near - a.near) || (c.year - a.year));
-        const rookies = b.players.filter(p => p.status === 'rookie');
-        const busts = b.players.filter(p => p.status === 'bust').sort((a, c) => c.year - a.year);
-
-        const isExpanded = state.expandedBustBuckets.has(b.id);
-        const hidePre2019 = state.hideOldCloggerBusts && !isExpanded;
-
-        const visibleBusts = hidePre2019 ? busts.filter(p => p.year >= 2019) : busts;
-        const hiddenNamedBustsCount = hidePre2019 ? (busts.length - visibleBusts.length) : 0;
-        const totalCollapsedBusts = hiddenNamedBustsCount + b.extraHistoricalBusts;
-
-        // Apply active outcome filter
-        let shownPlayers = [];
-        let showCollapsedPill = false;
-
-        if (state.outcome === 'all') {
-          shownPlayers = [...hits, ...nears, ...rookies, ...visibleBusts];
-          showCollapsedPill = totalCollapsedBusts > 0 || (state.hideOldCloggerBusts && isExpanded && busts.some(p => p.year < 2019));
-        } else if (state.outcome === 'hit') {
-          shownPlayers = hits;
-        } else if (state.outcome === 'near') {
-          shownPlayers = nears;
-        } else if (state.outcome === 'rookie') {
-          shownPlayers = rookies;
-        } else if (state.outcome === 'bust') {
-          shownPlayers = visibleBusts;
-          showCollapsedPill = totalCollapsedBusts > 0 || (state.hideOldCloggerBusts && isExpanded && busts.some(p => p.year < 2019));
-        }
-
-        // Stacked Bar Widths
-        const hitW = b.hitPct;
-        const nearW = b.nearOnlyPct;
-        const bustW = b.bustPct;
-
-        // Collapsed / Expandable Busts Pill HTML
-        let collapsedPillHtml = '';
-        if (showCollapsedPill) {
-          if (hiddenNamedBustsCount > 0) {
-            const label = b.extraHistoricalBusts > 0
-              ? `+${totalCollapsedBusts} earlier busts (${hiddenNamedBustsCount} named · show)`
-              : `+${hiddenNamedBustsCount} earlier pre-2019 busts (click to show)`;
-            collapsedPillHtml = `
-              <button type="button" data-toggle-busts="${esc(b.id)}"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-dashed border-rose-400/70 dark:border-rose-500/50 bg-rose-50/70 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 text-xs font-bold hover:bg-rose-100 dark:hover:bg-rose-900/50 transition cursor-pointer">
-                <span>${esc(label)}</span>
-              </button>`;
-          } else if (state.hideOldCloggerBusts && isExpanded && busts.some(p => p.year < 2019)) {
-            collapsedPillHtml = `
-              <button type="button" data-toggle-busts="${esc(b.id)}"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-dashed border-slate-400 dark:border-slate-600 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer">
-                Hide pre-2019 busts
-              </button>`;
-            if (b.extraHistoricalBusts > 0) {
-              collapsedPillHtml += `
-                <span class="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-dashed border-rose-300 dark:border-rose-500/40 bg-rose-50/60 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 text-xs font-semibold">
-                  +${b.extraHistoricalBusts} earlier historical busts (2006–2025)
-                </span>`;
-            }
-          } else if (b.extraHistoricalBusts > 0) {
-            collapsedPillHtml = `
-              <span class="inline-flex items-center px-2.5 py-1.5 rounded-lg border border-dashed border-rose-300 dark:border-rose-500/40 bg-rose-50/60 dark:bg-rose-950/30 text-rose-800 dark:text-rose-300 text-xs font-semibold"
-                title="Additional unrostered/historical 0-hit players included in the n=${b.n} spreadsheet sample">
-                +${b.extraHistoricalBusts} earlier historical busts
-              </span>`;
-          }
-        }
-
-        const chipsContent = (shownPlayers.length === 0 && !collapsedPillHtml)
-          ? `<span class="text-xs italic text-slate-500 dark:text-slate-400 py-1">No players in this bucket match the "${esc(state.outcome)}" filter${yearFiltered ? ` for ${state.yearMin}–${state.yearMax} draft classes` : ''}.</span>`
-          : shownPlayers.map(renderPlayerChip).join('') + collapsedPillHtml;
-
-        const repDesc = `Of ${b.pos}s who hit ${pm.hitLbl} once, % who hit ${pm.hitLbl.replace(' PPG', '')} in 2+ seasons`;
-
-        return `
-          <article class="bg-white dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col gap-4">
-            <!-- Card Header -->
-            <div class="flex flex-wrap items-start justify-between gap-2">
-              <div class="space-y-1">
-                <div class="flex flex-wrap items-center gap-2">
-                  <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-wide ${pm.badgeCls}">${esc(b.pos)}</span>
-                  <h2 class="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white"><button type="button" data-open-bucket="${esc(b.id)}" title="Open full bucket details" class="text-left hover:text-sky-600 dark:hover:text-sky-400 underline decoration-dotted decoration-slate-400/70 underline-offset-4 cursor-pointer">${esc(b.name)} <span class="text-xs align-middle opacity-60" aria-hidden="true">⤢</span></button></h2>
-                </div>
-                <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                  Sample Size: <strong class="text-slate-800 dark:text-slate-200">n = ${b.n}</strong>
-                  ${yearFiltered ? ` · <span class="text-indigo-600 dark:text-indigo-400 font-bold">${b.players.length} shown from ${state.yearMin}–${state.yearMax}</span>` : ''}
-                  ${rookies.length ? ` · <span class="text-sky-600 dark:text-sky-400 font-bold">${rookies.length} in 2026 Class</span>` : ''}
-                </p>
-              </div>
-
-              <!-- Headline Hit Rate Pill -->
-              <div class="text-right">
-                <div class="text-xl sm:text-2xl font-extrabold leading-none ${
-                  b.hitPct >= 60 ? 'text-emerald-600 dark:text-emerald-400'
-                  : b.hitPct >= 25 ? 'text-amber-600 dark:text-amber-400'
-                  : 'text-rose-600 dark:text-rose-400'
-                }">${b.hitPct.toFixed(1)}%</div>
-                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mt-1">Hit Rate</div>
-              </div>
-            </div>
-
-            <!-- 4 Key Metrics Grid -->
-            <div class="grid grid-cols-4 gap-2">
-              <div class="rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 px-2.5 py-2 text-center">
-                <div class="text-xs sm:text-sm font-extrabold text-emerald-700 dark:text-emerald-400">${b.hitPct.toFixed(1)}%</div>
-                <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">Hit (${esc(pm.hitLbl.replace(' PPG', ''))})</div>
-              </div>
-              <div class="rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 px-2.5 py-2 text-center cursor-help"
-                title="${esc(repDesc)}">
-                <div class="text-xs sm:text-sm font-extrabold text-sky-700 dark:text-sky-400">${b.repPct.toFixed(1)}%</div>
-                <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate inline-flex items-center justify-center gap-0.5">
-                  <span>Repeater</span>
-                  <span class="text-sky-600 dark:text-sky-400 font-bold" aria-hidden="true">ⓘ</span>
-                </div>
-              </div>
-              <div class="rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 px-2.5 py-2 text-center">
-                <div class="text-xs sm:text-sm font-extrabold text-indigo-700 dark:text-indigo-400">${b.twoPlusPct.toFixed(1)}%</div>
-                <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">2+ Seasons</div>
-              </div>
-              <div class="rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 px-2.5 py-2 text-center">
-                <div class="text-xs sm:text-sm font-extrabold text-amber-700 dark:text-amber-400">${b.elitePct.toFixed(1)}%</div>
-                <div class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">Elite (${esc(pm.eliteLbl.replace(' PPG', ''))})</div>
-              </div>
-            </div>
-
-            <!-- Horizontal Stacked Color-Coded Outcome Bar -->
-            <div class="space-y-1.5">
-              <div class="w-full h-3.5 rounded-full overflow-hidden flex bg-slate-200 dark:bg-slate-800"
-                role="img" aria-label="Outcome breakdown: ${hitW.toFixed(1)}% Hits${b.noNear ? '' : `, ${nearW.toFixed(1)}% Starters Only`}, ${bustW.toFixed(1)}% Busts">
-                ${hitW > 0 ? `<div class="bg-emerald-500 dark:bg-emerald-500 h-full transition-all duration-300" style="width:${hitW}%"></div>` : ''}
-                ${nearW > 0 ? `<div class="bg-amber-400 dark:bg-amber-400 h-full transition-all duration-300" style="width:${nearW}%"></div>` : ''}
-                ${bustW > 0 ? `<div class="bg-rose-500 dark:bg-rose-500 h-full transition-all duration-300" style="width:${bustW}%"></div>` : ''}
-              </div>
-              <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] font-bold">
-                <span class="text-emerald-700 dark:text-emerald-400">Hit ${hitW.toFixed(1)}%</span>
-                ${b.noNear ? '' : `<span class="text-amber-400 dark:text-amber-400">Starter Only ${nearW.toFixed(1)}%</span>`}
-                <span class="text-rose-700 dark:text-rose-400">Bust ${bustW.toFixed(1)}%</span>
-              </div>
-            </div>
-
-            <!-- Clickable Player Chips -->
-            <div class="pt-3 border-t border-slate-200/80 dark:border-slate-800">
-              <div class="flex flex-wrap gap-1.5">
-                ${chipsContent}
-              </div>
-            </div>
-          </article>
-        `;
-      }).join('');
     }
 
     // =========================================================================
@@ -3019,7 +2694,8 @@
         outcome: p => -(order[p.status] * 1000) + p.hit * 10 + p.elite
       }[bm.sort];
       const flt = bm.filter;
-      const players = [...b.players].filter(p => !flt || (!p.isRookie && markCount(p, flt.i) >= flt.min)).sort((x, y) => {
+      const yr = bm.years, inYr = p => !yr || p.isRookie || (p.year >= yr.lo && p.year <= yr.hi);
+      const players = [...b.players].filter(p => inYr(p) && (!flt || (!p.isRookie && markCount(p, flt.i) >= flt.min))).sort((x, y) => {
         const a = key(x), c = key(y);
         return (a < c ? -1 : a > c ? 1 : 0) * bm.dir || (y.year - x.year);
       });
@@ -3070,7 +2746,8 @@
 
         <section id="bmTable" class="space-y-2 scroll-mt-2">
           <h3 class="text-sm font-extrabold">${flt ? 'Players' : 'All named players'} <span class="font-normal text-slate-500 dark:text-slate-400">· tap a column to sort, tap a player for his range of outcomes</span></h3>
-          ${flt ? `<div class="flex flex-wrap items-center gap-2 text-xs"><span class="px-2 py-1 rounded-full font-bold bg-sky-500/15 text-sky-700 dark:text-sky-300">Showing: ${esc(flt.label)} · ${players.length} of ${b.players.filter(p => !p.isRookie).length}</span>${flt.hl ? (() => {
+          ${yr ? `<div class="flex flex-wrap items-center gap-2 text-xs"><span class="px-2 py-1 rounded-full font-bold bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">Drafted ${yr.lo}–${yr.hi}</span><span class="text-[11px] text-slate-500 dark:text-slate-400">From the matrix's draft-class filter. The rates at the top use every class.</span><button type="button" data-bm-clearyears class="px-2 py-1 rounded-lg font-bold border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer">All draft classes</button></div>` : ''}
+          ${flt ? `<div class="flex flex-wrap items-center gap-2 text-xs"><span class="px-2 py-1 rounded-full font-bold bg-sky-500/15 text-sky-700 dark:text-sky-300">Showing: ${esc(flt.label)} · ${players.length} of ${b.players.filter(p => !p.isRookie && inYr(p)).length}</span>${flt.hl ? (() => {
             const lastYr = Math.max(...ALL_PLAYERS.filter(q => !q.isRookie).map(q => q.year));
             const elig = players.filter(p => p.year < lastYr), rep = elig.filter(p => markCount(p, flt.i) >= flt.hl).length, one = players.length - elig.length;
             return `<span class="text-[11px] text-slate-500 dark:text-slate-400">Green = did it in 2+ seasons: ${rep} of ${elig.length}${elig.length ? ` (${(100 * rep / elig.length).toFixed(1)}%)` : ''}${one ? `; ${one} from the ${lastYr} class ${one === 1 ? 'has' : 'have'} played one season, so ${one === 1 ? "he isn't" : "they aren't"} counted` : ''}</span>`;
@@ -3090,10 +2767,10 @@
     }
 
     let bucketLastFocus = null;
-    function openBucketModal(id, filter) {
+    function openBucketModal(id, filter, years) {
       if (!BUCKET_BY_ID.has(id)) return;
       if (!bm.id) bucketLastFocus = document.activeElement;
-      bm.id = id; bm.sort = 'outcome'; bm.dir = -1; bm.filter = filter || null;
+      bm.id = id; bm.sort = 'outcome'; bm.dir = -1; bm.filter = filter || null; bm.years = years || null;
       renderBucketModal();
       positionModalForEmbed(bucketModalEl, 'bucketModalPanel');
       bucketModalEl.classList.remove('modal-closed'); bucketModalEl.classList.add('modal-open');
@@ -3118,6 +2795,8 @@
       Object.keys(leagueKey).forEach(k => delete leagueKey[k]);
       if (LEAGUE) Object.entries(LEAGUE.players).forEach(([n, o]) => { leagueKey[n.replace(/[^a-z]/g, '')] = o; });
       if (bm.id) renderBucketModal();
+      renderMatrix();
+      if (state.modalPlayerId) { const mp = PLAYER_BY_ID.get(state.modalPlayerId); if (mp) document.getElementById('modalDraftYear').innerHTML = `Draft Class: ${mp.year}${ownerBadge(mp)}`; }
     }
     function ownerBadge(p) {
       if (!LEAGUE) return '';
@@ -3134,9 +2813,10 @@
       if (of) { e.stopPropagation(); try { window.parent.postMessage({ type: 'dtc-build-offer', name: of.dataset.bmOffer }, location.origin); } catch (err) {} return; }
       const s = e.target.closest('[data-bm-sort]');
       if (s) { const k = s.dataset.bmSort; if (bm.sort === k) bm.dir *= -1; else { bm.sort = k; bm.dir = (k === 'name') ? 1 : -1; } renderBucketModal(); return; }
+      if (e.target.closest('[data-bm-clearyears]')) { bm.years = null; renderBucketModal(); document.getElementById('bmTable')?.scrollIntoView({ block: 'start' }); return; }
       if (e.target.closest('[data-bm-clearfilter]')) { bm.filter = null; renderBucketModal(); document.getElementById('bmTable')?.scrollIntoView({ block: 'start' }); return; }
       const sw = e.target.closest('[data-bm-switch]');
-      if (sw) { bm.id = sw.dataset.bmSwitch; bm.sort = 'outcome'; bm.dir = -1; bm.filter = null; renderBucketModal(); bucketModalBody.scrollTop = 0; return; }
+      if (sw) { bm.id = sw.dataset.bmSwitch; bm.sort = 'outcome'; bm.dir = -1; bm.filter = null; bm.years = null; renderBucketModal(); bucketModalBody.scrollTop = 0; return; }
       const pl = e.target.closest('[data-bm-player], [data-player-id]');
       if (pl) { const pid = pl.dataset.bmPlayer || pl.dataset.playerId; closeBucketModal(false); openPlayerModal(pid, true); }
     });
@@ -3199,7 +2879,7 @@
       statBadge.textContent = sm.label;
 
       document.getElementById('modalPlayerName').textContent = p.name;
-      document.getElementById('modalDraftYear').textContent = `Draft Class: ${p.year}`;
+      document.getElementById('modalDraftYear').innerHTML = `Draft Class: ${p.year}${ownerBadge(p)}`;
 
       // Recorded Seasons Badges for Selected Player
       const seasonsEl = document.getElementById('modalPlayerSeasons');
@@ -3409,49 +3089,6 @@
       document.getElementById('themeToggleMobile')?.addEventListener('click', toggleTheme);
       document.getElementById('themeToggleDesktop')?.addEventListener('click', toggleTheme);
 
-      // Position Filter Tabs
-      document.querySelectorAll('.pos-tab').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.pos = btn.dataset.pos;
-          syncControlStyles();
-          renderBucketsGrid();
-        });
-      });
-
-      // Outcome Filter Pills
-      document.querySelectorAll('.outcome-pill').forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.outcome = btn.dataset.outcome;
-          syncControlStyles();
-          renderBucketsGrid();
-        });
-      });
-
-      // Draft-class range filter
-      const yMinSel = document.getElementById('yearMin');
-      const yMaxSel = document.getElementById('yearMax');
-      const onYearChange = changed => {
-        let lo = Number(yMinSel.value), hi = Number(yMaxSel.value);
-        if (lo > hi) { if (changed === 'min') hi = lo; else lo = hi; }
-        state.yearMin = lo; state.yearMax = hi;
-        yMinSel.value = lo; yMaxSel.value = hi;
-        renderBucketsGrid();
-      };
-      yMinSel?.addEventListener('change', () => onYearChange('min'));
-      yMaxSel?.addEventListener('change', () => onYearChange('max'));
-      document.getElementById('yearReset')?.addEventListener('click', () => {
-        yMinSel.value = yMinSel.options[0].value;
-        yMaxSel.value = yMaxSel.options[yMaxSel.options.length - 1].value;
-        onYearChange('max');
-      });
-
-      // Hide Pre-2019 Busts in Clogger Tiers Toggle
-      document.getElementById('hideOldCloggerBusts')?.addEventListener('change', e => {
-        state.hideOldCloggerBusts = Boolean(e.target.checked);
-        state.expandedBustBuckets.clear();
-        renderBucketsGrid();
-      });
-
       // Global Search Input + Keyboard Navigation
       searchInput.addEventListener('input', renderSearchDropdown);
       searchInput.addEventListener('focus', () => {
@@ -3493,6 +3130,8 @@
 
       // Delegated Clicks (Player Chips, Search Results, Bust Expander, Modal Switch)
       document.addEventListener('click', e => {
+        const offerBtn = e.target.closest('[data-bm-offer]');
+        if (offerBtn) { try { window.parent.postMessage({ type: 'dtc-build-offer', name: offerBtn.dataset.bmOffer }, location.origin); } catch (err) {} return; }
         const searchBtn = e.target.closest('[data-search-pid]');
         if (searchBtn) {
           const pid = searchBtn.dataset.searchPid;
@@ -3505,22 +3144,13 @@
         const bucketBtn = e.target.closest('[data-open-bucket]');
         if (bucketBtn) {
           const f = bucketBtn.dataset.mxFilter ? JSON.parse(bucketBtn.dataset.mxFilter) : null;   // a matrix cell: open filtered
-          openBucketModal(bucketBtn.dataset.openBucket, f);
+          openBucketModal(bucketBtn.dataset.openBucket, f, bucketBtn.closest('#mxOut') ? mxYears() : null);
           return;
         }
 
         const chipBtn = e.target.closest('[data-player-id]');
         if (chipBtn) {
           openPlayerModal(chipBtn.dataset.playerId, true);
-          return;
-        }
-
-        const toggleBustBtn = e.target.closest('[data-toggle-busts]');
-        if (toggleBustBtn) {
-          const bid = toggleBustBtn.dataset.toggleBusts;
-          if (state.expandedBustBuckets.has(bid)) state.expandedBustBuckets.delete(bid);
-          else state.expandedBustBuckets.add(bid);
-          renderBucketsGrid();
           return;
         }
 
@@ -4011,7 +3641,32 @@
 
     // ---- Bucket matrix (data: the owner's Hit Rates sheet, bucket summary rows; scripts/build_matrix.py) ----
     const BUCKET_MATRIX = {"QB":{"marks":["16+","20+","24+"],"lowMark":"16+","hitMark":"20+","rep2Mark":"20+","rows":[{"name":"Cornerstone Konami","tier":"Cornerstone","hitRate":1.0,"hits":1,"n":1,"rates":[1.0,1.0,1.0],"low2":1.0,"low3":1.0,"lowRep":1.0,"hit2":1.0,"hitRep":1.0,"tierOverall":1.0},{"name":"Elite Konami","tier":"Elite","hitRate":0.75,"hits":3,"n":4,"rates":[0.75,0.75,0.5],"low2":0.75,"low3":0.5,"lowRep":1.0,"hit2":0.5,"hitRep":0.6667,"tierOverall":0.8947},{"name":"Elite Pocket","tier":"Elite","hitRate":0.8571,"hits":6,"n":7,"rates":[1.0,0.8571,0.1429],"low2":1.0,"low3":0.7143,"lowRep":1.0,"hit2":0.4286,"hitRep":0.5,"tierOverall":0.8947},{"name":"Elite Scramble","tier":"Elite","hitRate":1.0,"hits":8,"n":8,"rates":[1.0,1.0,0.5],"low2":1.0,"low3":0.75,"lowRep":1.0,"hit2":0.625,"hitRep":0.625,"tierOverall":0.8947},{"name":"Upside Konami","tier":"Upside","hitRate":0.2,"hits":1,"n":5,"rates":[0.2,0.2,0.2],"low2":0.2,"low3":0.2,"lowRep":1.0,"hit2":0.2,"hitRep":1.0,"tierOverall":0.3793},{"name":"Upside Pocket","tier":"Upside","hitRate":0.2727,"hits":3,"n":11,"rates":[0.3636,0.2727,0.1818],"low2":0.3636,"low3":0.2727,"lowRep":1.0,"hit2":0.1818,"hitRep":0.6667,"tierOverall":0.3793},{"name":"Upside Scramble","tier":"Upside","hitRate":0.5385,"hits":7,"n":13,"rates":[0.7692,0.5385,0.1538],"low2":0.5385,"low3":0.3077,"lowRep":0.7778,"hit2":0.2308,"hitRep":0.4286,"tierOverall":0.3793},{"name":"Depth Konami","tier":"Depth","hitRate":0.25,"hits":1,"n":4,"rates":[0.5,0.25,0.25],"low2":0.5,"low3":0.5,"lowRep":1.0,"hit2":0.25,"hitRep":1.0,"tierOverall":0.2143},{"name":"Depth Pocket","tier":"Depth","hitRate":0.2,"hits":7,"n":35,"rates":[0.4,0.2,0.0857],"low2":0.2571,"low3":0.2286,"lowRep":0.6429,"hit2":0.0857,"hitRep":0.4286,"tierOverall":0.2143},{"name":"Depth Scramble","tier":"Depth","hitRate":0.2353,"hits":4,"n":17,"rates":[0.2941,0.2353,0.0588],"low2":0.2941,"low3":0.1765,"lowRep":1.0,"hit2":0.1176,"hitRep":0.5,"tierOverall":0.2143},{"name":"Clogger Konami","tier":"Clogger","hitRate":0.0,"hits":0,"n":5,"rates":[0.0,0.0,0.0],"low2":0.0,"low3":0.0,"lowRep":null,"hit2":0.0,"hitRep":null,"tierOverall":0.0504},{"name":"Clogger Pocket","tier":"Clogger","hitRate":0.0263,"hits":2,"n":76,"rates":[0.0395,0.0263,0.0],"low2":0.0395,"low3":0.0132,"lowRep":1.0,"hit2":0.0132,"hitRep":0.5,"tierOverall":0.0504},{"name":"Clogger Scramble","tier":"Clogger","hitRate":0.1053,"hits":4,"n":38,"rates":[0.2105,0.1053,0.0526],"low2":0.0789,"low3":0.0789,"lowRep":0.375,"hit2":0.0789,"hitRep":0.75,"tierOverall":0.0504}]},"RB":{"marks":["12+","15+","18+"],"lowMark":"12+","hitMark":"15+","rep2Mark":"15+","rows":[{"name":"Cornerstone Bellcow","tier":"Cornerstone","hitRate":1.0,"hits":1,"n":1,"rates":[1.0,1.0,1.0],"low2":1.0,"low3":1.0,"lowRep":1.0,"hit2":1.0,"hitRep":1.0,"tierOverall":1.0},{"name":"Elite Bellcow","tier":"Elite","hitRate":0.6923,"hits":9,"n":13,"rates":[1.0,0.6923,0.4615],"low2":0.6923,"low3":0.6923,"lowRep":0.8182,"hit2":0.5385,"hitRep":0.7778,"tierOverall":0.8},{"name":"Elite Workhorse","tier":"Elite","hitRate":1.0,"hits":7,"n":7,"rates":[1.0,1.0,0.7143],"low2":0.8571,"low3":0.7143,"lowRep":0.8571,"hit2":0.5714,"hitRep":0.5714,"tierOverall":0.8},{"name":"Elite Committee","tier":"Elite","hitRate":null,"hits":0,"n":0,"rates":[null,null,null],"low2":null,"low3":null,"lowRep":null,"hit2":null,"hitRep":null,"tierOverall":0.8},{"name":"Upside Bellcow","tier":"Upside","hitRate":1.0,"hits":3,"n":3,"rates":[1.0,1.0,0.6667],"low2":1.0,"low3":1.0,"lowRep":1.0,"hit2":0.6667,"hitRep":0.6667,"tierOverall":0.6},{"name":"Upside Workhorse","tier":"Upside","hitRate":0.75,"hits":9,"n":12,"rates":[0.8333,0.75,0.4167],"low2":0.75,"low3":0.5833,"lowRep":0.9,"hit2":0.5,"hitRep":0.6667,"tierOverall":0.6},{"name":"Upside Committee","tier":"Upside","hitRate":0.0,"hits":0,"n":5,"rates":[0.6,0.0,0.0],"low2":0.2,"low3":0.2,"lowRep":0.3333,"hit2":0.0,"hitRep":null,"tierOverall":0.6},{"name":"Depth Bellcow","tier":"Depth","hitRate":null,"hits":0,"n":0,"rates":[null,null,null],"low2":null,"low3":null,"lowRep":null,"hit2":null,"hitRep":null,"tierOverall":0.2424},{"name":"Depth Workhorse","tier":"Depth","hitRate":0.3636,"hits":12,"n":33,"rates":[0.6061,0.3636,0.2121],"low2":0.4545,"low3":0.303,"lowRep":0.75,"hit2":0.2424,"hitRep":0.6667,"tierOverall":0.2424},{"name":"Depth Committee","tier":"Depth","hitRate":0.1818,"hits":12,"n":66,"rates":[0.3485,0.1818,0.0909],"low2":0.1818,"low3":0.1364,"lowRep":0.5714,"hit2":0.1212,"hitRep":0.6667,"tierOverall":0.2424},{"name":"Clogger Bellcow","tier":"Clogger","hitRate":0.1,"hits":1,"n":10,"rates":[0.3,0.1,0.0],"low2":0.1,"low3":0.1,"lowRep":0.3333,"hit2":0.1,"hitRep":1.0,"tierOverall":0.0644},{"name":"Clogger Workhorse","tier":"Clogger","hitRate":0.125,"hits":7,"n":56,"rates":[0.2143,0.125,0.0357],"low2":0.0893,"low3":0.0536,"lowRep":0.4545,"hit2":0.0357,"hitRep":0.3333,"tierOverall":0.0644},{"name":"Clogger Committee","tier":"Clogger","hitRate":0.0455,"hits":9,"n":198,"rates":[0.1263,0.0455,0.0051],"low2":0.0455,"low3":0.0202,"lowRep":0.36,"hit2":0.0152,"hitRep":0.3333,"tierOverall":0.0644}]},"WR_RAW":{"marks":["12+","14+","16+","18+"],"lowMark":"12+","hitMark":"14+","rep2Mark":"14+","rows":[{"name":"Cornerstone Hog","tier":"Cornerstone","hitRate":1.0,"hits":1,"n":1,"rates":[1.0,1.0,1.0,1.0],"low2":1.0,"low3":1.0,"lowRep":1.0,"hit2":1.0,"hitRep":1.0,"tierOverall":1.0},{"name":"Cornerstone Runt","tier":"Cornerstone","hitRate":null,"hits":0,"n":0,"rates":[null,null,null,null],"low2":null,"low3":null,"lowRep":null,"hit2":null,"hitRep":null,"tierOverall":1.0},{"name":"Elite Hog","tier":"Elite","hitRate":0.7778,"hits":14,"n":18,"rates":[0.8889,0.7778,0.5556,0.3333],"low2":0.7222,"low3":0.5556,"lowRep":0.8667,"hit2":0.6111,"hitRep":0.7857,"tierOverall":0.7368},{"name":"Elite Runt","tier":"Elite","hitRate":0.0,"hits":0,"n":1,"rates":[0.0,0.0,0.0,0.0],"low2":0.0,"low3":0.0,"lowRep":null,"hit2":0.0,"hitRep":null,"tierOverall":0.7368},{"name":"Upside Hog","tier":"Upside","hitRate":0.5122,"hits":21,"n":41,"rates":[0.6585,0.5122,0.3902,0.1951],"low2":0.5122,"low3":0.3659,"lowRep":0.7778,"hit2":0.3415,"hitRep":0.6667,"tierOverall":0.5},{"name":"Upside Runt","tier":"Upside","hitRate":0.4857,"hits":17,"n":35,"rates":[0.6571,0.4857,0.2857,0.0857],"low2":0.4286,"low3":0.3143,"lowRep":0.6522,"hit2":0.2857,"hitRep":0.5882,"tierOverall":0.5},{"name":"Depth Hog","tier":"Depth","hitRate":0.2857,"hits":6,"n":21,"rates":[0.381,0.2857,0.1429,0.0952],"low2":0.1905,"low3":0.1905,"lowRep":0.5,"hit2":0.1429,"hitRep":0.5,"tierOverall":0.186},{"name":"Depth Runt","tier":"Depth","hitRate":0.1722,"hits":26,"n":151,"rates":[0.2517,0.1722,0.0861,0.0464],"low2":0.1391,"low3":0.106,"lowRep":0.5526,"hit2":0.0861,"hitRep":0.5,"tierOverall":0.186},{"name":"Clogger Hog","tier":"Clogger","hitRate":0.0833,"hits":2,"n":24,"rates":[0.2083,0.0833,0.0833,0.0417],"low2":0.1667,"low3":0.0833,"lowRep":0.8,"hit2":0.0417,"hitRep":0.5,"tierOverall":0.0371},{"name":"Clogger Runt","tier":"Clogger","hitRate":0.0337,"hits":11,"n":326,"rates":[0.0552,0.0337,0.0215,0.0215],"low2":0.0368,"low3":0.0245,"lowRep":0.6667,"hit2":0.0215,"hitRep":0.6364,"tierOverall":0.0371}]},"WR":{"marks":["12+","14+","16+","18+"],"lowMark":"12+","hitMark":"14+","rep2Mark":"14+","rows":[{"name":"Cornerstone Alpha Hog","tier":"Cornerstone","hitRate":1.0,"hits":1,"n":1,"rates":[1.0,1.0,1.0,1.0],"low2":1.0,"low3":1.0,"lowRep":1.0,"hit2":1.0,"hitRep":1.0,"tierOverall":1.0},{"name":"Cornerstone Alpha Runt","tier":"Cornerstone","hitRate":null,"hits":0,"n":0,"rates":[null,null,null,null],"low2":null,"low3":null,"lowRep":null,"hit2":null,"hitRep":null,"tierOverall":1.0},{"name":"Elite Alpha Hog","tier":"Elite","hitRate":0.8462,"hits":11,"n":13,"rates":[0.9231,0.8462,0.6923,0.4615],"low2":0.7692,"low3":0.5385,"lowRep":0.9091,"hit2":0.6923,"hitRep":0.8182,"tierOverall":0.7368},{"name":"Elite Alpha Runt","tier":"Elite","hitRate":null,"hits":0,"n":0,"rates":[null,null,null,null],"low2":null,"low3":null,"lowRep":null,"hit2":null,"hitRep":null,"tierOverall":0.7368},{"name":"Elite Beta Hog","tier":"Elite","hitRate":0.6,"hits":3,"n":5,"rates":[0.8,0.6,0.2,0.0],"low2":0.6,"low3":0.6,"lowRep":0.75,"hit2":0.4,"hitRep":0.6667,"tierOverall":0.7368},{"name":"Elite Beta Runt","tier":"Elite","hitRate":0.0,"hits":0,"n":1,"rates":[0.0,0.0,0.0,0.0],"low2":0.0,"low3":0.0,"lowRep":null,"hit2":0.0,"hitRep":null,"tierOverall":0.7368},{"name":"Upside Alpha Hog","tier":"Upside","hitRate":0.6087,"hits":14,"n":23,"rates":[0.6957,0.6087,0.5217,0.3043],"low2":0.5652,"low3":0.4783,"lowRep":0.8125,"hit2":0.5217,"hitRep":0.8571,"tierOverall":0.5},{"name":"Upside Alpha Runt","tier":"Upside","hitRate":0.5,"hits":7,"n":14,"rates":[0.7143,0.5,0.2857,0.1429],"low2":0.3571,"low3":0.2143,"lowRep":0.5,"hit2":0.2143,"hitRep":0.4286,"tierOverall":0.5},{"name":"Upside Beta Hog","tier":"Upside","hitRate":0.3889,"hits":7,"n":18,"rates":[0.6111,0.3889,0.2222,0.0556],"low2":0.4444,"low3":0.2222,"lowRep":0.7273,"hit2":0.1111,"hitRep":0.2857,"tierOverall":0.5},{"name":"Upside Beta Runt","tier":"Upside","hitRate":0.4762,"hits":10,"n":21,"rates":[0.619,0.4762,0.2857,0.0476],"low2":0.4762,"low3":0.381,"lowRep":0.7692,"hit2":0.3333,"hitRep":0.7,"tierOverall":0.5},{"name":"Depth Alpha Hog","tier":"Depth","hitRate":0.3077,"hits":4,"n":13,"rates":[0.3077,0.3077,0.1538,0.1538],"low2":0.2308,"low3":0.2308,"lowRep":0.75,"hit2":0.1538,"hitRep":0.5,"tierOverall":0.186},{"name":"Depth Alpha Runt","tier":"Depth","hitRate":0.1978,"hits":18,"n":91,"rates":[0.2747,0.1978,0.1099,0.0659],"low2":0.1758,"low3":0.1319,"lowRep":0.64,"hit2":0.1099,"hitRep":0.5556,"tierOverall":0.186},{"name":"Depth Beta Hog","tier":"Depth","hitRate":0.25,"hits":2,"n":8,"rates":[0.5,0.25,0.125,0.0],"low2":0.125,"low3":0.125,"lowRep":0.25,"hit2":0.125,"hitRep":0.5,"tierOverall":0.186},{"name":"Depth Beta Runt","tier":"Depth","hitRate":0.1333,"hits":8,"n":60,"rates":[0.2167,0.1333,0.05,0.0167],"low2":0.0833,"low3":0.0667,"lowRep":0.3846,"hit2":0.05,"hitRep":0.375,"tierOverall":0.186},{"name":"Clogger Alpha Hog","tier":"Clogger","hitRate":0.1667,"hits":2,"n":12,"rates":[0.4167,0.1667,0.1667,0.0833],"low2":0.3333,"low3":0.1667,"lowRep":0.8,"hit2":0.0833,"hitRep":0.5,"tierOverall":0.0346},{"name":"Clogger Alpha Runt","tier":"Clogger","hitRate":0.0258,"hits":4,"n":155,"rates":[0.0387,0.0258,0.0258,0.0258],"low2":0.0258,"low3":0.0194,"lowRep":0.6667,"hit2":0.0194,"hitRep":0.75,"tierOverall":0.0346},{"name":"Clogger Beta Hog","tier":"Clogger","hitRate":0.0,"hits":0,"n":11,"rates":[0.0,0.0,0.0,0.0],"low2":0.0,"low3":0.0,"lowRep":null,"hit2":0.0,"hitRep":null,"tierOverall":0.0346},{"name":"Clogger Beta Runt","tier":"Clogger","hitRate":0.0355,"hits":6,"n":169,"rates":[0.0651,0.0355,0.0178,0.0178],"low2":0.0414,"low3":0.0237,"lowRep":0.6364,"hit2":0.0237,"hitRep":0.6667,"tierOverall":0.0346}]},"TE":{"marks":["12+","14+","17+"],"lowMark":"12+","hitMark":"12+","rep2Mark":"14+","rows":[{"name":"Elite Freak","tier":"Elite","hitRate":1.0,"hits":1,"n":1,"rates":[1.0,1.0,0.0],"low2":1.0,"low3":0.0,"lowRep":1.0,"hit2":0.0,"hitRep":0.0,"tierOverall":1.0},{"name":"Elite Gifted","tier":"Elite","hitRate":1.0,"hits":1,"n":1,"rates":[1.0,1.0,1.0],"low2":1.0,"low3":0.0,"lowRep":1.0,"hit2":1.0,"hitRep":1.0,"tierOverall":1.0},{"name":"Upside Freak","tier":"Upside","hitRate":1.0,"hits":6,"n":6,"rates":[1.0,0.6667,0.3333],"low2":0.6667,"low3":0.6667,"lowRep":0.6667,"hit2":0.6667,"hitRep":1.0,"tierOverall":0.7826},{"name":"Upside Gifted","tier":"Upside","hitRate":0.7059,"hits":12,"n":17,"rates":[0.7059,0.4118,0.1176],"low2":0.4706,"low3":0.2941,"lowRep":0.8889,"hit2":0.2941,"hitRep":0.7143,"tierOverall":0.7826},{"name":"Depth Freak","tier":"Depth","hitRate":0.3529,"hits":6,"n":17,"rates":[0.3529,0.1765,0.1176],"low2":0.1765,"low3":0.1176,"lowRep":0.5,"hit2":0.1176,"hitRep":0.6667,"tierOverall":0.2625},{"name":"Depth Gifted","tier":"Depth","hitRate":0.2381,"hits":15,"n":63,"rates":[0.2381,0.1746,0.0635],"low2":0.1429,"low3":0.0794,"lowRep":0.6,"hit2":0.0635,"hitRep":0.3636,"tierOverall":0.2625},{"name":"Clogger Freak","tier":"Clogger","hitRate":0.2,"hits":4,"n":20,"rates":[0.2,0.15,0.1],"low2":0.1,"low3":0.1,"lowRep":0.5,"hit2":0.1,"hitRep":0.6667,"tierOverall":0.0942},{"name":"Clogger Gifted","tier":"Clogger","hitRate":0.0819,"hits":14,"n":171,"rates":[0.0819,0.0468,0.0292],"low2":0.0468,"low3":0.0234,"lowRep":0.5714,"hit2":0.0175,"hitRep":0.375,"tierOverall":0.0942}]}};
-    const MX = { pos: 'WR', compact: (typeof window !== 'undefined' && window.innerWidth < 640), tier: 'All', q: '', hideTiny: false, sort: null, dir: -1 };
+    const MX = { pos: 'WR', compact: (typeof window !== 'undefined' && window.innerWidth < 640), tier: 'All', q: '', hideTiny: false, sort: null, dir: -1, ylo: null, yhi: null };
+    // Draft-class range: every player in the bucket data is named, so any range can be recomputed exactly from the
+    // player rows, with the same rules as scripts/build_buckets.py (Rule A: the newest class can't count as a repeater).
+    const MX_VET_YEARS = () => ALL_PLAYERS.filter(p => !p.isRookie).map(p => p.year);
+    const mxYearBounds = () => { const ys = MX_VET_YEARS(); return [Math.min(...ys), Math.max(...ys)]; };
+    function mxYears() {
+      const [lo, hi] = mxYearBounds();
+      const a = MX.ylo ?? lo, b = MX.yhi ?? hi;
+      return (a > lo || b < hi) ? { lo: a, hi: b } : null;
+    }
+    function mxRecompute(sec, posKey, yr) {
+      const lastDone = mxYearBounds()[1], hitI = sec.marks.indexOf(sec.hitMark);
+      const rows = sec.rows.map(r0 => {
+        const b = BUCKETS.find(x => x.pos === posKey && x.name === r0.name);
+        const vets = (b ? b.players : []).filter(p => !p.isRookie && p.year >= yr.lo && p.year <= yr.hi);
+        const n = vets.length, c = markCount, sh = k => n ? k / n : null;
+        const rep = i => { const hs = vets.filter(p => c(p, i) >= 1 && lastDone - p.year + 1 >= 2); return hs.length ? hs.filter(p => c(p, i) >= 2).length / hs.length : null; };
+        const hits = vets.filter(p => c(p, hitI) >= 1).length;
+        return { ...r0, n, hits, hitRate: n ? hits / n : null, rates: sec.marks.map((m, i) => sh(vets.filter(p => c(p, i) >= 1).length)),
+          low2: sh(vets.filter(p => c(p, 0) >= 2).length), low3: sh(vets.filter(p => c(p, 0) >= 3).length), lowRep: rep(0),
+          hit2: sh(vets.filter(p => c(p, 1) >= 2).length), hitRep: rep(1) };
+      });
+      const tt = {}; rows.forEach(x => { const t = tt[x.tier] || (tt[x.tier] = [0, 0]); t[0] += x.hits; t[1] += x.n; });
+      rows.forEach(x => { const t = tt[x.tier]; x.tierOverall = t[1] ? t[0] / t[1] : null; });
+      return rows;
+    }
     const MX_TABS = [['QB', 'QB'], ['RB', 'RB'], ['WR', 'WR (Size-Adj.)'], ['WR_RAW', 'WR (Raw)'], ['TE', 'TE']];
     const MX_TIER_CLS = { Cornerstone: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300', Elite: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300', Upside: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300', Depth: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300', Clogger: 'bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300' };
     function renderMatrix() {
@@ -4020,11 +3675,18 @@
       const pill = (on) => `px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer ${on ? 'bg-sky-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`;
       const sec = BUCKET_MATRIX[MX.pos];
       const tiers = ['All', ...new Set((sec ? sec.rows : []).map(r => r.tier))];
+      const [yMin, yMax] = mxYearBounds(), yLo = MX.ylo ?? yMin, yHi = MX.yhi ?? yMax;
+      const yOpts = v => { let o = ''; for (let y = yMin; y <= yMax; y++) o += `<option value="${y}" ${y === v ? 'selected' : ''}>${y}</option>`; return o; };
+      const yr = MX.pos === 'WR_RAW' ? null : mxYears();
       if (!tiers.includes(MX.tier)) MX.tier = 'All';
       tabs.innerHTML = `<div class="flex flex-wrap gap-1.5">${MX_TABS.map(([k, l]) => `<button type="button" data-mxpos="${k}" class="${pill(MX.pos === k)}">${l} <span class="opacity-70 font-semibold">${BUCKET_MATRIX[k].rows.length}</span></button>`).join('')}</div>
         <div class="flex flex-wrap items-center gap-1.5 mt-2"><span class="text-[10px] font-bold uppercase tracking-wide text-slate-500 mr-1">Tier</span>${tiers.map(t => `<button type="button" data-mxtier="${t}" class="${pill(MX.tier === t)}">${t}</button>`).join('')}</div>
         <div class="flex flex-wrap items-center gap-x-3 gap-y-2 mt-2">
-          <input id="mxQ" type="search" placeholder="Search buckets (e.g. Alpha)" value="${esc(MX.q)}" class="flex-1 min-w-[10rem] max-w-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-2.5 py-1.5 text-xs">
+          <input id="mxQ" type="search" placeholder="Search buckets or players (e.g. Alpha, Lemon)" value="${esc(MX.q)}" class="flex-1 min-w-[10rem] max-w-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-2.5 py-1.5 text-xs">
+          <span class="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300"><span class="font-semibold">Draft class</span>
+            <label for="mxYlo" class="sr-only">Earliest draft class</label><select id="mxYlo" class="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-1 py-1 text-xs font-bold" ${MX.pos === 'WR_RAW' ? 'disabled' : ''}>${yOpts(yLo)}</select>
+            <span>to</span><label for="mxYhi" class="sr-only">Latest draft class</label><select id="mxYhi" class="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-1 py-1 text-xs font-bold" ${MX.pos === 'WR_RAW' ? 'disabled' : ''}>${yOpts(yHi)}</select>
+            ${yr ? '<button type="button" id="mxYreset" class="font-bold text-sky-700 dark:text-sky-400 hover:underline cursor-pointer">All years</button>' : ''}</span>
           <label class="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 cursor-pointer"><input id="mxTiny" type="checkbox" class="accent-sky-600" ${MX.hideTiny ? 'checked' : ''}> Hide empty / tiny (n&lt;5)</label>
           <span id="mxCount" class="text-[11px] text-slate-500"></span>
         </div>`;
@@ -4045,11 +3707,24 @@
         { k: 'low3', f: { i: 0, min: 3, label: `3+ seasons at ${low}` }, g: r => r.low3, grp: 'rep', label: `${low} (3+ yrs)`, tip: `Share of the bucket with 3+ seasons at ${low}` },
         { k: 'lowRep', f: { i: 0, min: 1, hl: 2, label: `${low} hitters (repeaters in green)` }, g: r => r.lowRep, grp: 'rep', label: `${low} Repeater`, tip: `Of the players with a ${low} season, the share who did it in 2+ seasons`, hue: A, bold: 1, keep: 1, line: 'border-amber-500' },
         { k: 'hit2', f: { i: 1, min: 2, label: `2+ seasons at ${rep2}` }, g: r => r.hit2, grp: 'rep', label: `${rep2} (2+ yrs)`, tip: `Share of the bucket with 2+ seasons at ${rep2}` },
-        { k: 'hitRep', f: { i: 1, min: 1, hl: 2, label: `${rep2} hitters (repeaters in green)` }, g: r => r.hitRep, grp: 'rep', label: `${rep2} Repeater`, tip: `Of the players with a ${rep2} season, the share who did it in 2+ seasons. ${MX.pos === 'TE' ? 'TE bucket cards use the 12+ column instead.' : 'This is the Repeater % on the bucket cards.'}`, hue: G, bold: 1, keep: 1, line: 'border-emerald-500' },
+        { k: 'hitRep', f: { i: 1, min: 1, hl: 2, label: `${rep2} hitters (repeaters in green)` }, g: r => r.hitRep, grp: 'rep', label: `${rep2} Repeater`, tip: `Of the players with a ${rep2} season, the share who did it in 2+ seasons. ${MX.pos === 'TE' ? 'TE buckets use the 12+ column instead.' : 'This is the Repeater % in the bucket detail.'}`, hue: G, bold: 1, keep: 1, line: 'border-emerald-500' },
       ].filter(x => !c || x.keep);
-      let rows = sec.rows.slice();
+      let rows = yr ? mxRecompute(sec, posKey, yr) : sec.rows.slice();
       if (MX.tier !== 'All') rows = rows.filter(r => r.tier === MX.tier);
-      if (MX.q.trim()) { const q = MX.q.trim().toLowerCase(); rows = rows.filter(r => r.name.toLowerCase().includes(q)); }
+      // Search: bucket names, or player names (bucket sheet names and the rookie tabs' names) once 3+ letters are typed
+      const mxHits = new Map();
+      if (MX.q.trim()) {
+        const q = MX.q.trim().toLowerCase(), qn = normStr(MX.q);
+        rows = rows.filter(r => {
+          if (r.name.toLowerCase().includes(q)) return true;
+          if (MX.pos === 'WR_RAW' || qn.length < 3) return false;
+          const b = BUCKETS.find(x => x.pos === posKey && x.name === r.name); if (!b) return false;
+          const alias = new Set([...CMP_ALIAS].filter(([k]) => k.includes(qn)).map(([, v]) => v.id));
+          const m = b.players.filter(p => (p.isRookie || !yr || (p.year >= yr.lo && p.year <= yr.hi)) && (p.norm.includes(qn) || alias.has(p.id)));
+          if (m.length) mxHits.set(r.name, m);
+          return m.length > 0;
+        });
+      }
       if (MX.hideTiny) rows = rows.filter(r => r.n >= 5);
       const sorting = MX.sort && (MX.sort === 'name' || MX.sort === 'n' || cols.some(x => x.k === MX.sort));
       if (sorting) {
@@ -4072,21 +3747,18 @@
         const tag = r.n === 0 ? '<span class="px-1 rounded border border-slate-300 dark:border-slate-600 text-slate-500">empty</span>' : r.n < 10 ? '<span class="px-1 rounded border border-amber-400/60 text-amber-600 dark:text-amber-400">n&lt;10</span>' : '';
         const newTier = !sorting && r.tier !== lastTier; lastTier = r.tier;
         h += `<tr class="${newTier ? 'border-t-2 border-slate-200 dark:border-slate-700' : 'border-t border-slate-100 dark:border-slate-800'}">
-          <td class="px-2 py-1.5 sticky left-0 bg-white dark:bg-slate-900 z-10 min-w-[7rem] sm:whitespace-nowrap"><div class="leading-tight">${nm}</div><div class="flex flex-wrap items-center gap-1 mt-0.5 text-[10px]"><span class="px-1 rounded font-bold ${MX_TIER_CLS[r.tier] || ''}">${esc(r.tier)}</span><span class="text-slate-500">${r.hits}/${r.n}</span>${tag}</div></td>
+          <td class="px-2 py-1.5 sticky left-0 bg-white dark:bg-slate-900 z-10 min-w-[7rem] sm:whitespace-nowrap"><div class="leading-tight">${nm}</div><div class="flex flex-wrap items-center gap-1 mt-0.5 text-[10px]"><span class="px-1 rounded font-bold ${MX_TIER_CLS[r.tier] || ''}">${esc(r.tier)}</span><span class="text-slate-500">${r.hits}/${r.n}</span>${tag}</div>${mxHits.has(r.name) ? `<div class="flex flex-col items-start gap-0.5 mt-1">${mxHits.get(r.name).slice(0, 4).map(p => `<span class="inline-flex items-center text-[11px]"><button type="button" data-player-id="${esc(p.id)}" class="font-semibold text-sky-700 dark:text-sky-400 hover:underline cursor-pointer">${esc(p.name)} <span class="text-slate-500">'${String(p.year).slice(2)}</span></button>${ownerBadge(p)}</span>`).join('')}${mxHits.get(r.name).length > 4 ? `<span class="text-[10px] text-slate-500">+${mxHits.get(r.name).length - 4} more</span>` : ''}</div>` : ''}</td>
           ${cols.map((x, i) => { const v = x.g(r); const show = x.k === 'tier' ? (sorting || newTier) : true; return `<td class="px-1.5 sm:px-2 py-1.5 text-right ${x.bold ? 'font-bold' : ''} ${x.muted ? 'text-slate-500' : ''} ${i && cols[i - 1].grp !== x.grp ? 'border-l border-slate-100 dark:border-slate-800' : ''}" style="${show ? heat(v) : ''}">${!show ? '' : (b && x.f && v != null) ? `<button type="button" data-open-bucket="${esc(b.id)}" data-mx-filter='${JSON.stringify(x.f).replace(/'/g, '&#39;')}' class="cursor-pointer hover:underline" title="Show the players behind this number">${pct(v)}</button>` : pct(v)}</td>`; }).join('')}
         </tr>`;
       });
       if (!rows.length) h += `<tr><td colspan="${cols.length + 1}" class="px-2 py-4 text-center text-slate-500">No buckets match.</td></tr>`;
       h += `</tbody></table>
-        <p class="pt-2 text-[10px] text-slate-500 dark:text-slate-400">From the owner's Hit Rates sheet, recomputed from its player rows (the same data as the bucket cards), 2006–2025 seasons. Repeater = of the players who reached the mark at least once, the share who reached it in 2+ seasons; "(2+ yrs)" columns are the same count over the whole bucket. ${MX.pos === 'WR' ? 'WR buckets on this page are the size-adjusted ones. ' : MX.pos === 'WR_RAW' ? 'Reference only: the buckets on this page use the size-adjusted WR table. ' : ''}${MX.pos === 'TE' ? 'TE hit mark is 12+, so the 12+ Repeater column is the Repeater % on the TE bucket cards. ' : ''}Small buckets (n under 10) are leans, not rules. "—" = no players reached that mark.</p>`;
+        <p class="pt-2 text-[10px] text-slate-500 dark:text-slate-400">From the owner's Hit Rates sheet, recomputed from its player rows (the same data as the bucket detail), 2006–2025 seasons. Repeater = of the players who reached the mark at least once, the share who reached it in 2+ seasons; "(2+ yrs)" columns are the same count over the whole bucket. ${MX.pos === 'WR' ? 'WR buckets on this page are the size-adjusted ones. ' : MX.pos === 'WR_RAW' ? 'Reference only: the buckets on this page use the size-adjusted WR table. ' : ''}${MX.pos === 'TE' ? 'TE hit mark is 12+, so the 12+ Repeater column is the TE Repeater %. ' : ''}Small buckets (n under 10) are leans, not rules. "—" = no players reached that mark.</p>`;
+      if (yr) h = `<div class="mb-2 flex flex-wrap items-center gap-2 text-xs"><span class="px-2 py-1 rounded-full font-bold bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">Drafted ${yr.lo}–${yr.hi}</span><span class="text-[11px] text-slate-500 dark:text-slate-400">Every rate recomputed from the ${rows.reduce((a, x) => a + x.n, 0)} players drafted in that range. Small samples move a lot; check n.</span></div>` + h;
+      else if (MX.pos === 'WR_RAW') h = `<p class="mb-2 text-[11px] text-slate-500 dark:text-slate-400">The draft-class filter and player search use the size-adjusted WR buckets; this reference table has no player list on this page.</p>` + h;
       out.innerHTML = h;
       const cnt = document.getElementById('mxCount'); if (cnt) cnt.textContent = `Showing ${rows.length} of ${sec.rows.length} buckets`;
     }
-    (function rememberCardView() {
-      const d = document.getElementById('cardView'); if (!d) return;
-      try { if (localStorage.getItem('pbe_cardview') === '1') d.open = true; } catch (e) {}
-      d.addEventListener('toggle', () => { try { localStorage.setItem('pbe_cardview', d.open ? '1' : '0'); } catch (e) {} });
-    })();
     function wireMatrix() {
       const tabs = document.getElementById('mxPos'), out = document.getElementById('mxOut');
       if (!tabs) return;
@@ -4095,7 +3767,15 @@
         const t = e.target.closest('[data-mxtier]'); if (t) { MX.tier = t.dataset.mxtier; renderMatrix(); }
       });
       tabs.addEventListener('input', e => { if (e.target.id === 'mxQ') { MX.q = e.target.value; const pos = e.target.selectionStart; renderMatrix(); const q = document.getElementById('mxQ'); q.focus(); q.setSelectionRange(pos, pos); } });
-      tabs.addEventListener('change', e => { if (e.target.id === 'mxTiny') { MX.hideTiny = e.target.checked; renderMatrix(); } });
+      tabs.addEventListener('change', e => {
+        if (e.target.id === 'mxTiny') { MX.hideTiny = e.target.checked; renderMatrix(); }
+        if (e.target.id === 'mxYlo' || e.target.id === 'mxYhi') {
+          let lo = Number(document.getElementById('mxYlo').value), hi = Number(document.getElementById('mxYhi').value);
+          if (lo > hi) { if (e.target.id === 'mxYlo') hi = lo; else lo = hi; }
+          const [a, b] = mxYearBounds(); MX.ylo = lo === a ? null : lo; MX.yhi = hi === b ? null : hi; renderMatrix();
+        }
+      });
+      tabs.addEventListener('click', e => { if (e.target.id === 'mxYreset') { MX.ylo = MX.yhi = null; renderMatrix(); } });
       out?.addEventListener('click', e => { const s = e.target.closest('[data-mxsort]'); if (!s) return; const k = s.dataset.mxsort; if (MX.sort === k) { if (MX.dir < 0) MX.dir = 1; else MX.sort = null; } else { MX.sort = k; MX.dir = k === 'name' ? 1 : -1; } renderMatrix(); });
       document.getElementById('mxCompact')?.addEventListener('change', e => { MX.compact = e.target.checked; renderMatrix(); });
       renderMatrix();
@@ -4132,6 +3812,7 @@
           extra.push(`<option value="${esc(label)}"></option>`);
         });
         if (extra.length) list.insertAdjacentHTML('beforeend', extra.join(''));
+        if (MX.q.trim()) renderMatrix();
       });
       document.getElementById('cmpMkt')?.addEventListener('change', e => { CMP.market = e.target.checked; renderCompare(); });
       document.getElementById('cmpMktFmt')?.addEventListener('change', e => { CMP.mktFmt = e.target.value; CMP.mkt = null; renderCompare(); });
@@ -4173,18 +3854,6 @@
       } catch (e) {}
 
       applyTheme();
-      // Draft-class options from the data (e.g. 2006–2026)
-      const years = [...new Set(ALL_PLAYERS.map(p => p.year))].sort((a, b) => a - b);
-      const lo = years[0], hi = years[years.length - 1];
-      const opts = [];
-      for (let y = lo; y <= hi; y++) opts.push(`<option value="${y}">${y}</option>`);
-      document.getElementById('yearMin').innerHTML = opts.join('');
-      document.getElementById('yearMax').innerHTML = opts.join('');
-      document.getElementById('yearMin').value = lo;
-      document.getElementById('yearMax').value = hi;
-      state.yearMin = lo; state.yearMax = hi;
-      syncControlStyles();
-      renderBucketsGrid();
       wireEvents();
       wireCompare();
       wireMatrix();
