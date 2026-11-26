@@ -3841,6 +3841,11 @@
           if (CMP.ids.some(Boolean)) renderCompare();
           return;
         }
+        if (e.data && e.data.type === 'dtc-open-bucket') {   // from the hub's player popup
+          const b = BUCKETS.find(x => x.pos === e.data.pos && x.name === e.data.name);
+          if (b) openBucketModal(b.id);
+          return;
+        }
         if (e.data && e.data.type === 'dtc-theme' && (e.data.theme === 'dark' || e.data.theme === 'light')) {
           state.theme = e.data.theme;
           applyTheme();

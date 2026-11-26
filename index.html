@@ -986,8 +986,9 @@
       if (!p) return { name: 'Unknown', hit: null, rep2: null, cond: null, tier: 'mid' };
       if (p.pick || p.pos === 'PICK') return { name: 'Draft Capital', ...BUCKET_STATS['Draft Capital'] };
       const key = normName(p.name);
-      let bName = NAMED_BUCKETS[key];
+      let bName = NAMED_BUCKETS[key] || NAMED_BUCKETS[aliasKey(p.name)], guess = false;   // FantasyCalc vs sheet spelling
       if (!bName) {
+        guess = true;
         const v = V[p.id] || p.f || p.k || 0;
         if (p.pos === 'QB') bName = v >= 6800 ? 'Elite Pocket' : v >= 2800 ? 'Depth Pocket' : 'Clogger Pocket';
         else if (p.pos === 'RB') bName = v >= 6800 ? 'Elite Bellcow' : v >= 4200 ? 'Upside Workhorse' : v >= 2400 ? 'Depth Committee' : 'Clogger Committee';
@@ -995,7 +996,7 @@
         else if (p.pos === 'TE') bName = v >= 5200 ? 'Upside Gifted' : v >= 2200 ? 'Depth Gifted' : 'Clogger Gifted';
         else bName = 'Clogger Beta Runt';
       }
-      return { name: bName, ...(BUCKET_STATS[bName] || { hit: 15, rep2: 7, cond: 46, tier: 'mid' }) };
+      return { name: bName, guess, ...(BUCKET_STATS[bName] || { hit: 15, rep2: 7, cond: 46, tier: 'mid' }) };
     }
 
     // ---- Rookie pick odds: what a pick at this slot usually becomes (2015-2023 QB/WR/RB/TE classes; RBs moved up 18 NFL picks to mimic superflex rookie drafts) ----
@@ -1076,6 +1077,26 @@
       if (d && d.players) { PPG = d.players; try { all(); } catch (e) { /* app not ready yet; next render picks it up */ } }
     }).catch(() => {});
 
+    // Hit / Starter / Bust bar for the player popup: the same numbers as the Profile Buckets bucket detail, read from
+    // data/bucket-stats.json (scripts/export_bucket_stats.py, run by build_buckets.py). Only for players named in a
+    // bucket (no bar for value-based guesses).
+    let BUCKET_BAR = null;
+    fetch(`./data/bucket-stats.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
+      if (d && d.buckets) { BUCKET_BAR = d.buckets; try { if (st.pm && st.pm.id != null) renderPlayerModal(); } catch (e) { /* not open */ } }
+    }).catch(() => {});
+    function bucketBar(p) {
+      if (!p || p.pick || !BUCKET_BAR) return '';
+      const b = getBucket(p);
+      const s = !b.guess && BUCKET_BAR[`${p.pos}|${b.name}`];
+      if (!s || !s.n) return '';
+      const seg = (v, cls, ink, lbl) => v > 0 ? `<div class="${cls} h-full flex items-center justify-center overflow-hidden text-[10px] font-extrabold ${ink} whitespace-nowrap" style="width:${v}%" title="${lbl}: ${v.toFixed(1)}%">${v >= 9 ? v.toFixed(0) + '%' : ''}</div>` : '';
+      const tot = s.hit + s.starter + s.bust || 1, k = 100 / tot;
+      const pct = v => v == null ? '—' : `${Number(v).toFixed(0)}%`;
+      return `<button type="button" data-openbucket="${esc(p.pos)}|${esc(b.name)}" class="mt-2 w-full text-left cursor-pointer group" title="Open the ${esc(b.name)} bucket on the Profile Buckets tab">
+          <div class="w-full h-5 rounded-full overflow-hidden flex bg-slate-200 dark:bg-slate-800">${seg(s.hit * k, 'bg-emerald-500', 'text-slate-950', `Hit (${s.hitLbl} PPG)`)}${seg(s.starter * k, 'bg-amber-400', 'text-slate-950', `Starter only (${s.starterLbl} PPG)`)}${seg(s.bust * k, 'bg-rose-500', 'text-white', 'Bust')}</div>
+          <div class="mt-1 text-[11px] text-[#5d6672] dark:text-[#98a2ae]"><span class="font-semibold text-[#111827] dark:text-white group-hover:underline">${esc(b.name)}</span> · Hit (${s.hitLbl}) ${pct(s.hit)} · Elite (${s.eliteLbl}) ${pct(s.elite)} · Repeater ${pct(s.rep)} · n = ${s.n}${s.n < 10 ? ' (small sample)' : ''}</div>
+        </button>`;
+    }
     function bucketBadge(p) {
       const b = getBucket(p);
       if (b.tier === 'pick') {
@@ -1142,6 +1163,7 @@
       const fr = document.getElementById('buckets-frame');
       if (!fr || fr.getAttribute('src')) return;
       fr.addEventListener('load', onBucketsFrameLoad);
+      BUCKETS_READY = false;
       fr.removeAttribute('loading'); // src is already deferred until the tab is opened; don't let native lazy-loading stall it
       fr.src = freshSrc(fr.dataset.src);
     }
@@ -1257,10 +1279,22 @@
       if (fr && n > 200 && Math.abs(parseFloat(fr.style.height) - n) > 1) fr.style.height = `${n}px`;
     }
 
+    // Player popup → Profile Buckets: open one bucket's detail in the buckets frame (sent now if loaded, else on 'dtc-ready')
+    let PENDING_BUCKET = null, BUCKETS_READY = false;
+    function sendPendingBucket() {
+      const fr = document.getElementById('buckets-frame');
+      if (!PENDING_BUCKET || !fr || !BUCKETS_READY) return;   // not loaded yet: sent when the frame posts 'dtc-ready'
+      try { fr.contentWindow.postMessage({ type: 'dtc-open-bucket', ...PENDING_BUCKET }, location.origin); } catch (e) { return; }
+      PENDING_BUCKET = null;
+    }
     // Embedded pages ask for league data ('dtc-ready') or a pre-loaded offer ('dtc-build-offer', name)
     window.addEventListener('message', e => {
       if (e.origin !== location.origin || !e.data) return;
-      if (e.data.type === 'dtc-ready') { sendLeagueToFrames(); return; }
+      if (e.data.type === 'dtc-ready') {
+        const bf = document.getElementById('buckets-frame');
+        if (bf && e.source === bf.contentWindow) { BUCKETS_READY = true; sendPendingBucket(); }
+        sendLeagueToFrames(); return;
+      }
       if (e.data.type !== 'dtc-build-offer') return;
       const key = normName(e.data.name);
       const pid = Object.keys(OWN).find(id => P[id] && !P[id].pick && normName(P[id].name) === key);
@@ -2529,7 +2563,7 @@
       const posLbl = p.pick ? 'Pick' : p.pos;
       document.getElementById('pmHeader').innerHTML = `
         <div class="flex items-center gap-2 flex-wrap">${posTag(p.pos)}<h3 class="text-base sm:text-lg font-extrabold">${esc(p.name)}</h3>${p.pick ? pickOddsHtml(p) : bucketBadge(p) + sellBadge(p)}${!p.pick && OWN[p.id] !== undefined && OWN[p.id] !== ME && T[ME] ? `<button type="button" data-findpkg="${p.id}" class="ml-auto px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white cursor-pointer">Find offers for him →</button>` : ''}</div>
-        <div class="text-xs text-[#5d6672] dark:text-[#98a2ae] mt-0.5">${p.pick ? `Projected ${esc(p.tier || 'mid')} pick · KTC history uses its “${esc((p.ktcKey || '').split('|')[0])}” value` : `${esc(p.team || 'FA')}${p.age ? ` · Age ${Number(p.age).toFixed(1)}` : ''}${sellLine(p)}`} · ${esc(ownTxt(p.id))}</div>`;
+        <div class="text-xs text-[#5d6672] dark:text-[#98a2ae] mt-0.5">${p.pick ? `Projected ${esc(p.tier || 'mid')} pick · KTC history uses its “${esc((p.ktcKey || '').split('|')[0])}” value` : `${esc(p.team || 'FA')}${p.age ? ` · Age ${Number(p.age).toFixed(1)}` : ''}${sellLine(p)}`} · ${esc(ownTxt(p.id))}</div>${bucketBar(p)}`;
       const t7 = trendWindow(p, 7, gm), t30 = trendWindow(p, 30, gm);
       const chg = (t, lbl) => {
         if (!t) return `<div class="text-sm font-extrabold text-[#5d6672] dark:text-[#98a2ae]">—</div><div class="text-[10px] text-[#5d6672] dark:text-[#98a2ae]">${lbl}: not enough history yet</div>`;
@@ -5183,6 +5217,15 @@
           const o = openRow.dataset.openrow;
           st.open = st.open === o ? null : o;
           renderLeague();
+          return;
+        }
+        const obBtn = e.target.closest('[data-openbucket]');
+        if (obBtn) {
+          const [pos, name] = obBtn.dataset.openbucket.split('|');
+          PENDING_BUCKET = { pos, name };
+          document.getElementById('playerModal')?.classList.add('hidden');
+          switchTab('buckets');
+          sendPendingBucket();
           return;
         }
         const radarIdeaBtn = e.target.closest('[data-radaridea]');
