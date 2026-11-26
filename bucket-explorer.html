@@ -184,7 +184,7 @@
 
         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-semibold bg-indigo-100 dark:bg-indigo-500/20 text-indigo-950 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-500/40">
           <span class="text-indigo-600 dark:text-indigo-400 font-extrabold" aria-hidden="true">↻</span>
-          <span><strong>Repeater %:</strong> Of players who hit their PPG mark once (QB 20+, RB 15+, WR 14+, TE 12+), % who hit it in 2+ seasons</span>
+          <span><strong>Repeater %:</strong> Of players who reached the mark once (QB 20+, RB 15+, WR 14+, TE 14+), % who reached it in 2+ seasons</span>
         </span>
       </div>
     </div>
@@ -2797,10 +2797,11 @@
         const hp = d.tr?.hp || d.sg?.hp || {};
         const g8 = d.tr?.g8, g4 = d.tr?.g;
         // Already hit 12+ in a completed season (his class isn't settled yet, but this part is known)
-        if (d.tr && d.tr.tier && d.tr.tier !== 'tbd' && d.tr.tier !== 'red') return { cohort: 'rookie', p: 100, tag: 'already hit 12+', view: 'completed season' };
-        let model = null, view = '', games = null;
-        if (hp['8'] != null && (g8 == null || g8 >= 2)) { model = hp['8']; view = 'Games 1–8'; games = g8; }
-        else if (hp['4'] != null && (g4 == null || g4 >= 2)) { model = hp['4']; view = pos === 'WR' ? 'Weeks 1–4' : 'Games 1–4'; games = g4; }
+        if (d.tr && d.tr.tier && d.tr.tier !== 'tbd' && d.tr.tier !== 'red') return { cohort: 'rookie', p: 100, tag: 'already hit 12+', view: 'completed season', elHit: d.tr.tier === 'green' };
+        let model = null, view = '', games = null, wk = null;
+        if (hp['8'] != null && (g8 == null || g8 >= 2)) { model = hp['8']; view = 'Games 1–8'; games = g8; wk = '8'; }
+        else if (hp['4'] != null && (g4 == null || g4 >= 2)) { model = hp['4']; view = pos === 'WR' ? 'Weeks 1–4' : 'Games 1–4'; games = g4; wk = '4'; }
+        const he = d.tr?.he || d.sg?.he || {};
         if (model == null) return { cohort: 'rookie', why: 'no model odds yet (needs 2+ games)' };
         const thin = games != null && games < 6;
         const tag = `${games != null ? games + 'g' : view}${thin ? ' · thin' : ''}${d.soph ? ' · rookie yr' : ''}`;
@@ -2808,7 +2809,7 @@
           if (d.base?.safe == null) return { cohort: 'rookie', p: model, tag: tag + ' · TE, no draft history', view, te: true };
           return { cohort: 'rookie', p: 0.5 * model + 0.5 * d.base.safe, tag: tag + ' · TE small sample', view, te: true, model, draft: d.base.safe };
         }
-        return { cohort: 'rookie', p: model, tag, view };
+        return { cohort: 'rookie', p: model, tag, view, el: he[wk] ?? null };
       }
       if (!early) {
         const x = sellOdds(d.p, d.pg, ex);
@@ -2835,6 +2836,22 @@
       return { k: find(m.k), f: find(m.f) };
     };
 
+    // Elite odds (WR 14+ / RB 15+): the 12+ model rescaled (backtested Nov 2026; same order as 12+, better
+    // calibrated than a separate elite model). Never shown above the 12+ odds; "<5%" when the 12+ odds are under 5%.
+    const ELITE_LBL = { WR: '14+', RB: '15+' };
+    function eliteTxt(p12, el) {
+      if (el == null || p12 == null) return null;
+      return p12 < 5 ? '&lt;5%' : `${Math.min(el, p12)}%`;
+    }
+    function rankElite(x) {
+      const pos = x.d.p.pos, o = x.o;
+      if (o.cohort !== 'rookie') return '';
+      if (pos === 'TE') return ' <span class="text-[11px] text-slate-500 dark:text-slate-400">· elite: TE uses 12+ only</span>';
+      if (!ELITE_LBL[pos]) return '';
+      if (o.elHit) return ` <span class="text-[11px] text-slate-500 dark:text-slate-400">· already hit ${ELITE_LBL[pos]}</span>`;
+      const t = eliteTxt(o.p, o.el);
+      return t ? ` <span class="text-[11px] text-slate-500 dark:text-slate-400">· ${ELITE_LBL[pos]} <strong class="text-slate-700 dark:text-slate-200">${t}</strong></span>` : '';
+    }
     function rankSummary(ds, ex) {
       const r = ds.map(d => ({ d, o: rankOdds(d, ex) }));
       const ranked = r.filter(x => x.o.p != null), unranked = r.filter(x => x.o.p == null);
@@ -2866,7 +2883,7 @@
             <span class="font-extrabold tabular-nums w-5">#${i + 1}</span>
             <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold ${POS_META[x.d.p.pos].badgeCls}">${x.d.p.pos}</span>
             <span class="font-bold">${esc(x.d.p.name)}</span>
-            <span class="font-extrabold tabular-nums">${Math.round(x.o.p)}%</span>
+            <span class="font-extrabold tabular-nums">${Math.round(x.o.p)}%</span>${rankElite(x)}
             <span class="text-[10px] font-bold px-1.5 rounded ${/thin|small/.test(x.o.tag) ? 'bg-amber-400/20 text-amber-800 dark:text-amber-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}" title="${esc(x.o.view || '')}">${esc(x.o.tag)}</span>${mkt}</div>`;
         }).join('')}</div>`;
       };
@@ -2881,6 +2898,7 @@
         if (rk.length) h += list(rk, 'Rookies: chance of a 12+ PPG season in Years 1–3');
         if (vt.length) h += list(vt, 'Veterans: chance of 12+ PPG again next season');
       }
+      if (ranked.some(x => x.o.cohort === 'rookie' && ['WR', 'RB'].includes(x.d.p.pos))) h += `<p class="text-[10px] text-slate-500 dark:text-slate-400 pt-1">Second number: chance of an elite season (WR 14+, RB 15+), same model rescaled, so the order doesn't change. A separate elite model ranked the same players the same way and was less accurate. TEs and veterans: 12+ only.</p>`;
       if (unranked.length) h += `<p class="text-[11px] text-slate-500 dark:text-slate-400 pt-1">Not ranked: ${unranked.map(x => `${esc(x.d.p.name)} (${esc(x.o.why)})`).join('; ')}.</p>`;
       if (m) h += `<p class="text-[10px] text-slate-500 dark:text-slate-400 pt-1">Market: ${CMP.mktFmt === 'sf' ? 'SF' : '1QB'} · 1 PPR values (KTC and the daily <a href="https://fantasycalc.com" target="_blank" rel="noopener" class="underline">FantasyCalc</a> cache${m.updated ? `, ${new Date(m.updated).toLocaleDateString()}` : ''}). "Cheap" / "priced above" compare the market rank with the odds rank in this group.</p>`;
       return h ? cmpStrip('Ranking', h) : '';
@@ -2954,8 +2972,19 @@
           const lbl = { buy: 'WR BUY', missed: 'MISSED TIME', jump: 'JUMPED' };
           return t.length ? t.map(x => `<span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800">${lbl[x]}</span>`).join(' ') : '—';
         };
+        const elite = d => {
+          if (!isEarly(d)) return '—';
+          if (d.p.pos === 'TE') return '<span class="text-slate-400">TE: 12+ only (too few 17+ seasons to model)</span>';
+          if (!ELITE_LBL[d.p.pos]) return '—';
+          const hp = d.tr?.hp || d.sg?.hp || {}, he = d.tr?.he || d.sg?.he || {};
+          const gOf = { '4': d.tr?.g, '8': d.tr?.g8 };
+          const parts = [['4', 'G1–4'], ['8', 'G1–8']]
+            .filter(([k]) => hp[k] != null && he[k] != null && (gOf[k] == null || gOf[k] >= 2))
+            .map(([k, l]) => `${l} <strong>${eliteTxt(hp[k], he[k])}</strong>`);
+          return parts.length ? parts.join(' · ') + ` <span class="text-slate-400">(${ELITE_LBL[d.p.pos]} PPG)</span>` : '<span class="text-slate-400">—</span>';
+        };
         const best = d => d.tb ? `<strong>${d.tb.med.toFixed(1)}</strong> PPG <span class="text-slate-400">(middle half ${d.tb.lo.toFixed(1)}–${d.tb.hi.toFixed(1)}; 15 closest past rookies on ${d.tb.view} usage and draft slot)</span>` : '—';
-        h += cmpStrip('Early usage & model odds', cmpRow('Usage', each(use)) + cmpRow('12+ hit odds (usage + draft slot)', each(odds)) + cmpRow('Flags', each(tags)) + cmpRow('Typical best season, Years 1–3', each(best)));
+        h += cmpStrip('Early usage & model odds', cmpRow('Usage', each(use)) + cmpRow('12+ hit odds (usage + draft slot)', each(odds)) + cmpRow('Elite odds (WR 14+ / RB 15+)', each(elite)) + cmpRow('Flags', each(tags)) + cmpRow('Typical best season, Years 1–3', each(best)));
         const y2 = d => (d?.sg?.u2 != null) ? `Rookie ${d.sg.u != null ? Number(d.sg.u).toFixed(1) : '—'} → Year 2 <strong>${Number(d.sg.u2).toFixed(1)}</strong>${(d.sg.sig || []).includes('jump') ? ' <span class="text-[10px] font-extrabold px-1.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">JUMPED</span>' : ''}` : '—';
         if (ds.some(d => d?.sg?.u2 != null)) h += cmpRow('Year 2 usage (Games 1–4)', each(y2));
       }
@@ -3015,7 +3044,7 @@
         { k: 'low3', g: r => r.low3, grp: 'rep', label: `${low} (3+ yrs)`, tip: `Share of the bucket with 3+ seasons at ${low}` },
         { k: 'lowRep', g: r => r.lowRep, grp: 'rep', label: `${low} Repeater`, tip: `Of the players with a ${low} season, the share who did it in 2+ seasons`, hue: A, bold: 1, keep: 1, line: 'border-amber-500' },
         { k: 'hit2', g: r => r.hit2, grp: 'rep', label: `${rep2} (2+ yrs)`, tip: `Share of the bucket with 2+ seasons at ${rep2}` },
-        { k: 'hitRep', g: r => r.hitRep, grp: 'rep', label: `${rep2} Repeater`, tip: `Of the players with a ${rep2} season, the share who did it in 2+ seasons. This is the Repeater % on the bucket cards${MX.pos === 'TE' ? ' (TE cards use 12+, the column to the left)' : ''}.`, hue: G, bold: 1, keep: 1, line: 'border-emerald-500' },
+        { k: 'hitRep', g: r => r.hitRep, grp: 'rep', label: `${rep2} Repeater`, tip: `Of the players with a ${rep2} season, the share who did it in 2+ seasons. This is the Repeater % on the bucket cards.`, hue: G, bold: 1, keep: 1, line: 'border-emerald-500' },
       ].filter(x => !c || x.keep);
       let rows = sec.rows.slice();
       if (MX.tier !== 'All') rows = rows.filter(r => r.tier === MX.tier);
@@ -3048,7 +3077,7 @@
       });
       if (!rows.length) h += `<tr><td colspan="${cols.length + 1}" class="px-2 py-4 text-center text-slate-500">No buckets match.</td></tr>`;
       h += `</tbody></table>
-        <p class="pt-2 text-[10px] text-slate-500 dark:text-slate-400">From the owner's Hit Rates sheet (bucket summary rows), 2006–2025 seasons. Repeater = of the players who reached the mark at least once, the share who reached it in 2+ seasons; "(2+ yrs)" columns are the same count over the whole bucket. ${MX.pos === 'WR' ? 'WR buckets on this page are the size-adjusted ones. ' : MX.pos === 'WR_RAW' ? 'Reference only: the buckets on this page use the size-adjusted WR table. ' : ''}${MX.pos === 'TE' ? 'TE hit mark is 12+, so the 12+ Repeater column is what the TE bucket cards show. ' : ''}Small buckets (n under 10) are leans, not rules. "—" = no players reached that mark.</p>`;
+        <p class="pt-2 text-[10px] text-slate-500 dark:text-slate-400">From the owner's Hit Rates sheet (bucket summary rows), 2006–2025 seasons. Repeater = of the players who reached the mark at least once, the share who reached it in 2+ seasons; "(2+ yrs)" columns are the same count over the whole bucket. ${MX.pos === 'WR' ? 'WR buckets on this page are the size-adjusted ones. ' : MX.pos === 'WR_RAW' ? 'Reference only: the buckets on this page use the size-adjusted WR table. ' : ''}${MX.pos === 'TE' ? 'TE hit mark is 12+, but the Repeater % on the TE bucket cards uses 14+ (the right-hand column); the 12+ Repeater column is the hit-mark repeat. ' : ''}Small buckets (n under 10) are leans, not rules. "—" = no players reached that mark.</p>`;
       out.innerHTML = h;
       const cnt = document.getElementById('mxCount'); if (cnt) cnt.textContent = `Showing ${rows.length} of ${sec.rows.length} buckets`;
     }
