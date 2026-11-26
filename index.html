@@ -429,7 +429,7 @@
     <section id="view-scout" class="hidden space-y-4">
       <details class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl px-4 py-3 text-xs sm:text-sm">
         <summary class="cursor-pointer font-bold">How to use this tab</summary>
-        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Buys &amp; sells — one list:</strong> every backtested signal on the site (WR BUY, Year 2 JUMPED, CHEAP / PRICEY, SELL NOW / SELL WINDOW) with each player's odds of 12+ and 14+ PPG and his class average. Buys are on other rosters, sells on yours; tick Whole league to see everyone. Open "What each signal is worth" for the backtest numbers.</li><li><strong>Sell-High Radar:</strong> your players whose value is ahead of their profile: low repeat-rate spikes, big KTC-vs-FantasyCalc gaps, and aging players. Shop these first.</li><li><strong>Buy-Low Targets:</strong> high repeat-rate players on other rosters that the market is discounting.</li><li><strong>Rookie Buy Targets:</strong> rookies and second-year players on other teams with a BUY, Year 2 JUMPED or CHEAP flag from the rookie tabs.</li><li><strong>Risers and Fallers:</strong> the biggest recent value moves on rostered players in your league.</li><li><strong>Backfield Stash Alerts:</strong> free-agent RB2s behind aging starters, worth a bench spot before the starter gets hurt or falls off.</li><li><strong>Best Available:</strong> the most valuable unrostered players in your league, with Sleeper add trends. Check it before waivers run.</li><li>Tap any name for his value history and odds; everything follows the value mix you set at the top.</li></ul>
+        <ul class="list-disc pl-5 mt-2 space-y-1.5 text-[#3d4652] dark:text-[#c3cad3] leading-relaxed"><li><strong>Buys &amp; sells — one list:</strong> every backtested signal on the site (WR BUY, Year 2 JUMPED, CHEAP / PRICEY, SELL NOW / SELL WINDOW) with each player's odds of 12+ and 14+ PPG and his class average. Buys are on other rosters, sells on yours; tick Whole league to see everyone. Open "What each signal is worth" for the backtest numbers.</li><li><strong>Rookie Buy Targets:</strong> rookies and second-year players on other teams with a BUY, Year 2 JUMPED or CHEAP flag from the rookie tabs.</li><li><strong>Risers and Fallers:</strong> the biggest recent value moves on rostered players in your league.</li><li><strong>Backfield Stash Alerts:</strong> free-agent RB2s behind aging starters, worth a bench spot before the starter gets hurt or falls off.</li><li><strong>Best Available:</strong> the most valuable unrostered players in your league, with Sleeper add trends. Check it before waivers run.</li><li>Tap any name for his value history and odds; everything follows the value mix you set at the top.</li></ul>
       </details>
       <!-- Buys & sells: every backtested signal on the site in one list, with each player's odds -->
       <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
@@ -452,32 +452,9 @@
             <li><strong>Contender / rebuild tilt</strong>: your team's League-tab tag reorders the lists (rebuilders: aging veterans first in Sell; contenders: this-season scorers up in Buy, SELL WINDOW players down in Sell). Nothing is hidden.</li>
             <li><strong>SELL NOW / SELL WINDOW</strong> (age curve, 2015–2024): veterans with 12+ PPG at that position, age and PPG level; the % is how many posted 12+ again the next season.</li>
             <li><strong>MIXED</strong>: a player with both a buy and a sell signal (for example a WR BUY whose KTC price is already PRICEY) shows in both lists with this tag. PRICEY is the better-tested of the two.</li>
-            <li>Left out on purpose: the Sell-High / Buy-Low radars below (repeat rate and KTC-vs-FC gaps), which haven't been backtested.</li>
+            <li><strong>Act now / Solid move / Worth a look</strong>: urgency tiers, not a score. Act now = the best-tested sell signals (PRICEY with KTC + FC agreeing, SELL NOW, SELL WINDOW when rebuilding) and, for contenders, WR BUY / Y2 JUMPED players already scoring 12+ this season. Solid move = the other WR BUY / Y2 JUMPED buys, PRICEY on KTC only, SELL WINDOW when not rebuilding. Worth a look = CHEAP and MIXED. Each row keeps its own odds and backtest numbers. The retired Sell-High / Buy-Low radars were never backtested.</li>
           </ul>
         </details>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <!-- Sell-High Radar -->
-        <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
-          <div class="flex items-center justify-between gap-2">
-            <div>
-              <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">🔥 Sell-High Radar</h2>
-              <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">Low-repeater spikes, KTC hype gaps, or aging assets to pivot off.</p>
-            </div>
-            <select id="radarTeamSel" class="bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#d6dbe3] dark:border-[#2e3540] rounded-lg px-2 py-1 text-xs font-semibold max-w-[160px] truncate cursor-pointer"></select>
-          </div>
-          <div id="sellHighList" class="space-y-2"></div>
-        </div>
-
-        <!-- Buy-Low Radar -->
-        <div class="bg-white dark:bg-[#171b21] border border-[#e3e6eb] dark:border-[#2a3039] rounded-xl p-4 space-y-3">
-          <div>
-            <h2 class="text-sm sm:text-base font-bold flex items-center gap-1.5">💎 Buy-Low Targets (Across League)</h2>
-            <p class="text-xs text-[#5d6672] dark:text-[#98a2ae]">High-repeater assets on other rosters with KTC discounts or sweet-spot pricing.</p>
-          </div>
-          <div id="buyLowList" class="space-y-2"></div>
-        </div>
       </div>
 
       <!-- Rookie buy targets -->
@@ -4057,122 +4034,10 @@
     }
 
     // ============================================================================
-    // 11B. SCOUT & WAIVERS RENDERER (SELL-HIGH / BUY-LOW RADAR + FREE AGENTS)
+    // 11B. SCOUT & WAIVERS RENDERER (FREE AGENTS)
     // ============================================================================
     function renderScout() {
-      const rSel = document.getElementById('radarTeamSel');
-      const targetTeam = (st.radarTeam && T[st.radarTeam]) ? st.radarTeam : (T[ME] ? ME : (owners[0] || ''));
-      if (rSel && owners.length) {
-        rSel.innerHTML = owners.map(o => `<option value="${esc(o)}" ${o === targetTeam ? 'selected' : ''}>${esc(T[o].n)}</option>`).join('');
-      }
-
-      // 1. Sell-High Radar
-      const sellEl = document.getElementById('sellHighList');
-      if (sellEl) {
-        const t = T[targetTeam];
-        const arch = teamArchetype(targetTeam);
-        const sellCandidates = [];
-        if (t) {
-          (t.ids || []).forEach(id => {
-            const p = P[id];
-            if (!p || p.pick) return;
-            const val = V[id] || 0;
-            if (val < 1200) return;
-            const b = getBucket(p);
-            const ktcDiffPct = (p.k > 0 && p.f > 0) ? ((p.k - p.f) / p.f) * 100 : 0;
-            const reasons = [];
-            let score = 0;
-
-            if (b.cond !== null && b.cond <= 45 && val >= 1500) {
-              reasons.push(`Low repeater (${b.cond.toFixed(0)}%) at ${fmt(val)} value`);
-              score += (val / 80) + (55 - b.cond);
-            }
-            if (ktcDiffPct >= 7 && val >= 1800) {
-              reasons.push(`KTC hype +${ktcDiffPct.toFixed(0)}% above FC`);
-              score += ktcDiffPct * 2;
-            }
-            if (arch.archetype === 'rebuild' && ((p.pos === 'RB' && p.age >= 25.5) || (p.pos === 'WR' && p.age >= 28.5)) && val >= 1800) {
-              reasons.push(`Aging ${p.pos} (${Number(p.age).toFixed(1)}) on Rebuild`);
-              score += 28;
-            }
-            if (reasons.length) sellCandidates.push({ p, val, b, reasons, score });
-          });
-        }
-        sellCandidates.sort((a, b) => b.score - a.score);
-        if (!sellCandidates.length) {
-          sellEl.innerHTML = `<div class="text-xs text-[#5d6672] dark:text-[#98a2ae] py-3">No glaring sell-high flags on ${esc(t?.n || 'this roster')} right now — clean repeater profile!</div>`;
-        } else {
-          sellEl.innerHTML = sellCandidates.slice(0, 6).map(c => `
-            <div class="p-2.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] flex items-center justify-between gap-2">
-              <div class="min-w-0">
-                <div class="flex items-center gap-1.5">
-                  ${posTag(c.p.pos)}
-                  <span class="text-xs font-bold truncate">${esc(c.p.name)}</span>
-                  <span class="text-[11px] font-bold text-[#5d6672] dark:text-[#98a2ae]">${fmt(c.val)}</span>
-                </div>
-                <div class="text-[11px] text-rose-600 dark:text-rose-400 font-medium mt-0.5">${esc(c.reasons.join(' · '))}</div>
-              </div>
-              <button type="button" data-radaridea="${c.p.id}" data-radarteam="${esc(targetTeam)}"
-                class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border border-amber-500/30 shrink-0 cursor-pointer">
-                Find trades →
-              </button>
-            </div>`).join('');
-        }
-      }
-
-      // 2. Buy-Low Targets
-      const buyEl = document.getElementById('buyLowList');
-      if (buyEl) {
-        const buyCandidates = [];
-        owners.forEach(other => {
-          if (other === targetTeam) return;
-          const ot = T[other];
-          if (!ot) return;
-          (ot.ids || []).forEach(id => {
-            const p = P[id];
-            if (!p || p.pick) return;
-            const val = V[id] || 0;
-            if (val < 2000 || val > 7200) return;
-            const b = getBucket(p);
-            const fcEdgePct = (p.k > 0 && p.f > 0) ? ((p.f - p.k) / p.k) * 100 : 0;
-            const reasons = [];
-            let score = 0;
-
-            if (b.cond !== null && b.cond >= 72) {
-              if (fcEdgePct >= 4) {
-                reasons.push(`KTC discount (-${fcEdgePct.toFixed(0)}% vs FC) · ${b.cond.toFixed(0)}% rep`);
-                score += fcEdgePct * 3 + b.cond * 0.5;
-              } else if (val <= 5800 && (!p.age || p.age <= 28.5)) {
-                reasons.push(`${b.name} (${b.cond.toFixed(0)}% rep) in buyable tier`);
-                score += b.cond * 0.45 + (6000 - val) / 180;
-              }
-            }
-            if (reasons.length) buyCandidates.push({ p, val, b, other, reasons, score });
-          });
-        });
-        buyCandidates.sort((a, b) => b.score - a.score);
-        if (!buyCandidates.length) {
-          buyEl.innerHTML = `<div class="text-xs text-[#5d6672] dark:text-[#98a2ae] py-3">Sync live league rosters to scan for buy-low targets across other teams.</div>`;
-        } else {
-          buyEl.innerHTML = buyCandidates.slice(0, 6).map(c => `
-            <div class="p-2.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] flex items-center justify-between gap-2">
-              <div class="min-w-0">
-                <div class="flex items-center gap-1.5">
-                  ${posTag(c.p.pos)}
-                  <span class="text-xs font-bold truncate">${esc(c.p.name)}</span>
-                  <span class="text-[11px] font-bold text-[#5d6672] dark:text-[#98a2ae]">${fmt(c.val)}</span>
-                </div>
-                <div class="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium mt-0.5 truncate">On ${esc(T[c.other].n)} · ${esc(c.reasons[0])}</div>
-              </div>
-              <button type="button" data-buyoffer="${c.p.id}" data-buyowner="${esc(c.other)}"
-                class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white shrink-0 cursor-pointer">
-                Build offer →
-              </button>
-            </div>`).join('');
-        }
-      }
-
-      // 3. Best Available Free Agents
+      // Best available free agents (the Sell-High / Buy-Low radars were retired Nov 26: never backtested)
       const wBody = document.getElementById('waiverBody');
       if (wBody) {
         const wq = normName(st.waiverQ);
@@ -4399,7 +4264,11 @@
       };
       const buys = [], sells = [];
       // Contender / rebuild tilt from your own team's archetype (the League tab's rule): reorders, never hides
-      const myArch = owners.length && T[ME] ? teamArchetype(ME).archetype : 'neutral';
+      const autoArch = owners.length && T[ME] ? teamArchetype(ME).archetype : 'neutral';
+      let winPick = 'auto';
+      try { winPick = localStorage.getItem(`dtc_bswin_${activeLeague.id}`) || 'auto'; } catch (e) { /* storage off */ }
+      const myArch = winPick === 'auto' ? autoArch : winPick;
+      const SCORING = x => { const r = PPG[normName(x.p.name)]; return r && r.s === SIGNALS.season && r.ppg >= 12; };
       const agree = m => m.both ? 'KTC + FC agree' : 'KTC only';
       xs.forEach(x => {
         const o = OWN[x.p.id], mine = o === ME;
@@ -4413,8 +4282,11 @@
         if (chips.length && pricey) chips.push(['MIXED', 'also PRICEY: the market already pays for it']);
         // contenders: a rookie already scoring this season (FantasyCalc redraft value) moves up a little
         const nowTilt = myArch === 'contender' ? Math.min(0.3, (x.p.rdv || 0) / 10000) : 0;
-        if (chips.length && (all || !mine)) buys.push({ p: x.p, o, chips, odds: oddsTxt(x), score: sc.reduce((a, b) => a + b, 0) + nowTilt + (own != null ? own / 100 : (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 0.79 : 0.3)) });
-        if (pricey && (all || mine)) sells.push({ p: x.p, o, chips: [['PRICEY', `strongest sell signal · odds #${x.m4.hr} vs KTC #${x.m4.kr} of ${x.m4.n} · ${agree(x.m4)}`], ...(x.s.sig.includes('buy') ? [['MIXED', 'also a WR BUY: role ahead of his points']] : [])], odds: oddsTxt(x), score: x.m4.both ? 5.5 : 5 });
+        const strong = x.s.sig.includes('buy') || x.s.sig.includes('jump');
+        const btier = !strong || pricey ? 3 : myArch === 'contender' && SCORING(x) ? 1 : 2;
+        if (chips.length && (all || !mine)) buys.push({ p: x.p, o, chips, tier: btier, odds: oddsTxt(x), score: sc.reduce((a, b) => a + b, 0) + nowTilt + (own != null ? own / 100 : (x.s.sig.includes('jump') && x.s.pos === 'RB' ? 0.79 : 0.3)) });
+        const mixedSell = x.s.sig.includes('buy');
+        if (pricey && (all || mine)) sells.push({ p: x.p, o, tier: mixedSell ? 3 : x.m4.both ? 1 : 2, chips: [['PRICEY', `5 of 5 faded in the backtest · odds #${x.m4.hr} vs KTC #${x.m4.kr} of ${x.m4.n} · ${agree(x.m4)}`], ...(mixedSell ? [['MIXED', 'also a WR BUY: role ahead of his points']] : [])], odds: oddsTxt(x), score: x.m4.both ? 5.5 : 5 });
       });
       P.forEach(p => {
         if (p.pick) return;
@@ -4428,10 +4300,11 @@
           : `<div class="text-[11px]"><span class="font-bold">Ask: ${fmt(p.k)}</span> <span class="${MUTED}">KTC vs FantasyCalc ${fmt(p.f)}; trades value him lower, so KTC is the higher anchor</span></div>`) : '';
         // rebuilders sell aging veterans first; contenders can ride a SELL WINDOW player through this season
         const wTilt = myArch === 'rebuild' ? 1 : myArch === 'contender' && si.flag === 'window' ? -1 : 0;
-        sells.push({ p, o, chips: [[si.flag === 'now' ? 'SELL NOW' : 'SELL WINDOW', `age ${si.age.toFixed(1)}`]],
+        sells.push({ p, o, tier: si.flag === 'now' || myArch === 'rebuild' ? 1 : 2, chips: [[si.flag === 'now' ? 'SELL NOW' : 'SELL WINDOW', `age ${si.age.toFixed(1)}`]],
           odds: `<span class="font-bold">12+ next season ${si.odds}%</span> <span class="${MUTED}">(${si.k} of ${si.n} like him; ${si.ppg} PPG in ${si.season})</span>${ask}`, score: (si.flag === 'now' ? 3 : 2) + wTilt + (100 - si.odds) / 100 });
       });
-      buys.sort((a, b) => b.score - a.score); sells.sort((a, b) => b.score - a.score);
+      buys.sort((a, b) => a.tier - b.tier || b.score - a.score); sells.sort((a, b) => a.tier - b.tier || b.score - a.score);
+      const TIER = { 1: ['Act now', 'bg-emerald-600 text-white', 'bg-rose-600 text-white'], 2: ['Solid move', 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300', 'bg-rose-500/15 text-rose-800 dark:text-rose-300'], 3: ['Worth a look', 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200', 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200'] };
       const row = (r, kind) => `<div class="p-2.5 rounded-xl bg-[#f6f7f9] dark:bg-[#0f1216] border border-[#e3e6eb] dark:border-[#2a3039] flex items-center justify-between gap-2">
           <div class="min-w-0 space-y-0.5">
             <div class="flex flex-wrap items-center gap-1.5">${posTag(r.p.pos)}<button type="button" data-player="${r.p.id}" class="text-xs font-bold hover:underline cursor-pointer text-left">${esc(r.p.name)}</button><span class="text-[11px] font-bold ${MUTED}">${fmt(V[r.p.id])}</span>${r.chips.map(([c, t]) => `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${c === 'MIXED' ? 'bg-amber-400/20 text-amber-800 dark:text-amber-300' : kind === 'buy' ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' : 'bg-rose-500/15 text-rose-700 dark:text-rose-300'}" title="${esc(t)}">${c} · ${esc(t)}</span>`).join('')}</div>
@@ -4441,10 +4314,13 @@
           ${kind === 'buy' && r.o && r.o !== ME ? `<button type="button" data-acquire="${r.p.id}" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white shrink-0 cursor-pointer">Offer →</button>`
             : kind === 'sell' && r.o === ME ? `<button type="button" data-radaridea="${r.p.id}" data-radarteam="${esc(ME)}" class="px-2.5 py-1.5 rounded-lg text-[11px] font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border border-amber-500/30 shrink-0 cursor-pointer">Find trades →</button>` : ''}
         </div>`;
-      const col = (title, list, kind, empty) => `<div class="space-y-2"><h3 class="text-xs font-extrabold uppercase tracking-wider ${kind === 'buy' ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}">${title} <span class="${MUTED} font-semibold normal-case tracking-normal">(${list.length})</span></h3>${list.length ? list.slice(0, 15).map(r => row(r, kind)).join('') : `<div class="text-xs ${MUTED} py-2">${empty}</div>`}</div>`;
+      const col = (title, list, kind, empty) => `<div class="space-y-2"><h3 class="text-xs font-extrabold uppercase tracking-wider ${kind === 'buy' ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}">${title} <span class="${MUTED} font-semibold normal-case tracking-normal">(${list.length})</span></h3>${list.length ? list.slice(0, 15).map((r, i, a) => (i === 0 || a[i - 1].tier !== r.tier ? `<div class="pt-1"><span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${TIER[r.tier][kind === 'buy' ? 1 : 2]}">${TIER[r.tier][0]}</span></div>` : '') + row(r, kind)).join('') : `<div class="text-xs ${MUTED} py-2">${empty}</div>`}</div>`;
       if (!SIGNALS) { el.innerHTML = `<div class="text-xs ${MUTED} py-2 lg:col-span-2">Loading rookie signals…</div>`; return; }
-      const tiltNote = { rebuild: 'Your team reads as <strong>rebuilding</strong>: aging veterans are sorted to the top of Sell.', contender: 'Your team reads as a <strong>contender</strong>: rookies already scoring this season rank a bit higher in Buy, and SELL WINDOW veterans drop down Sell (they still help this year; sell after the season).' }[myArch];
-      el.innerHTML = (tiltNote ? `<div class="lg:col-span-2 text-[11px] ${MUTED}">${tiltNote} Same rule as the League tab's Contender / Rebuild tags; nothing is hidden.</div>` : '') + col('Buy', buys, 'buy', all ? 'No buy signals right now.' : 'No buy signals on other rosters right now.') + col('Sell', sells, 'sell', all ? 'No sell signals right now.' : 'No sell signals on your roster right now.');
+      const who = winPick === 'auto' ? `Your team reads as ${{ rebuild: '<strong>rebuilding</strong>', contender: 'a <strong>contender</strong>', retool: '<strong>in between</strong> (Retool)' }[myArch] || '<strong>balanced</strong>'} (League tab rule)` : `Set to <strong>${myArch === 'rebuild' ? 'Rebuilder' : 'Contender'}</strong>`;
+      const how = { rebuild: 'aging veterans move to the top of Sell and SELL WINDOW counts as Act now.', contender: 'rookies already scoring 12+ this season move up Buy (Act now), and SELL WINDOW veterans drop to Solid move (they still help this year).' }[myArch] || 'no reordering.';
+      const pill = (v, t) => `<button type="button" data-bswin="${v}" class="px-2.5 py-1 font-semibold cursor-pointer ${winPick === v ? 'bg-blue-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}">${t}</button>`;
+      const bar = owners.length ? `<div class="lg:col-span-2 flex flex-wrap items-center gap-2 text-[11px] ${MUTED}"><span class="inline-flex rounded-lg border border-[#d6dbe3] dark:border-[#2e3540] overflow-hidden text-[11px]">${pill('auto', 'Auto')}${pill('rebuild', 'Rebuilder')}${pill('contender', 'Contender')}</span><span>${who}: ${how} Nothing is hidden.</span></div>` : '';
+      el.innerHTML = bar + col('Buy', buys, 'buy', all ? 'No buy signals right now.' : 'No buy signals on other rosters right now.') + col('Sell', sells, 'sell', all ? 'No sell signals right now.' : 'No sell signals on your roster right now.');
     }
 
     function renderRookieTargets() {
@@ -5085,7 +4961,11 @@
         btn.addEventListener('click', () => { st.leagueFilter = btn.dataset.lfilter; syncControls(); renderLeague(); });
       });
 
-      document.getElementById('radarTeamSel')?.addEventListener('change', e => { st.radarTeam = e.target.value; renderScout(); });
+      document.getElementById('buySellBox')?.addEventListener('click', e => {
+        const b = e.target.closest('[data-bswin]'); if (!b) return;
+        try { localStorage.setItem(`dtc_bswin_${activeLeague.id}`, b.dataset.bswin); } catch (err) { /* storage off */ }
+        renderBuySell();
+      });
       document.getElementById('bsAll')?.addEventListener('change', () => { try { renderBuySell(); } catch (e) { console.error(e); } });
       document.getElementById('leagueHead')?.addEventListener('click', e => {
         const th = e.target.closest('[data-lsort]');
