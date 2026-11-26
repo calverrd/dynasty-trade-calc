@@ -265,7 +265,8 @@
     // ---------- Phase 2: player pool, Best Available, ghost picks ----------
     const TIERS = ['Cornerstone', 'Elite', 'Upside', 'Depth', 'Clogger'];
     const tierIx = t => { const i = TIERS.indexOf(t); return i < 0 ? 9 : i; };
-    const byMarket = (a, b) => (b.val ?? -1) - (a.val ?? -1) || (a.board ?? 9999) - (b.board ?? 9999) || tierIx(a.tier) - tierIx(b.tier) || a.name.localeCompare(b.name);
+    // market value → consensus big-board rank → your prospect board's order (tier-sorted, Prospects tab) → tier → name
+    const byMarket = (a, b) => (b.val ?? -1) - (a.val ?? -1) || (a.board ?? 9999) - (b.board ?? 9999) || (a.ord ?? 9999) - (b.ord ?? 9999) || tierIx(a.tier) - tierIx(b.tier) || a.name.localeCompare(b.name);
     const byOdds = (a, b) => (b.hit ?? -1) - (a.hit ?? -1) || byMarket(a, b);
     // a prospect's odds from his tier + type, like the Prospects tab: the bucket when it has 5+ past players, else the whole tier, else the whole type
     function prosOdds(e) {
@@ -284,7 +285,7 @@
         const k = `${pos}|${keyName(name)}`;
         ent.set(k, Object.assign(ent.get(k) || { k, pos, name }, extra));
       };
-      if (PROS) PROS.pros.filter(p => p.yr === M.season).forEach(p => add(p.pos, p.n, { tier: p.tier, type: p.type, board: PROS.board[keyName(p.n)] ?? null }));
+      if (PROS) PROS.pros.forEach((p, i) => { if (p.yr === M.season) add(p.pos, p.n, { tier: p.tier, type: p.type, board: PROS.board[keyName(p.n)] ?? null, ord: i + 1 }); });
       S.picks.forEach(p => add(p.metadata?.position, pickName(p), {}));
       const taken = new Set();
       S.picks.forEach(p => { if (S.replay == null || p.pick_no <= S.replay) taken.add(`${p.metadata?.position}|${keyName(pickName(p))}`); });
@@ -444,7 +445,7 @@
       const list = (OPT.sort === 'odds' ? PL.avail.slice().sort(byOdds) : PL.avail).filter(e => (OPT.pos === 'ALL' || e.pos === OPT.pos) && !STARS.has(e.k));
       const starred = [...STARS].map(k => PL.all.get(k)).filter(Boolean).sort((a, b) => !!madeAt[a.k] - !!madeAt[b.k] || byMarket(a, b));
       const shown = OPT.more ? list : list.slice(0, 20);
-      const basis = PL.hasVal ? `${VALUE_LABEL || 'KTC'} value` : `the NFL big board (Prospects tab); no ${M.season} rookie values yet`;
+      const basis = PL.hasVal ? `${VALUE_LABEL || 'KTC'} value` : `the consensus NFL big board, then your prospect board's order (both from the Prospects tab); no ${M.season} rookie values yet`;
       const btn = (k, v, t) => `<button data-opt="${k}" data-val="${v}" class="px-2 py-0.5 rounded-md text-[11px] font-semibold ${OPT[k] === v ? 'bg-sky-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}">${t}</button>`;
       const row = e => {
         const at = GH.at[e.k], mine = at && at.owner === me, gone = madeAt[e.k], on = STARS.has(e.k);
