@@ -12,7 +12,7 @@ Usage:
   python3 scripts/build_buckets.py "Updated Hit Rates.xlsx" --last-done 2025            # dry run: prints a summary
   python3 scripts/build_buckets.py "Updated Hit Rates.xlsx" --last-done 2025 --write    # rewrites bucket-explorer.html
 """
-import json, re, sys
+import json, os, re, sys
 import openpyxl
 
 HTML = "bucket-explorer.html"
@@ -143,5 +143,8 @@ if __name__ == "__main__":
         assert k == 1
         open(HTML, "w", encoding="utf-8").write(s)
         print("wrote", HTML, file=sys.stderr)
+        # the hub's player popup reads the same bucket numbers from data/bucket-stats.json
+        import subprocess
+        subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), "export_bucket_stats.py"), os.path.join(os.path.dirname(__file__), "..")], check=True)
     else:
         print(json.dumps({"cards": [{k: v for k, v in c.items() if k != "players"} for c in cards]}, indent=0)[:3000])
