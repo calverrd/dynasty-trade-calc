@@ -97,14 +97,14 @@
     const EMBEDDED = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
 
     // ctx comes from the hub ('dtc-draft-ctx'); standalone uses ?league= and ?me=
-    let CTX = { leagueId: params.get('league') || '1334642025076621312', me: (params.get('me') || 'calverrd').toLowerCase(), slotByRid: null, nextSeason: null };
+    let CTX = { leagueId: params.get('league') || '1334642025076621312', me: (params.get('me') || 'calverrd').toLowerCase(), slotByRid: null, nextSeason: null, sf: params.get('sf') !== '0' };
     const S = { league: null, users: [], rosters: [], drafts: [], sel: null, draft: null, picks: [], traded: [], leagueTraded: [],
                 lastSync: 0, paused: false, replay: null, hl: undefined, err: '', loading: false, loadSeq: 0 };
     // Phase 2: market values + bucket odds (hub, or ktc.json standalone), prospect list (prospects.html), rail options
     const keyName = s => String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\b(jr|sr|ii|iii|iv|v)\b\.?/g, '').replace(/[^a-z]/g, '');
     let VALUES = null, VALUE_LABEL = '', PROS = null;
-    const OPT = Object.assign({ ghost: true, sort: 'market', pos: 'ALL', more: false }, store.get('dtc_db_opts', {}));
-    const saveOpt = () => store.set('dtc_db_opts', { ghost: OPT.ghost, sort: OPT.sort, pos: OPT.pos });
+    const OPT = Object.assign({ ghost: true, sort: 'market', pos: 'ALL', who: 'ALL', more: false }, store.get('dtc_db_opts', {}));
+    const saveOpt = () => store.set('dtc_db_opts', { ghost: OPT.ghost, sort: OPT.sort, pos: OPT.pos, who: OPT.who });
     // starred targets, per league; click-to-find target (a player key)
     let STARS = new Set();
     const loadStars = () => { STARS = new Set(store.get(`dtc_db_star_${CTX.leagueId}`, [])); };
@@ -266,7 +266,29 @@
     const TIERS = ['Cornerstone', 'Elite', 'Upside', 'Depth', 'Clogger'];
     const tierIx = t => { const i = TIERS.indexOf(t); return i < 0 ? 9 : i; };
     // market value → consensus big-board rank → your prospect board's order (tier-sorted, Prospects tab) → tier → name
-    const byMarket = (a, b) => (b.val ?? -1) - (a.val ?? -1) || (a.board ?? 9999) - (b.board ?? 9999) || (a.ord ?? 9999) - (b.ord ?? 9999) || tierIx(a.tier) - tierIx(b.tier) || a.name.localeCompare(b.name);
+    // market value (or, before a class has values, the estimate below) → your prospect board's order → tier → name
+    const byMarket = (a, b) => ((b.val ?? b.est ?? -1) - (a.val ?? a.est ?? -1)) || (a.board ?? 9999) - (b.board ?? 9999) || (a.ord ?? 9999) - (b.ord ?? 9999) || tierIx(a.tier) - tierIx(b.tier) || a.name.localeCompare(b.name);
+    // Estimated value before a class has KTC/FC values: what last year's rookies drafted at that NFL pick are worth now,
+    // in this league's format (1QB or superflex). Per position, log(value) = a + b·log(pick), fit on draft_latest.json
+    // picks × ktc.json values. The projected pick is the consensus big-board rank; players outside it count as pick 160.
+    let EST = null;   // { sf: {QB:[b,a],…}, oneqb: {…}, season, n }
+    function fitEst(draft, ktc) {
+      const vals = {}, out0 = {};
+      (ktc.players || []).forEach(p => { vals[`${p.position}|${keyName(p.playerName)}`] = p; });
+      const pts = { QB: [], RB: [], WR: [], TE: [] };
+      Object.entries(draft.picks || {}).forEach(([k, v]) => {
+        const i = k.lastIndexOf('|'), pos = k.slice(i + 1), p = vals[`${pos}|${keyName(k.slice(0, i))}`];
+        if (p && pts[pos] && v.pick) pts[pos].push([Math.log(v.pick), Math.log(Math.max(1, p.superflexValues?.value || 1)), Math.log(Math.max(1, p.oneQBValues?.value || 1))]);
+      });
+      out0.max = {}; Object.entries(pts).forEach(([pos, a]) => { out0.max[pos] = { sf: Math.max(...a.map(r => Math.exp(r[1])), 0), oneqb: Math.max(...a.map(r => Math.exp(r[2])), 0) }; });
+      const line = (xs, ys) => { const n = xs.length, mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
+        let sxy = 0, sxx = 0; xs.forEach((x, i) => { sxy += (x - mx) * (ys[i] - my); sxx += (x - mx) ** 2; }); const b = sxx ? sxy / sxx : 0; return [b, my - b * mx]; };
+      const out = Object.assign(out0, { sf: {}, oneqb: {}, season: draft.season, n: {} });
+      Object.entries(pts).forEach(([pos, a]) => { out.n[pos] = a.length; if (a.length >= 4) { out.sf[pos] = line(a.map(r => r[0]), a.map(r => r[1])); out.oneqb[pos] = line(a.map(r => r[0]), a.map(r => r[2])); } });
+      return out;
+    }
+    const estFor = (pos, pick) => { const k = CTX.sf ? 'sf' : 'oneqb', f = EST && EST[k][pos]; if (!f) return null;
+      const v = Math.exp(f[1] + f[0] * Math.log(pick)), cap = EST.max[pos]?.[k] || v; return Math.round(Math.min(v, cap)); };   // capped at last class's top value at the position
     const byOdds = (a, b) => (b.hit ?? -1) - (a.hit ?? -1) || byMarket(a, b);
     // a prospect's odds from his tier + type, like the Prospects tab: the bucket when it has 5+ past players, else the whole tier, else the whole type
     function prosOdds(e) {
@@ -285,14 +307,19 @@
         const k = `${pos}|${keyName(name)}`;
         ent.set(k, Object.assign(ent.get(k) || { k, pos, name }, extra));
       };
-      if (PROS) PROS.pros.forEach((p, i) => { if (p.yr === M.season) add(p.pos, p.n, { tier: p.tier, type: p.type, board: PROS.board[keyName(p.n)] ?? null, ord: i + 1 }); });
+      if (PROS) PROS.pros.forEach((p, i) => { if (p.yr === M.season) { const bb = PROS.board[keyName(p.n)] ?? null; add(p.pos, p.n, { tier: p.tier, type: p.type, board: bb, ord: i + 1, est: estFor(p.pos, bb || 160) }); } });
       S.picks.forEach(p => add(p.metadata?.position, pickName(p), {}));
+      // leagues whose draft also takes unrostered veterans (LFFL): every valued player not on a roster in this league
+      if (CTX.vetPool && VALUES) Object.entries(VALUES).forEach(([k, v]) => {
+        if (v[4] || !v[5] || ent.has(k)) return;
+        add(k.slice(0, k.indexOf('|')), v[5], { vet: true, age: v[6] });
+      });
       const taken = new Set();
       S.picks.forEach(p => { if (S.replay == null || p.pick_no <= S.replay) taken.add(`${p.metadata?.position}|${keyName(pickName(p))}`); });
-      let hasVal = false;
+      let hasVal = false, hasEst = false;
       ent.forEach(e => {
         const v = VALUES && VALUES[e.k];
-        e.val = v ? v[0] : null; if (e.val) hasVal = true;
+        e.val = v ? v[0] : null; if (e.val) hasVal = true; if (!e.val && e.est) hasEst = true;
         if (v && v[2] != null) { e.hit = v[2]; e.n = v[3]; e.src = v[1]; e.bucket = v[1]; }
         else if (e.tier && PROS) { const o = prosOdds(e); e.bucket = `${e.tier} ${e.type}`; if (o) { e.hit = o.hit; e.n = o.n; e.src = o.src; } }
         else if (v && v[1]) e.bucket = v[1];
@@ -300,7 +327,7 @@
       });
       const avail = [...ent.values()].filter(e => !taken.has(e.k)).sort(byMarket);
       avail.forEach((e, i) => { e.mk = i + 1; });
-      return { avail, hasVal, size: ent.size, all: ent };
+      return { avail, hasVal, hasEst, size: ent.size, all: ent };
     }
     // ghost picks: open picks in order, each takes the best player left by market rank
     function ghosts(M, avail) {
@@ -442,10 +469,14 @@
     }
     function renderRail(M, PL, GH, me, madeAt, name) {
       const rail = $('#rail');
-      const list = (OPT.sort === 'odds' ? PL.avail.slice().sort(byOdds) : PL.avail).filter(e => (OPT.pos === 'ALL' || e.pos === OPT.pos) && !STARS.has(e.k));
+      const who = CTX.vetPool ? OPT.who : 'ALL';
+      const list = (OPT.sort === 'odds' ? PL.avail.slice().sort(byOdds) : PL.avail).filter(e => (OPT.pos === 'ALL' || e.pos === OPT.pos) && (who === 'ALL' || (who === 'VET') === !!e.vet) && !STARS.has(e.k));
       const starred = [...STARS].map(k => PL.all.get(k)).filter(Boolean).sort((a, b) => !!madeAt[a.k] - !!madeAt[b.k] || byMarket(a, b));
       const shown = OPT.more ? list : list.slice(0, 24);
-      const basis = PL.hasVal ? `${VALUE_LABEL || 'KTC'} value` : `the consensus NFL big board, then your prospect board's order (both from the Prospects tab); no ${M.season} rookie values yet`;
+      const fmt = CTX.sf ? 'superflex' : '1QB';
+      const est = `an estimate (~): what ${EST && EST.season} rookies drafted at his projected pick (consensus big board; pick 160 if unranked) are worth now in ${fmt}`;
+      const basis = PL.hasEst ? (PL.hasVal ? `${VALUE_LABEL || 'KTC'} value where it exists, otherwise ${est}; ties by your prospect board's order` : `${est}, since there are no ${M.season} rookie values yet; ties by your prospect board's order`)
+        : PL.hasVal ? `${VALUE_LABEL || 'KTC'} value` : `your prospect board's order (no ${M.season} values or estimates yet)`;
       const btn = (k, v, t) => `<button data-opt="${k}" data-val="${v}" class="px-2 py-0.5 rounded-md text-[11px] font-semibold ${OPT[k] === v ? 'bg-sky-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}">${t}</button>`;
       const row = e => {
         const at = GH.at[e.k], mine = at && at.owner === me, gone = madeAt[e.k], on = STARS.has(e.k);
@@ -456,13 +487,14 @@
           <span class="w-6 shrink-0 text-right num text-[11px] text-slate-400">${gone ? '' : e.mk}</span>
           <span class="shrink-0 w-7 text-center text-[10px] font-bold rounded px-0.5 ${POS[e.pos].cell.split(' ').filter(x => x.startsWith('bg-')).join(' ')} ${POS[e.pos].txt}">${e.pos}</span>
           <div class="min-w-0 flex-1"><div class="flex items-center gap-1 min-w-0"><span class="text-[12.5px] font-semibold truncate">${esc(e.name)}</span>${at ? `<span class="shrink-0 px-1 rounded text-[9px] font-bold num ${mine ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}" title="Ghost pick: projected to go at ${at.label}${mine ? ' (your pick)' : ''}">${at.label}</span>` : ''}</div>
-            <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${gone ? `<b>Drafted at ${gone.label}</b> · ${esc(name(gone.owner))}` : esc(e.bucket || 'no profile')}</div></div>
-          <div class="shrink-0 text-right"><div class="num text-[11px] font-semibold">${e.val ? fmtV(e.val) : e.board ? 'BB #' + e.board : '—'}</div>
+            <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">${e.vet ? `<span class="font-bold text-slate-600 dark:text-slate-300">VET${e.age ? ' · ' + Math.floor(e.age) : ''}</span> · ` : ''}${gone ? `<b>Drafted at ${gone.label}</b> · ${esc(name(gone.owner))}` : esc(e.bucket || 'no profile')}</div></div>
+          <div class="shrink-0 text-right"><div class="num text-[11px] font-semibold" title="${e.val ? 'Market value' : e.est ? `Estimate (${CTX.sf ? 'superflex' : '1QB'}) from his projected pick${e.board ? ' #' + e.board : ' (unranked: 160)'}` : ''}">${e.val ? fmtV(e.val) : e.est ? `<span class="text-slate-400 font-normal">~</span>${fmtV(e.est)}` : e.board ? 'BB #' + e.board : '—'}</div>${!e.val && e.board ? `<div class="text-[9px] text-slate-400 num">BB #${e.board}</div>` : ''}
             <div class="num text-[10px] font-bold ${hitCls}">${e.hit != null ? e.hit + '% hit' : '—'}</div></div></div>`;
       };
       rail.innerHTML = `<div class="flex items-baseline gap-2"><h2 class="text-sm font-extrabold">Best available</h2><span class="text-xs text-slate-500">${list.length}${OPT.pos !== 'ALL' ? ' ' + OPT.pos : ''}</span></div>
         <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">${OPT.sort === 'odds' ? 'Sorted by hit odds; # is still the market rank' : `Ranked by ${esc(basis)}`}. Hit % = how often past players with his profile reached his position's hit line (Profile Buckets; sample size in the tooltip).</p>
-        <div class="flex flex-wrap gap-1 mt-2">${btn('sort', 'market', 'Market')}${btn('sort', 'odds', 'Hit odds')}<span class="w-2"></span>${['ALL', 'QB', 'RB', 'WR', 'TE'].map(p => btn('pos', p, p === 'ALL' ? 'All' : p)).join('')}</div>
+        <div class="flex flex-wrap gap-1 mt-2">${btn('sort', 'market', 'Market')}${btn('sort', 'odds', 'Hit odds')}<span class="w-2"></span>${CTX.vetPool ? btn('who', 'ALL', 'Everyone') + btn('who', 'ROOK', 'Rookies') + btn('who', 'VET', 'Veterans') + '<span class="w-2"></span>' : ''}${['ALL', 'QB', 'RB', 'WR', 'TE'].map(p => btn('pos', p, p === 'ALL' ? 'All' : p)).join('')}</div>
+        ${CTX.vetPool ? '<p class="mt-1.5 text-[10.5px] text-slate-500 dark:text-slate-400">This league drafts unrostered veterans too: everyone valued and not on a roster here is in the pool (rosters as of the hub\'s last sync; players dropped mid-draft appear after the next sync).</p>' : ''}
         ${OPT.sort === 'odds' && OPT.pos === 'ALL' ? '<p class="mt-1.5 text-[10.5px] leading-snug rounded bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-200 px-2 py-1">Each position uses its own hit line (WR/TE 14+, RB 15+, QB 20+). Pick a position to compare like with like.</p>' : ''}
         <div class="mt-2">
           ${starred.length ? `<div class="text-[10.5px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400 mt-1">★ Your targets (${starred.length})</div><div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-x-5">${starred.map(row).join('')}</div><div class="text-[10.5px] font-bold uppercase tracking-wide text-slate-400 mt-2">Everyone else</div>` : '<p class="text-[10.5px] text-slate-400 mb-1">☆ Star 4–6 targets to pin them here (saved for this league).</p>'}
@@ -542,12 +574,14 @@
       PROS = { pros: D.pros || [], stats: D.stats || [], board };
       render();
     }).catch(() => {});
+    Promise.all([fetch(`./draft_latest.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)), fetch(`./ktc.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null))])
+      .then(([dr, k]) => { if (dr && k) { EST = fitEst(dr, k); render(); } }).catch(() => {});
     function loadKtcStandalone() {
       fetch(`./ktc.json?t=${Date.now()}`, { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then(d => {
         if (!d || VALUES) return;
         const v = {};
-        (d.players || []).forEach(p => { const x = p.superflexValues?.value; if (x) v[`${p.position}|${keyName(p.playerName)}`] = [x, null, null, null]; });
-        VALUES = v; VALUE_LABEL = 'KTC superflex'; render();
+        (d.players || []).forEach(p => { const x = (CTX.sf ? p.superflexValues : p.oneQBValues)?.value; if (x) v[`${p.position}|${keyName(p.playerName)}`] = [x, null, null, null]; });
+        VALUES = v; VALUE_LABEL = CTX.sf ? 'KTC superflex' : 'KTC 1QB'; render();
       }).catch(() => {});
     }
 
@@ -562,7 +596,7 @@
         if (e.data.type === 'dtc-theme') document.documentElement.classList.toggle('dark', e.data.theme === 'dark');
         if (e.data.type === 'dtc-draft-ctx') {
           const c = e.data, changed = c.leagueId && c.leagueId !== CTX.leagueId;
-          CTX = { leagueId: c.leagueId || CTX.leagueId, me: String(c.me || CTX.me).toLowerCase(), slotByRid: c.slotByRid || null, nextSeason: Number(c.nextSeason) || null };
+          CTX = { leagueId: c.leagueId || CTX.leagueId, me: String(c.me || CTX.me).toLowerCase(), slotByRid: c.slotByRid || null, nextSeason: Number(c.nextSeason) || null, sf: c.sf !== false, vetPool: !!c.vetPool };
           if (c.values && Object.keys(c.values).length) { VALUES = c.values; VALUE_LABEL = c.valueLabel || ''; }
           if (changed || !S.league) loadLeague(); else { buildDraftSelect(); render(); }
         }

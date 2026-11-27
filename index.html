@@ -784,7 +784,8 @@
     const LFFL_RULES = {
       bracket: [[1, 1], [2, 2], [2, 1], [1, 2], [4, 1], [3, 2], [3, 1], [4, 2]],
       text: 'top 2 of each division make the playoffs; division winners play the other East or West division\'s runner-up, then East and West winners meet, and the final is East vs West',
-      draft: 'toiletbowl', hideLast: true
+      draft: 'toiletbowl', hideLast: true,
+      vetPool: true   // the draft takes unrostered veterans too (anyone not on a 22-man roster), not just rookies
     };
     const LEAGUE_RULES = { '1312492943805779968': DDD_PLAYOFFS, '1180587471338332160': DDD_PLAYOFFS, '1312070951269076992': LFFL_RULES, '1181014173902921728': LFFL_RULES };
 
@@ -1287,11 +1288,12 @@
         P.forEach(p => {
           if (p.pick || !V[p.id]) return;
           const b = getBucket(p), s = !b.guess && BUCKET_BAR ? BUCKET_BAR[`${p.pos}|${b.name}`] : null;
-          values[`${p.pos}|${keyName(p.name)}`] = [Math.round(V[p.id]), b.guess ? null : b.name, s && s.n ? Math.round(s.hit) : null, s && s.n ? s.n : null];
+          // [value, bucket, hit %, n, rostered in this league (1/0), name, age]
+          values[`${p.pos}|${keyName(p.name)}`] = [Math.round(V[p.id]), b.guess ? null : b.name, s && s.n ? Math.round(s.hit) : null, s && s.n ? s.n : null, OWN[p.id] ? 1 : 0, p.name, p.age ? Number(p.age) : null];
         });
       } catch (e) { /* values not ready */ }
       const label = st.src === 'blend' ? `Blend (${st.w}% KTC)` : (SRC_NAME[st.src] || 'KTC');
-      try { fr.contentWindow.postMessage({ type: 'dtc-draft-ctx', leagueId: activeLeague.id, me: ME, slotByRid: SLOT_BY_RID, nextSeason: DRAFT_YEARS[0], values, valueLabel: label }, location.origin); } catch (e) {}
+      try { fr.contentWindow.postMessage({ type: 'dtc-draft-ctx', leagueId: activeLeague.id, me: ME, slotByRid: SLOT_BY_RID, nextSeason: DRAFT_YEARS[0], values, valueLabel: label, sf: !!useSfValues(activeLeague), vetPool: !!LEAGUE_RULES[activeLeague.id]?.vetPool }, location.origin); } catch (e) {}
     }
 
     // ---- Rookie TEs iframe ----
