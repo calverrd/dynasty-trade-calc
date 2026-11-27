@@ -24,7 +24,7 @@
   <main class="max-w-6xl mx-auto px-3 sm:px-5 py-5 space-y-4">
     <header>
       <h1 class="text-lg sm:text-xl font-extrabold tracking-tight">2027 Prospects</h1>
-      <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Your early prospect board (as of Nov 18, 2026) with loose hit rates from each prospect's profile tier and type. Tiers and types will shift as the college season ends and draft capital comes into focus.</p>
+      <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">Your early prospect board (as of Nov 18, 2026) with loose hit rates from each prospect's profile tier and type. Tiers follow each prospect's projected pick, and you can change a projected pick to see how his bucket moves.</p>
     </header>
 
     <details class="rounded-xl border border-sky-200 dark:border-sky-500/30 bg-sky-50 dark:bg-sky-500/10 text-sm" open>
@@ -33,6 +33,7 @@
         <p>Rates come from your Profile Buckets history: every past player with that position and profile type. Use the <strong>Safe / Upside</strong> switch to change what the odds mean. <strong>Safe</strong> = at least one 12+ PPG season (QB 16+). <strong>Upside</strong> = a hit: 14+ PPG for WRs and TEs, 15+ for RBs, 20+ for QBs. The bars always show the full split.</p>
         <p><strong>Each prospect's odds use his tier + type</strong> (e.g., Upside Hog WR) from the second chart. When fewer than 5 past players share that exact combination, the odds fall back to every past player in that tier at his position (tier matters more than type) and say so. Every rate shows its sample size (n).</p>
         <p><strong>These are loose.</strong> Tier matters more than type: a Hog WR in the Elite tier hit 78%, but a Clogger-tier Hog hit 9%. Expect a prospect's odds to move whenever his tier changes.</p>
+        <p><strong>Tier follows the projected pick.</strong> Your Profile Buckets tie tier to draft round: Round 4+ is always Clogger, Round 3 is Depth, Round 2 is Upside or Depth, and in Round 1 the pick decides Elite or Upside. When a prospect's projected pick doesn't fit his board tier, the page moves him to the nearest tier that does and shows his board tier under it. <strong>Tap a projected pick to change it</strong>: tier, bucket odds, comps and draft-capital odds update as you go. Type never changes. Edits stay in this browser only.</p>
       </div>
     </details>
 
@@ -78,6 +79,7 @@
         <select id="typef" class="px-3 py-2 rounded-lg text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700"><option value="">All types</option></select>
         <input id="search" type="search" placeholder="Search prospect…" class="px-3 py-2 rounded-lg text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 w-full sm:w-56" />
         <span id="count" class="text-xs text-slate-500 dark:text-slate-400"></span>
+        <button type="button" id="resetAll" hidden class="text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-amber-500/60 text-amber-800 dark:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20">Reset all pick edits</button>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-xs sm:text-sm">
@@ -96,6 +98,7 @@
         </table>
       </div>
       <p class="text-[11px] text-slate-500 dark:text-slate-400">Tap a prospect to see the past players in his bucket, grouped by how they turned out. <strong>Draft-capital odds</strong> come from draft position alone, which out-predicted every college stat we tested (target share, yards per team pass attempt, breakout age, Combine speed, and more). WRs use their rank among WRs drafted (WR1, WR2…), everyone else the overall pick. Before the draft the pick is the consensus big-board rank (NFL Mock Draft Database, top 100, Nov 24, 2026); players outside it get the historical rate for picks 101+. After the April draft it switches to the real picks automatically. Projected picks are rough, so treat pre-draft odds as a range. Where the two columns disagree is worth a look: a high bucket with weak draft capital, or the reverse. Board source: your prospects board export, Nov 18, 2026.</p>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400"><strong>Projected tier rule</strong> (from your Hit Rates sheet, 2006–2025 drafts: Round 4+ was Clogger 100% of the time, Round 3 Depth 219 of 220, Round 2 Upside or Depth 201 of 203): before the draft, picks 1–32 count as Round 1, 33–64 Round 2, 65–102 Round 3, and <strong>103+ as Round 4+ (Clogger)</strong>. Round 4 started between picks 101 and 107 in 2018–2026 (101 in 2026) because of compensatory picks; after the draft the real rounds are used. Round 1 is Elite at QB pick 1, RB 1–12, WR 1–10 or TE 1–4 (the sheet's best-fitting cutoffs; a Cornerstone stays Cornerstone) and Upside for the rest of Round 1. Round 2 keeps Upside or Depth from your board; a board Clogger becomes Depth and an Elite or Cornerstone becomes Upside. Players outside the consensus top 100 keep their board tier unless you give them a pick.</p>
     </section>
   </main>
 
@@ -124,14 +127,43 @@
     const BOARD = {"jeremiah smith": 1, "drew mestemaker": 3, "cj carr": 7, "charlie becker": 8, "darian mensah": 9, "arch manning": 16, "cam coleman": 17, "nick marsh": 19, "trinidad chambliss": 21, "dante moore": 23, "jadan baugh": 25, "treydez green": 26, "jamari johnson": 29, "jackson harris": 30, "lanorris sellers": 32, "ryan coleman williams": 36, "reed harris": 40, "kj duff": 41, "luke reynolds": 48, "kewan lacy": 57, "jayden maiava": 64, "deuce alexander": 65, "ryan wingo": 71, "wyatt young": 76, "brendan sorsby": 85, "ahmad hardy": 86, "junior sherrill": 87, "bryant wesco": 91, "isaac brown": 92, "dylan riley": 95, "amare thomas": 96, "wayshawn parker": 97, "mario craver": 99};
     const BOARD_DATE = 'Nov 24, 2026';
     let DRAFT = null;
+    // ---- Projected tier from projected pick (Nov 27). Your Hit Rates sheet ties tier to round (2006-2025 drafts):
+    // Round 4+ = Clogger (100%), Round 3 = Depth (219/220), Round 2 = Upside or Depth (201/203), Round 1 by pick (best-fit cutoffs, 82-89%).
+    const R4_PICK = 103;   // projected start of Round 4 (101-107 in 2018-2026 drafts); real rounds replace it after the draft
+    const ELITE_CUT = { QB: 1, RB: 12, WR: 10, TE: 4 };  // Round 1: Elite at or above this pick (Cornerstone stays Cornerstone), else Upside
+    const roundOf = p => (p.dcSrc === 'drafted' && p.dcRd) ? p.dcRd : p.dcPick <= 32 ? 1 : p.dcPick <= 64 ? 2 : p.dcPick < R4_PICK ? 3 : 4;
+    function projTier(p) {
+      const b = p.boardTier;
+      if (!p.dcPick) return p.dcSrc === 'undrafted' ? 'Clogger' : b;
+      const r = roundOf(p);
+      if (r >= 4) return 'Clogger';
+      if (r === 3) return 'Depth';
+      if (r === 2) return (b === 'Upside' || b === 'Depth') ? b : b === 'Clogger' ? 'Depth' : 'Upside';
+      if (p.dcPick <= ELITE_CUT[p.pos]) return b === 'Cornerstone' ? b : 'Elite';
+      return 'Upside';
+    }
+    const tierWhy = p => {
+      if (p.tier === p.boardTier) return '';
+      const r = roundOf(p);
+      return `Board tier ${p.boardTier}; ${p.dcSrc === 'drafted' ? 'drafted' : 'projected'} pick #${p.dcPick} is Round ${r >= 4 ? '4+' : r}, where your buckets ${r >= 4 ? 'are always Clogger' : r === 3 ? 'are Depth' : r === 2 ? 'are Upside or Depth' : `are Elite through pick ${ELITE_CUT[p.pos]}, then Upside`}`;
+    };
+    // pick overrides (this browser only)
+    const OV_KEY = 'dtc_pros_pick_v1';
+    let OV = {};
+    try { OV = JSON.parse(localStorage.getItem(OV_KEY) || '{}') || {}; } catch (e) { OV = {}; }
+    const saveOV = () => { try { localStorage.setItem(OV_KEY, JSON.stringify(OV)); } catch (e) {} };
+    const okey = p => p.pos + '|' + nnk(p.n);
+    function nnk(x) { return nn(x); }
     const nn = s => String(s || '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/['’.]/g, '').replace(/\b(jr|sr|ii|iii|iv|v)\b/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
     function computeDC() {
       const pick = {};
       D.pros.forEach(p => {
         const a = DRAFT && DRAFT.picks[nn(p.n) + '|' + p.pos];
-        if (a) { p.dcPick = a.pick; p.dcSrc = 'drafted'; }
+        p.dcCons = BOARD[nn(p.n)] || null; p.dcRd = null;
+        if (a) { p.dcPick = a.pick; p.dcRd = a.rd || null; p.dcSrc = 'drafted'; }
         else if (DRAFT) { p.dcPick = null; p.dcSrc = 'undrafted'; }
-        else if (BOARD[nn(p.n)]) { p.dcPick = BOARD[nn(p.n)]; p.dcSrc = 'proj'; }
+        else if (OV[okey(p)]) { p.dcPick = OV[okey(p)]; p.dcSrc = 'edit'; }
+        else if (p.dcCons) { p.dcPick = p.dcCons; p.dcSrc = 'proj'; }
         else { p.dcPick = null; p.dcSrc = 'out'; }
       });
       // WR class rank among WRs with a pick (projected or real), plus real-draft WRs not on the board
@@ -155,16 +187,41 @@
     function dcCell(p) {
       if (p.dc == null) return '<span class="text-slate-400">—</span>';
       const cls = p.dc >= 50 ? 'text-emerald-700 dark:text-emerald-300' : p.dc >= 25 ? 'text-amber-700 dark:text-amber-300' : 'text-rose-600 dark:text-rose-400';
-      const tip = p.dcSrc === 'proj' ? `Consensus big-board rank (NFL Mock Draft Database, ${BOARD_DATE}) used as his projected pick` : p.dcSrc === 'out' ? `Not in the consensus top 100: historical rate for ${p.pos}s picked 101 or later (${DC[p.pos][(ODDS === 'safe' ? 'safe' : 'up') + '_101'].join(' of ')})` : p.dcSrc === 'drafted' ? 'Actual NFL draft pick' : 'Not drafted';
+      const tip = p.dcSrc === 'edit' ? `Your edited pick #${p.dcPick}` : p.dcSrc === 'proj' ? `Consensus big-board rank (NFL Mock Draft Database, ${BOARD_DATE}) used as his projected pick` : p.dcSrc === 'out' ? `Not in the consensus top 100: historical rate for ${p.pos}s picked 101 or later (${DC[p.pos][(ODDS === 'safe' ? 'safe' : 'up') + '_101'].join(' of ')})` : p.dcSrc === 'drafted' ? 'Actual NFL draft pick' : 'Not drafted';
       return `<div class="font-bold tabular-nums ${cls}" title="${tip}">${p.dc}%</div>`;
     }
     // projected / real pick, its own sortable column
     function pickCell(p) {
+      const ed = !DRAFT && (p.dcSrc === 'proj' || p.dcSrc === 'edit' || p.dcSrc === 'out');
+      const btn = (inner, extra = '') => ed ? `<button type="button" data-edit="${esc(p.n)}" class="pk-edit rounded px-1 -mx-1 hover:bg-slate-100 dark:hover:bg-slate-800 underline decoration-dotted decoration-slate-400 underline-offset-2 ${extra}" aria-label="Change projected pick for ${esc(p.n)}">${inner}</button>` : inner;
+      if (p.dcSrc === 'edit') {
+        return `<div class="font-semibold tabular-nums whitespace-nowrap text-amber-700 dark:text-amber-300">${btn(`#${p.dcPick} <span aria-hidden="true">✎</span>`)}</div><div class="text-[10px] text-slate-500 dark:text-slate-400 whitespace-nowrap">${p.dcRank ? `WR${p.dcRank} · ` : ''}edited${p.dcCons ? ` · was #${p.dcCons}` : ''} <button type="button" data-reset="${esc(p.n)}" class="ml-0.5 font-bold text-sky-700 dark:text-sky-300 hover:underline" aria-label="Reset ${esc(p.n)} to the consensus pick" title="Reset to consensus">↺</button></div>`;
+      }
       if (p.dcSrc === 'drafted' || p.dcSrc === 'proj') {
         const est = p.dcSrc === 'proj';
-        return `<div class="font-semibold tabular-nums whitespace-nowrap"${est ? ` title="Estimate: consensus big-board rank (${BOARD_DATE}); boards shift a lot before the April draft"` : ''}>${est ? '<span class="text-slate-400 font-normal">proj.</span> ' : ''}#${p.dcPick}</div><div class="text-[10px] text-slate-400 whitespace-nowrap">${p.dcRank ? `WR${p.dcRank}` : ''}${p.dcRank && est ? ' · ' : ''}${est ? 'est.' : ''}</div>`;
+        return `<div class="font-semibold tabular-nums whitespace-nowrap"${est ? ` title="Estimate: consensus big-board rank (${BOARD_DATE}); boards shift a lot before the April draft. Tap to change it."` : ''}>${btn(`${est ? '<span class="text-slate-400 font-normal">proj.</span> ' : ''}#${p.dcPick}`)}</div><div class="text-[10px] text-slate-400 whitespace-nowrap">${p.dcRank ? `WR${p.dcRank}` : ''}${p.dcRank && est ? ' · ' : ''}${est ? 'est.' : p.dcRd ? `Rd ${p.dcRd}` : ''}</div>`;
       }
-      return `<div class="text-[10px] text-slate-400 whitespace-nowrap">${p.dcSrc === 'undrafted' ? 'Undrafted' : 'Outside top 100'}</div>`;
+      return `<div class="text-[10px] text-slate-400 whitespace-nowrap">${p.dcSrc === 'undrafted' ? 'Undrafted' : btn('Outside top 100')}</div>`;
+    }
+    function editorRow(p) {
+      const v = p.dcPick || p.dcCons || 120;
+      const id = 'pk' + Math.abs([...p.n].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7));
+      return `<tr data-editor="${esc(p.n)}" class="bg-amber-50 dark:bg-amber-500/10"><td colspan="7" class="px-0 py-3">
+        <div data-pk="box" class="sticky left-0 px-3">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs">
+          <label for="${id}n" class="font-semibold">Projected pick for ${esc(p.n)}</label>
+          <input id="${id}n" data-pk="num" type="number" inputmode="numeric" min="1" max="257" step="1" value="${v}" class="w-20 px-2 py-1.5 rounded-lg text-sm tabular-nums bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700" />
+          <label for="${id}r" class="sr-only">Projected pick slider, 1 to 257</label>
+          <input id="${id}r" data-pk="range" type="range" min="1" max="257" step="1" value="${v}" class="flex-1 min-w-[10rem] accent-sky-600" />
+          <span class="text-slate-500 dark:text-slate-400" data-pk="hint">${p.dcCons ? `Consensus #${p.dcCons}` : 'Not in the consensus top 100'} · Round 4+ starts at ${R4_PICK}</span>
+          <span class="flex gap-2 ml-auto">
+            <button type="button" data-pk="reset" class="px-2.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 font-semibold">${p.dcCons ? 'Reset to consensus' : 'Clear'}</button>
+            <button type="button" data-pk="done" class="px-2.5 py-1.5 rounded-lg bg-sky-600 text-white font-semibold">Done</button>
+          </span>
+        </div>
+        <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5">Enter or Done keeps the pick; Escape undoes this edit. Rows don't re-sort until you close this.</div>
+        </div>
+      </td></tr>`;
     }
     // Safe = 12+ PPG (QB 16+); Upside = a "hit": WR/TE 14+, RB 15+, QB 20+ (your bucket thresholds)
     let ODDS = 'upside';
@@ -232,9 +289,11 @@
         ${grp(2, lB, 'text-emerald-600 dark:text-emerald-400')}
         ${grp(1, lC, p.pos === 'TE' ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-300')}
         ${busts.length ? `<details><summary class="cursor-pointer text-[11px] font-bold text-rose-600 dark:text-rose-400">Busts (${busts.length})</summary><div class="flex flex-wrap gap-1 mt-1">${busts.map(x => `<span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] text-slate-500">${esc(x[0])} '${String(x[1]).slice(2)}</span>`).join('')}</div></details>` : ''}` : '<div class="text-[11px] text-slate-500">No past players in this exact bucket yet.</div>';
-      return `<tr class="bg-slate-50 dark:bg-slate-800/40"><td colspan="7" class="px-3 py-3"><div class="text-[11px] text-slate-500 dark:text-slate-400 mb-2">Past <strong>${esc(p.tier)} ${esc(p.type)}</strong> ${p.pos}s in your Profile Buckets, best result first (rookies not yet counted).${p.fallback === 'tier' ? ` This bucket has fewer than ${MIN_CELL} players, so his odds above use every ${esc(p.tier)}-tier ${p.pos}.` : p.fallback === 'type' ? ' This bucket is small, so his odds above use the whole type.' : ''}</div><div class="space-y-2">${body}</div></td></tr>`;
+      return `<tr data-detail="${esc(p.n)}" class="bg-slate-50 dark:bg-slate-800/40"><td colspan="7" class="px-3 py-3"><div class="text-[11px] text-slate-500 dark:text-slate-400 mb-2">Past <strong>${esc(p.tier)} ${esc(p.type)}</strong> ${p.pos}s in your Profile Buckets, best result first (rookies not yet counted).${p.fallback === 'tier' ? ` This bucket has fewer than ${MIN_CELL} players, so his odds above use every ${esc(p.tier)}-tier ${p.pos}.` : p.fallback === 'type' ? ' This bucket is small, so his odds above use the whole type.' : ''}</div><div class="space-y-2">${body}</div></td></tr>`;
     }
-    D.pros.forEach(p => {
+    D.pros.forEach(p => { p.boardTier = p.tier; });
+    function bucket(p) {
+      p.fallback = null;
       const s = S[p.pos + '|' + p.type];
       const c = s && s.tiers[p.tier];
       p.tierRank = D.tiers.indexOf(p.tier);
@@ -243,52 +302,141 @@
       else if (tw && tw.n >= MIN_CELL) { p.s = { pos: p.pos, l1: tw.l1, l2: tw.l2, l3: tw.l3, n: tw.n }; p.src = `Only ${c ? c.n : 0} past ${p.tier} ${p.type}${c && c.n === 1 ? '' : 's'}, so this uses all ${p.tier}-tier ${p.pos}s (n = ${tw.n})`; p.fallback = 'tier'; }
       else if (s) { p.s = s; p.src = `Only ${c ? c.n : 0} past ${p.tier} ${p.type}${c && c.n === 1 ? '' : 's'}, so this uses all ${p.type} ${p.pos}s (n = ${s.n})`; p.fallback = 'type'; }
       p.hit = p.s ? hitOf(p.s) : null;
-    });
+    }
+    function recompute() {
+      computeDC();
+      D.pros.forEach(p => { p.tier = projTier(p); bucket(p); });
+    }
     const tierSel = document.getElementById('tierf');
-    D.tiers.filter(t => D.pros.some(p => p.tier === t)).forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; tierSel.appendChild(o); });
-    tierSel.addEventListener('change', e => { st.tier = e.target.value; render(); });
+    D.tiers.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; tierSel.appendChild(o); });
+    tierSel.addEventListener('change', e => { st.tier = e.target.value; st.edit = null; st.frozen = null; render(); });
     const tierPill = t => `<span class="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded ${{ Cornerstone: 'bg-violet-500/15 text-violet-700 dark:text-violet-300', Elite: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300', Upside: 'bg-sky-500/15 text-sky-700 dark:text-sky-300', Depth: 'bg-amber-500/20 text-amber-700 dark:text-amber-300', Clogger: 'bg-slate-500/15 text-slate-600 dark:text-slate-300' }[t] || ''}">${esc(t)}</span>`;
     const tsel = document.getElementById('typef');
     [...new Set(D.pros.map(p => p.pos + '|' + p.type))].sort((a, b) => ORDER.indexOf(a.split('|')[0]) - ORDER.indexOf(b.split('|')[0])).forEach(k => {
       const o = document.createElement('option'); o.value = k; o.textContent = k.replace('|', ' · '); tsel.appendChild(o);
     });
+    const C = {
+      tier: p => `${tierPill(p.tier)}${p.tier !== p.boardTier ? `<div class="text-[10px] leading-tight text-slate-500 dark:text-slate-400 mt-0.5" title="${esc(tierWhy(p))}">board: ${esc(p.boardTier)}</div>` : ''}`,
+      odds: p => p.s ? `<div class="flex items-center gap-2"><div class="flex-1">${bar(p.s)}</div><span class="text-[11px] font-bold tabular-nums w-9 text-right">${p.hit}%</span></div><div class="text-[10px] ${p.fallback ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'} mt-0.5">${esc(p.src)}</div>` : '<span class="text-slate-400">no history</span>',
+      pick: p => pickCell(p),
+      dc: p => dcCell(p)
+    };
+    const byName = n => D.pros.find(p => p.n === n);
+    function rowHtml(p) {
+      return `<tr class="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40" data-open="${esc(p.n)}">
+        <td class="py-2 pr-2 font-semibold whitespace-nowrap"><span class="text-slate-400 mr-1">${st.open.has(p.n) ? '▾' : '▸'}</span>${esc(p.n)}</td>
+        <td class="py-2 px-2">${posTag(p.pos)}</td>
+        <td class="py-2 px-2 whitespace-nowrap" data-c="tier">${C.tier(p)}</td>
+        <td class="py-2 px-2 whitespace-nowrap">${esc(p.type)}</td>
+        <td class="py-2 pl-2 min-w-[10rem]" data-c="odds" title="${esc(p.src || '')}">${C.odds(p)}</td>
+        <td class="py-2 px-2 text-right" data-c="pick">${C.pick(p)}</td>
+        <td class="py-2 pl-3 text-right" data-c="dc">${C.dc(p)}</td></tr>${st.edit === p.n ? editorRow(p) : ''}${st.open.has(p.n) ? detail(p) : ''}`;
+    }
+    function syncResetAll() {
+      const n = DRAFT ? 0 : D.pros.filter(p => OV[okey(p)]).length;
+      const b = document.getElementById('resetAll');
+      b.hidden = !n; b.textContent = `Reset all pick edits (${n})`;
+    }
     function render() {
-      D.pros.forEach(p => { p.hit = p.s ? hitOf(p.s) : null; });
-      computeDC();
-      const rows = D.pros.filter(p => (!st.pos || p.pos === st.pos) && (!st.tier || p.tier === st.tier) && (!st.type || p.pos + '|' + p.type === st.type) && (!st.q || p.n.toLowerCase().includes(st.q)))
+      recompute();
+      let rows = D.pros.filter(p => (!st.pos || p.pos === st.pos) && (!st.tier || p.tier === st.tier) && (!st.type || p.pos + '|' + p.type === st.type) && (!st.q || p.n.toLowerCase().includes(st.q)))
         .sort((a, b) => {
           const va = a[st.k], vb = b[st.k];
           if (va === vb) return a.n.localeCompare(b.n);
           if (va == null) return 1; if (vb == null) return -1;
           return (typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb))) * st.dir;
         });
+      if (st.frozen) rows = st.frozen.map(byName).filter(Boolean);
+      st.shown = rows.map(p => p.n);
       document.getElementById('count').textContent = `${rows.length} of ${D.pros.length} prospects`;
-      document.getElementById('rows').innerHTML = rows.map(p => `<tr class="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40" data-open="${esc(p.n)}">
-        <td class="py-2 pr-2 font-semibold whitespace-nowrap"><span class="text-slate-400 mr-1">${st.open.has(p.n) ? '▾' : '▸'}</span>${esc(p.n)}</td>
-        <td class="py-2 px-2">${posTag(p.pos)}</td>
-        <td class="py-2 px-2 whitespace-nowrap">${tierPill(p.tier)}</td>
-        <td class="py-2 px-2 whitespace-nowrap">${esc(p.type)}</td>
-        <td class="py-2 pl-2 min-w-[10rem]" title="${esc(p.src || '')}">${p.s ? `<div class="flex items-center gap-2"><div class="flex-1">${bar(p.s)}</div><span class="text-[11px] font-bold tabular-nums w-9 text-right">${p.hit}%</span></div><div class="text-[10px] ${p.fallback ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'} mt-0.5">${esc(p.src)}</div>` : '<span class="text-slate-400">no history</span>'}</td>
-        <td class="py-2 px-2 text-right">${pickCell(p)}</td>
-        <td class="py-2 pl-3 text-right">${dcCell(p)}</td></tr>${st.open.has(p.n) ? detail(p) : ''}`).join('');
+      document.getElementById('rows').innerHTML = rows.map(rowHtml).join('');
+      syncResetAll();
     }
+    // live update while editing: recompute and patch cells in place (no re-sort, the editor stays mounted)
+    function patch() {
+      recompute();
+      const tb = document.getElementById('rows');
+      (st.shown || []).forEach(n => {
+        const p = byName(n), tr = tb.querySelector(`tr[data-open="${CSS.escape(n)}"]`);
+        if (!p || !tr) return;
+        Object.keys(C).forEach(k => { const td = tr.querySelector(`[data-c="${k}"]`); if (td) td.innerHTML = C[k](p); });
+        const od = tr.querySelector('[data-c="odds"]'); if (od) od.title = p.src || '';
+        const dt = tb.querySelector(`tr[data-detail="${CSS.escape(n)}"]`);
+        if (dt) dt.outerHTML = detail(p);
+      });
+      const ep = st.edit && byName(st.edit), hint = tb.querySelector('[data-pk="hint"]');
+      if (ep && hint) hint.textContent = `${ep.dcCons ? `Consensus #${ep.dcCons}` : 'Not in the consensus top 100'} · now Round ${roundOf(ep) >= 4 ? '4+' : roundOf(ep)}, ${ep.tier} · Round 4+ starts at ${R4_PICK}`;
+      syncResetAll();
+    }
+    function openEditor(n) {
+      st.edit = n; st.editPrev = OV[okey(byName(n))] || null; st.frozen = (st.shown || []).slice();
+      render();
+      fitEditor();
+      const inp = document.querySelector('tr[data-editor] [data-pk="num"]'); if (inp) { inp.focus({ preventScroll: true }); inp.select(); }
+    }
+    // the table scrolls sideways on phones: keep the editor the width of the visible area, pinned left
+    function fitEditor() {
+      const box = document.querySelector('tr[data-editor] [data-pk="box"]'), sc = document.getElementById('rows').closest('.overflow-x-auto');
+      if (box && sc) box.style.width = sc.clientWidth + 'px';
+    }
+    window.addEventListener('resize', fitEditor);
+    function closeEditor(undo) {
+      if (!st.edit) return;
+      const p = byName(st.edit), n = st.edit;
+      if (undo && p) { if (st.editPrev) OV[okey(p)] = st.editPrev; else delete OV[okey(p)]; saveOV(); }
+      st.edit = null; st.frozen = null; render();
+      const b = document.querySelector(`[data-edit="${CSS.escape(n)}"]`); if (b) b.focus();
+    }
+    function setPick(p, v) {
+      if (!p) return;
+      if (v == null || v === p.dcCons) delete OV[okey(p)]; else OV[okey(p)] = v;
+      saveOV(); patch();
+    }
+    const tbEl = document.getElementById('rows');
+    tbEl.addEventListener('input', e => {
+      const t = e.target.closest('[data-pk="num"], [data-pk="range"]'); if (!t || !st.edit) return;
+      const raw = parseInt(t.value, 10);
+      if (!Number.isFinite(raw)) return;
+      const v = Math.max(1, Math.min(257, raw));
+      const ed = t.closest('tr[data-editor]');
+      const other = ed.querySelector(t.dataset.pk === 'num' ? '[data-pk="range"]' : '[data-pk="num"]');
+      if (other) other.value = v;
+      setPick(byName(st.edit), v);
+    });
+    tbEl.addEventListener('keydown', e => {
+      if (!e.target.closest('tr[data-editor]')) return;
+      if (e.key === 'Enter') { e.preventDefault(); closeEditor(false); }
+      else if (e.key === 'Escape') { e.preventDefault(); closeEditor(true); }
+    });
+    document.getElementById('resetAll').addEventListener('click', () => { OV = {}; saveOV(); st.edit = null; st.frozen = null; render(); });
     document.querySelectorAll('.pos-btn').forEach(b => b.addEventListener('click', () => {
-      st.pos = b.dataset.pos;
+      st.pos = b.dataset.pos; st.edit = null; st.frozen = null;
       document.querySelectorAll('.pos-btn').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
       if (st.type && st.pos && !st.type.startsWith(st.pos + '|')) { st.type = ''; tsel.value = ''; }
       render();
     }));
-    tsel.addEventListener('change', e => { st.type = e.target.value; render(); });
+    tsel.addEventListener('change', e => { st.type = e.target.value; st.edit = null; st.frozen = null; render(); });
     document.getElementById('rows').addEventListener('click', e => {
+      const eb = e.target.closest('[data-edit]');
+      if (eb) { e.stopPropagation(); st.edit === eb.dataset.edit ? closeEditor(false) : (st.edit && closeEditor(false), openEditor(eb.dataset.edit)); return; }
+      const rb = e.target.closest('[data-reset]');
+      if (rb) { e.stopPropagation(); const p = byName(rb.dataset.reset); if (p) { delete OV[okey(p)]; saveOV(); } st.edit = null; st.frozen = null; render(); return; }
+      const pk = e.target.closest('[data-pk]');
+      if (pk) {
+        if (pk.dataset.pk === 'done') closeEditor(false);
+        else if (pk.dataset.pk === 'reset') { const p = byName(st.edit); setPick(p, null); const ed = pk.closest('tr[data-editor]'); const v = (p && (p.dcCons || 120)); ed.querySelectorAll('[data-pk="num"], [data-pk="range"]').forEach(i => { i.value = v; }); }
+        return;
+      }
+      if (e.target.closest('tr[data-editor]')) return;
       const tr = e.target.closest('tr[data-open]');
       if (!tr || e.target.closest('summary, details')) return;
       const k = tr.dataset.open;
       st.open.has(k) ? st.open.delete(k) : st.open.add(k);
       render();
     });
-    document.getElementById('search').addEventListener('input', e => { st.q = e.target.value.trim().toLowerCase(); render(); });
+    document.getElementById('search').addEventListener('input', e => { st.q = e.target.value.trim().toLowerCase(); st.edit = null; st.frozen = null; render(); });
     document.querySelectorAll('th.sortable').forEach(th => th.addEventListener('click', () => {
-      const k = th.dataset.k; st.dir = st.k === k ? -st.dir : (k === 'hit' || k === 'dc' ? -1 : 1); st.k = k; render();
+      const k = th.dataset.k; st.dir = st.k === k ? -st.dir : (k === 'hit' || k === 'dc' ? -1 : 1); st.k = k; st.edit = null; st.frozen = null; render();
     }));
     function setOdds(m) {
       ODDS = m;
