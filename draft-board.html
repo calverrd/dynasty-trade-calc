@@ -221,7 +221,7 @@
       if (Object.keys(slotRid).length < N && CTX.slotByRid && Object.keys(CTX.slotByRid).length) {
         slotRid = {};
         Object.entries(CTX.slotByRid).forEach(([rid, s]) => { slotRid[s] = Number(rid); });
-        orderSrc = 'projected order (standings + lottery odds, from the hub)';
+        orderSrc = `projected order (standings + lottery odds, from the hub)${CTX.orderNote ? '; ' + CTX.orderNote : ''}`;
       }
       if (Object.keys(slotRid).length < N) {
         // standalone fallback: worst record picks first
@@ -596,7 +596,7 @@
         if (e.data.type === 'dtc-theme') document.documentElement.classList.toggle('dark', e.data.theme === 'dark');
         if (e.data.type === 'dtc-draft-ctx') {
           const c = e.data, changed = c.leagueId && c.leagueId !== CTX.leagueId;
-          CTX = { leagueId: c.leagueId || CTX.leagueId, me: String(c.me || CTX.me).toLowerCase(), slotByRid: c.slotByRid || null, nextSeason: Number(c.nextSeason) || null, sf: c.sf !== false, vetPool: !!c.vetPool };
+          CTX = { leagueId: c.leagueId || CTX.leagueId, me: String(c.me || CTX.me).toLowerCase(), slotByRid: c.slotByRid || null, nextSeason: Number(c.nextSeason) || null, sf: c.sf !== false, vetPool: !!c.vetPool, orderNote: c.orderNote || '' };
           if (c.values && Object.keys(c.values).length) { VALUES = c.values; VALUE_LABEL = c.valueLabel || ''; }
           if (changed || !S.league) loadLeague(); else { buildDraftSelect(); render(); }
         }

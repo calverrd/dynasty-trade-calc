@@ -787,6 +787,24 @@
       draft: 'toiletbowl', hideLast: true,
       vetPool: true   // the draft takes unrostered veterans too (anyone not on a 22-man roster), not just rookies
     };
+    // Pin draft slots from Sleeper's playoff brackets (checked on LFFL 2025 → its 2026 draft): in the losers bracket the
+    // team listed as w won the game, and the p 1 game is the Toilet Bowl final (w → 1.01, l → 1.02; p 3: w → 1.03,
+    // l → 1.04). Winners bracket p 1 is the championship (l → 1.11, w → 1.12). Unplayed games (no w yet) pin nothing,
+    // so the projection stands until each game is final. Returns null when nothing is final yet.
+    let BRACKET_NOTE = '';
+    function applyBracketPins(sorted, lbr, wbr) {
+      const n = sorted.length, pin = new Map();
+      const fin = (b, p) => (Array.isArray(b) ? b : []).find(x => x && x.p === p && x.w != null && x.l != null);
+      const tb1 = fin(lbr, 1), tb3 = fin(lbr, 3), ch = fin(wbr, 1), done = [];
+      if (tb1) { pin.set(Number(tb1.w), 1); pin.set(Number(tb1.l), 2); done.push('1.01–1.02'); }
+      if (tb3) { pin.set(Number(tb3.w), 3); pin.set(Number(tb3.l), 4); done.push('1.03–1.04'); }
+      if (ch) { pin.set(Number(ch.l), n - 1); pin.set(Number(ch.w), n); done.push(`1.${n - 1}–1.${n}`); }
+      if (!pin.size || [...pin.keys()].some(rid => !sorted.some(r => r.roster_id === rid))) return null;
+      const order = new Array(n), rest = sorted.filter(r => !pin.has(r.roster_id));
+      pin.forEach((slot, rid) => { order[slot - 1] = sorted.find(r => r.roster_id === rid); });
+      let k = 0; for (let i = 0; i < n; i++) if (!order[i]) order[i] = rest[k++];
+      return { order, note: `${done.join(', ')} set by Sleeper's ${tb1 || tb3 ? 'Toilet Bowl' : ''}${(tb1 || tb3) && ch ? ' and ' : ''}${ch ? 'championship' : ''} results` };
+    }
     const LEAGUE_RULES = { '1312492943805779968': DDD_PLAYOFFS, '1180587471338332160': DDD_PLAYOFFS, '1312070951269076992': LFFL_RULES, '1181014173902921728': LFFL_RULES };
 
     let savedLeagues = [];
@@ -1293,7 +1311,7 @@
         });
       } catch (e) { /* values not ready */ }
       const label = st.src === 'blend' ? `Blend (${st.w}% KTC)` : (SRC_NAME[st.src] || 'KTC');
-      try { fr.contentWindow.postMessage({ type: 'dtc-draft-ctx', leagueId: activeLeague.id, me: ME, slotByRid: SLOT_BY_RID, nextSeason: DRAFT_YEARS[0], values, valueLabel: label, sf: !!useSfValues(activeLeague), vetPool: !!LEAGUE_RULES[activeLeague.id]?.vetPool }, location.origin); } catch (e) {}
+      try { fr.contentWindow.postMessage({ type: 'dtc-draft-ctx', leagueId: activeLeague.id, me: ME, slotByRid: SLOT_BY_RID, nextSeason: DRAFT_YEARS[0], values, valueLabel: label, sf: !!useSfValues(activeLeague), vetPool: !!LEAGUE_RULES[activeLeague.id]?.vetPool, orderNote: BRACKET_NOTE }, location.origin); } catch (e) {}
     }
 
     // ---- Rookie TEs iframe ----
@@ -2099,6 +2117,10 @@
         const fcUrl = `./data/fc/fc-${numQbs === 2 ? 'sf' : '1qb'}-ppr${fcPpr === 0.5 ? '05' : fcPpr}-none.json`;
 
         FC_CAPPED = false;
+        // Toilet Bowl leagues (LFFL): Sleeper's brackets fix picks 1–4 and 11–12 once those games are played
+        const tbLeague = LEAGUE_RULES[activeLeague.id]?.draft === 'toiletbowl';
+        const bracketP = tbLeague ? Promise.all(['losers_bracket', 'winners_bracket'].map(b => fetch(`https://api.sleeper.app/v1/league/${activeLeague.id}/${b}`).then(r => (r.ok ? r.json() : [])).catch(() => [])))
+          : Promise.resolve([[], []]);
         const [fcRes, uRes, rRes, tpRes] = await Promise.all([
           fetch(fcUrl, { cache: 'no-cache' }),
           fetch(`https://api.sleeper.app/v1/league/${activeLeague.id}/users`),
@@ -2284,6 +2306,13 @@
           const field = new Set(playoffSeeds(best.map((_, i) => i), 0, dq, best.map(r => Number(r.settings?.division) || 0)).map(i => best[i].roster_id));
           const out = sortedForDraft.filter(r => !field.has(r.roster_id)), inn = sortedForDraft.filter(r => field.has(r.roster_id));
           sortedForDraft.splice(0, sortedForDraft.length, ...out, ...inn);
+        }
+
+        BRACKET_NOTE = '';
+        if (tbLeague) {
+          const [lbr, wbr] = await bracketP;
+          const pinned = applyBracketPins(sortedForDraft, lbr, wbr);
+          if (pinned) { sortedForDraft.splice(0, sortedForDraft.length, ...pinned.order); BRACKET_NOTE = pinned.note; }
         }
 
         const slotByRosterId = {};
